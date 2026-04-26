@@ -10,7 +10,7 @@ const Sidebar = ({
   setCurrentProjectId,
   createNewProject,
   selectedCountries,
-  selectedCountryNames,
+  masterCountryNames,
   toggleCountrySelection,
   clearSelection,
   addUnifiedNation,
@@ -37,8 +37,7 @@ const Sidebar = ({
       id: uuidv4(),
       name: nationName.trim(),
       color: nationColor,
-      countries: [...selectedCountries],
-      countryNames: { ...selectedCountryNames }
+      countries: [...selectedCountries]
     });
     
     setNationName('');
@@ -82,7 +81,7 @@ const Sidebar = ({
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h1>LIFEstreams Map Utility</h1>
+        <h1>LIFEstream Map Utility</h1>
         <p>2046 Alternate Reality Visualizer</p>
       </div>
 
@@ -150,8 +149,8 @@ const Sidebar = ({
                 <div className="selected-countries" style={{ marginBottom: '15px' }}>
                   {selectedCountries.map(id => (
                     <div key={id} className="country-chip">
-                      {selectedCountryNames[id] || id}
-                      <button className="remove-btn" onClick={() => toggleCountrySelection(id, selectedCountryNames[id])}>
+                      {masterCountryNames[id] || id}
+                      <button className="remove-btn" onClick={() => toggleCountrySelection(id, masterCountryNames[id])}>
                         <X size={14} />
                       </button>
                     </div>
@@ -249,8 +248,8 @@ const Sidebar = ({
                       <div className="selected-countries" style={{ marginTop: '10px' }}>
                         {nation.countries.map(id => (
                           <div key={id} className="country-chip">
-                            {nation.countryNames[id] || id}
-                            <button className="remove-btn" onClick={() => toggleCountrySelection(id, nation.countryNames[id])}>
+                            {masterCountryNames[id] || (nation.countryNames && nation.countryNames[id]) || id}
+                            <button className="remove-btn" onClick={() => toggleCountrySelection(id, masterCountryNames[id] || (nation.countryNames && nation.countryNames[id]))}>
                               <X size={14} />
                             </button>
                           </div>
@@ -286,7 +285,7 @@ const Sidebar = ({
                         </div>
                       </div>
                       <div className="unified-nation-countries" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
-                        {nation.countries.map(id => nation.countryNames[id] || id).join(', ')}
+                        {nation.countries.map(id => masterCountryNames[id] || (nation.countryNames && nation.countryNames[id]) || id).join(', ')}
                       </div>
                     </>
                   )}

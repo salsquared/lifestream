@@ -10,12 +10,28 @@ function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed && parsed.length > 0) return parsed;
+        if (parsed && parsed.length > 0) {
+          // Migration: Consolidate old countryNames into master dict and clean up nations
+          return parsed.map(project => {
+            const masterNames = { ...(project.countryNames || {}) };
+            const cleanNations = project.unifiedNations.map(nation => {
+              if (nation.countryNames) {
+                Object.entries(nation.countryNames).forEach(([id, name]) => {
+                  masterNames[id] = name;
+                });
+                const { countryNames, ...cleanNation } = nation;
+                return cleanNation;
+              }
+              return nation;
+            });
+            return { ...project, countryNames: masterNames, unifiedNations: cleanNations };
+          });
+        }
       } catch (e) {
         console.error("Failed to load projects", e);
       }
     }
-    return [{ id: uuidv4(), name: 'Version 1', createdAt: Date.now(), unifiedNations: [] }];
+    return [{ id: uuidv4(), name: 'Version 1', createdAt: Date.now(), unifiedNations: [], countryNames: {} }];
   });
   
   const [currentProjectId, setCurrentProjectId] = useState(projects[0].id);
@@ -28,13 +44,19 @@ function App() {
   const currentProject = projects.find(p => p.id === currentProjectId) || projects[0];
   const unifiedNations = currentProject.unifiedNations;
 
-  const updateCurrentProjectNations = (updater) => {
+  const updateCurrentProject = (updater) => {
     setProjects(prev => prev.map(p => {
       if (p.id === currentProjectId) {
-        const newNations = typeof updater === 'function' ? updater(p.unifiedNations) : updater;
-        return { ...p, unifiedNations: newNations };
+        return typeof updater === 'function' ? updater(p) : { ...p, ...updater };
       }
       return p;
+    }));
+  };
+
+  const updateCurrentProjectNations = (updater) => {
+    updateCurrentProject(p => ({
+      ...p,
+      unifiedNations: typeof updater === 'function' ? updater(p.unifiedNations) : updater
     }));
   };
 
@@ -44,7 +66,8 @@ function App() {
       id: uuidv4(),
       name: `Version ${newVersionNum}`,
       createdAt: Date.now(),
-      unifiedNations: []
+      unifiedNations: [],
+      countryNames: {}
     };
     setProjects(prev => [...prev, newProject]);
     setCurrentProjectId(newProject.id);
@@ -53,11 +76,18 @@ function App() {
   };
 
   const [selectedCountries, setSelectedCountries] = useState([]);
-  const [selectedCountryNames, setSelectedCountryNames] = useState({});
   const [tooltipContent, setTooltipContent] = useState("");
   const [editingId, setEditingId] = useState(null);
 
+  const masterCountryNames = currentProject.countryNames || {};
+
   const toggleCountrySelection = (id, name) => {
+    updateCurrentProject(p => {
+      const existingNames = p.countryNames || {};
+      if (existingNames[id] === name) return p;
+      return { ...p, countryNames: { ...existingNames, [id]: name } };
+    });
+
     if (editingId) {
       const editingNation = unifiedNations.find(un => un.id === editingId);
       if (!editingNation) return;
@@ -69,9 +99,7 @@ function App() {
         if (n.id === editingId) {
           const hasCountry = n.countries.includes(id);
           const newCountries = hasCountry ? n.countries.filter(c => c !== id) : [...n.countries, id];
-          const newNames = { ...n.countryNames };
-          if (!hasCountry) newNames[id] = name;
-          return { ...n, countries: newCountries, countryNames: newNames };
+          return { ...n, countries: newCountries };
         }
         return n;
       }));
@@ -86,11 +114,6 @@ function App() {
           return [...prev, id];
         }
       });
-
-      setSelectedCountryNames(prev => ({
-        ...prev,
-        [id]: name
-      }));
     }
   };
 
@@ -145,19 +168,35 @@ function App() {
         id: uuidv4(),
         name: `Imported Version ${projects.length + 1}`,
         createdAt: Date.now(),
-        unifiedNations: importedProject
+        unifiedNations: importedProject,
+        countryNames: {}
       };
     } else if (importedProject && importedProject.unifiedNations) {
       newProject = {
         ...importedProject,
         id: uuidv4(), // generate new ID to avoid collisions
         name: importedProject.name || `Imported Version ${projects.length + 1}`,
-        createdAt: Date.now() // Treat as a new project locally
+        createdAt: Date.now(), // Treat as a new project locally
+        countryNames: importedProject.countryNames || {}
       };
     } else {
       alert("Invalid map file format.");
       return;
     }
+    
+    // Migration: Consolidate imported countryNames
+    const masterNames = { ...newProject.countryNames };
+    newProject.unifiedNations = newProject.unifiedNations.map(nation => {
+      if (nation.countryNames) {
+        Object.entries(nation.countryNames).forEach(([id, name]) => {
+          masterNames[id] = name;
+        });
+        const { countryNames, ...cleanNation } = nation;
+        return cleanNation;
+      }
+      return nation;
+    });
+    newProject.countryNames = masterNames;
     
     setProjects(prev => [...prev, newProject]);
     setCurrentProjectId(newProject.id);
@@ -177,7 +216,7 @@ function App() {
         }}
         createNewProject={createNewProject}
         selectedCountries={selectedCountries}
-        selectedCountryNames={selectedCountryNames}
+        masterCountryNames={masterCountryNames}
         toggleCountrySelection={toggleCountrySelection}
         clearSelection={clearSelection}
         addUnifiedNation={addUnifiedNation}
