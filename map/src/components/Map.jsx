@@ -9,6 +9,7 @@ import {
 import { geoCentroid } from 'd3-geo';
 import { Plus, Minus } from 'lucide-react';
 import { feature } from 'topojson-client';
+import numericToAlpha3 from '../../../data/iso-numeric-to-alpha3.json';
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
 
@@ -60,6 +61,12 @@ const Map = ({ selectedCountries, toggleCountrySelection, unifiedNations, setToo
             }
           }
         }
+
+        // Remap all feature IDs from ISO numeric to alpha-3
+        features.forEach(f => {
+          const strId = (f.id === undefined || f.id === null) ? 'undefined' : String(f.id);
+          f.id = numericToAlpha3[strId] ?? strId;
+        });
 
         setGeoFeatures(features);
 
@@ -141,7 +148,7 @@ const Map = ({ selectedCountries, toggleCountrySelection, unifiedNations, setToo
                   defaultFill = "#f59e0b"; // actively selected for grouping = amber
                 }
 
-                const showLabel = position.zoom > 3 && geo.properties.name && geo.id !== "010"; 
+                const showLabel = position.zoom > 3 && geo.properties.name && geo.id !== "ATA";
 
                 return (
                   <React.Fragment key={geo.rsmKey || geo.id}>

@@ -1,7 +1,7 @@
 {
-  "id": "bc97d903-45a9-45fa-b20f-b7c8708c08ef",
+  "id": "2ea04f74-dc06-466d-a6fe-ce6736a31932",
   "name": "Version 1",
-  "createdAt": 1777165606525,
+  "createdAt": 1778140341802,
   "unifiedNations": [
     {
       "id": "ec6d919d-faf9-42d6-aad9-f97649b16d7f",
@@ -9,8 +9,8 @@
       "color": "#05d133",
       "countries": [
         "GUF",
-        "740",
-        "328"
+        "SUR",
+        "GUY"
       ]
     },
     {
@@ -18,10 +18,10 @@
       "name": "Nueva Colombia",
       "color": "#f755d1",
       "countries": [
-        "170",
-        "218",
-        "604",
-        "068"
+        "COL",
+        "ECU",
+        "PER",
+        "BOL"
       ]
     },
     {
@@ -29,10 +29,10 @@
       "name": "Argentina",
       "color": "#06f32f",
       "countries": [
-        "152",
-        "032",
-        "600",
-        "858"
+        "CHL",
+        "ARG",
+        "PRY",
+        "URY"
       ]
     },
     {
@@ -40,25 +40,25 @@
       "name": "Estados Unidos de Central America",
       "color": "#d00626",
       "countries": [
-        "320",
-        "084",
-        "340",
-        "222",
-        "558",
-        "188",
-        "192",
-        "388",
-        "214",
-        "332",
-        "630",
-        "044",
-        "796",
-        "136",
-        "028",
-        "052",
-        "531",
-        "780",
-        "591"
+        "GTM",
+        "BLZ",
+        "HND",
+        "SLV",
+        "NIC",
+        "CRI",
+        "CUB",
+        "JAM",
+        "DOM",
+        "HTI",
+        "PRI",
+        "BHS",
+        "TCA",
+        "CYM",
+        "ATG",
+        "BRB",
+        "CUW",
+        "TTO",
+        "PAN"
       ]
     },
     {
@@ -66,13 +66,13 @@
       "name": "Arab States",
       "color": "#ff00ea",
       "countries": [
-        "048",
-        "682",
-        "414",
-        "634",
-        "784",
-        "887",
-        "512"
+        "BHR",
+        "SAU",
+        "KWT",
+        "QAT",
+        "ARE",
+        "YEM",
+        "OMN"
       ]
     },
     {
@@ -80,11 +80,11 @@
       "name": "Greater India",
       "color": "#48ea53",
       "countries": [
-        "356",
-        "524",
-        "064",
-        "144",
-        "050"
+        "IND",
+        "NPL",
+        "BTN",
+        "LKA",
+        "BGD"
       ]
     },
     {
@@ -92,9 +92,9 @@
       "name": "Greater China",
       "color": "#6f621c",
       "countries": [
-        "156",
-        "496",
-        "104"
+        "CHN",
+        "MNG",
+        "MMR"
       ]
     },
     {
@@ -102,10 +102,10 @@
       "name": "Greater Indo-China",
       "color": "#bac98d",
       "countries": [
-        "764",
-        "418",
-        "704",
-        "116"
+        "THA",
+        "LAO",
+        "VNM",
+        "KHM"
       ]
     },
     {
@@ -113,12 +113,12 @@
       "name": "New Indonesia",
       "color": "#b44c69",
       "countries": [
-        "360",
-        "458",
-        "626",
-        "598",
-        "090",
-        "096"
+        "IDN",
+        "MYS",
+        "TLS",
+        "PNG",
+        "SLB",
+        "BRN"
       ]
     },
     {
@@ -126,8 +126,8 @@
       "name": "Pakistan",
       "color": "#ab08c8",
       "countries": [
-        "586",
-        "004"
+        "PAK",
+        "AFG"
       ]
     },
     {
@@ -135,11 +135,11 @@
       "name": "The Stans",
       "color": "#a081cd",
       "countries": [
-        "795",
-        "860",
-        "762",
-        "417",
-        "398"
+        "TKM",
+        "UZB",
+        "TJK",
+        "KGZ",
+        "KAZ"
       ]
     },
     {
@@ -147,10 +147,10 @@
       "name": "New Turkey",
       "color": "#db4af0",
       "countries": [
-        "268",
-        "031",
-        "051",
-        "792"
+        "GEO",
+        "AZE",
+        "ARM",
+        "TUR"
       ]
     },
     {
@@ -158,12 +158,12 @@
       "name": "East Slavia",
       "color": "#42aa4d",
       "countries": [
-        "804",
-        "498",
-        "112",
-        "440",
-        "428",
-        "233"
+        "UKR",
+        "MDA",
+        "BLR",
+        "LTU",
+        "LVA",
+        "EST"
       ]
     },
     {
@@ -171,11 +171,11 @@
       "name": "Nordia",
       "color": "#c0b78c",
       "countries": [
-        "246",
-        "752",
-        "578",
-        "208",
-        "304"
+        "FIN",
+        "SWE",
+        "NOR",
+        "DNK",
+        "GRL"
       ]
     },
     {
@@ -183,9 +183,9 @@
       "name": "Pays Bas",
       "color": "#59e469",
       "countries": [
-        "442",
-        "056",
-        "528"
+        "LUX",
+        "BEL",
+        "NLD"
       ]
     },
     {
@@ -193,10 +193,10 @@
       "name": "MAT",
       "color": "#2e7328",
       "countries": [
-        "504",
-        "012",
-        "788",
-        "732"
+        "MAR",
+        "DZA",
+        "TUN",
+        "ESH"
       ]
     },
     {
@@ -204,8 +204,8 @@
       "name": "Iberia",
       "color": "#bc058f",
       "countries": [
-        "620",
-        "724"
+        "PRT",
+        "ESP"
       ]
     },
     {
@@ -213,9 +213,9 @@
       "name": "Germania",
       "color": "#621512",
       "countries": [
-        "756",
-        "040",
-        "276"
+        "CHE",
+        "AUT",
+        "DEU"
       ]
     },
     {
@@ -223,8 +223,8 @@
       "name": "United Kingdom",
       "color": "#16a51d",
       "countries": [
-        "826",
-        "372"
+        "GBR",
+        "IRL"
       ]
     },
     {
@@ -232,10 +232,10 @@
       "name": "West Asia",
       "color": "#fbd730",
       "countries": [
-        "275",
-        "400",
-        "760",
-        "422"
+        "PSE",
+        "JOR",
+        "SYR",
+        "LBN"
       ]
     },
     {
@@ -243,17 +243,15 @@
       "name": "Balkan States",
       "color": "#4767b6",
       "countries": [
-        "300",
-        "807",
-        "100",
-        "008",
-        null,
-        "499",
-        "070",
-        "191",
-        "705",
-        "688",
-        null
+        "GRC",
+        "MKD",
+        "BGR",
+        "ALB",
+        "MNE",
+        "BIH",
+        "HRV",
+        "SVN",
+        "SRB"
       ]
     },
     {
@@ -261,11 +259,11 @@
       "name": "Central Europe",
       "color": "#7bc682",
       "countries": [
-        "616",
-        "203",
-        "703",
-        "348",
-        "642"
+        "POL",
+        "CZE",
+        "SVK",
+        "HUN",
+        "ROU"
       ]
     },
     {
@@ -273,11 +271,10 @@
       "name": "African Horn Alliance",
       "color": "#5e6f2c",
       "countries": [
-        "232",
-        "262",
-        null,
-        "706",
-        "231"
+        "ERI",
+        "DJI",
+        "SOM",
+        "ETH"
       ]
     },
     {
@@ -285,18 +282,18 @@
       "name": "South African Alliance",
       "color": "#ea886f",
       "countries": [
-        "024",
-        "454",
-        "508",
-        "894",
-        "716",
-        "072",
-        "516",
-        "710",
-        "426",
-        "748",
-        "450",
-        "174"
+        "AGO",
+        "MWI",
+        "MOZ",
+        "ZMB",
+        "ZWE",
+        "BWA",
+        "NAM",
+        "ZAF",
+        "LSO",
+        "SWZ",
+        "MDG",
+        "COM"
       ]
     },
     {
@@ -304,11 +301,11 @@
       "name": "Nile Alliance",
       "color": "#68f274",
       "countries": [
-        "434",
-        "562",
-        "148",
-        "729",
-        "818"
+        "LBY",
+        "NER",
+        "TCD",
+        "SDN",
+        "EGY"
       ]
     },
     {
@@ -316,18 +313,18 @@
       "name": "Central Africa Alliance",
       "color": "#6f0cd7",
       "countries": [
-        "834",
-        "108",
-        "646",
-        "404",
-        "800",
-        "728",
-        "140",
-        "180",
-        "266",
-        "120",
-        "178",
-        "226"
+        "TZA",
+        "BDI",
+        "RWA",
+        "KEN",
+        "UGA",
+        "SSD",
+        "CAF",
+        "COD",
+        "GAB",
+        "CMR",
+        "COG",
+        "GNQ"
       ]
     },
     {
@@ -335,20 +332,20 @@
       "name": "West African Alliance",
       "color": "#36ccdf",
       "countries": [
-        "466",
-        "478",
-        "686",
-        "270",
-        "624",
-        "324",
-        "694",
-        "430",
-        "384",
-        "854",
-        "768",
-        "204",
-        "288",
-        "566"
+        "MLI",
+        "MRT",
+        "SEN",
+        "GMB",
+        "GNB",
+        "GIN",
+        "SLE",
+        "LBR",
+        "CIV",
+        "BFA",
+        "TGO",
+        "BEN",
+        "GHA",
+        "NGA"
       ]
     },
     {
@@ -356,11 +353,11 @@
       "name": "East Asian Alliance",
       "color": "#2d2b99",
       "countries": [
-        "158",
-        "608",
-        "408",
-        "410",
-        "392"
+        "TWN",
+        "PHL",
+        "PRK",
+        "KOR",
+        "JPN"
       ]
     },
     {
@@ -368,177 +365,177 @@
       "name": "Iranshahr",
       "color": "#e06500",
       "countries": [
-        "364",
-        "368"
+        "IRN",
+        "IRQ"
       ]
     }
   ],
   "countryNames": {
-    "100": "Bulgaria",
-    "104": "Myanmar",
-    "108": "Burundi",
-    "112": "Belarus",
-    "116": "Cambodia",
-    "120": "Cameroon",
-    "136": "Cayman Is.",
-    "140": "Central African Rep.",
-    "144": "Sri Lanka",
-    "148": "Chad",
-    "152": "Chile",
-    "156": "China",
-    "158": "Taiwan",
-    "170": "Colombia",
-    "174": "Comoros",
-    "178": "Congo",
-    "180": "Dem. Rep. Congo",
-    "188": "Costa Rica",
-    "191": "Croatia",
-    "192": "Cuba",
-    "203": "Czechia",
-    "204": "Benin",
-    "208": "Denmark",
-    "214": "Dominican Rep.",
-    "218": "Ecuador",
-    "222": "El Salvador",
-    "226": "Eq. Guinea",
-    "231": "Ethiopia",
-    "232": "Eritrea",
-    "233": "Estonia",
-    "246": "Finland",
-    "250": "France",
-    "262": "Djibouti",
-    "266": "Gabon",
-    "268": "Georgia",
-    "270": "Gambia",
-    "275": "Palestine",
-    "276": "Germany",
-    "288": "Ghana",
-    "300": "Greece",
-    "304": "Greenland",
-    "320": "Guatemala",
-    "324": "Guinea",
-    "328": "Guyana",
-    "332": "Haiti",
-    "340": "Honduras",
-    "348": "Hungary",
-    "356": "India",
-    "360": "Indonesia",
-    "364": "Iran",
-    "368": "Iraq",
-    "372": "Ireland",
-    "384": "Côte d'Ivoire",
-    "388": "Jamaica",
-    "392": "Japan",
-    "398": "Kazakhstan",
-    "400": "Jordan",
-    "404": "Kenya",
-    "408": "North Korea",
-    "410": "South Korea",
-    "414": "Kuwait",
-    "417": "Kyrgyzstan",
-    "418": "Laos",
-    "422": "Lebanon",
-    "426": "Lesotho",
-    "428": "Latvia",
-    "430": "Liberia",
-    "434": "Libya",
-    "440": "Lithuania",
-    "442": "Luxembourg",
-    "450": "Madagascar",
-    "454": "Malawi",
-    "458": "Malaysia",
-    "466": "Mali",
-    "478": "Mauritania",
-    "496": "Mongolia",
-    "498": "Moldova",
-    "499": "Montenegro",
-    "504": "Morocco",
-    "508": "Mozambique",
-    "512": "Oman",
-    "516": "Namibia",
-    "524": "Nepal",
-    "528": "Netherlands",
-    "531": "Curaçao",
-    "558": "Nicaragua",
-    "562": "Niger",
-    "566": "Nigeria",
-    "578": "Norway",
-    "586": "Pakistan",
-    "591": "Panama",
-    "598": "Papua New Guinea",
-    "600": "Paraguay",
-    "604": "Peru",
-    "608": "Philippines",
-    "616": "Poland",
-    "620": "Portugal",
-    "624": "Guinea-Bissau",
-    "626": "Timor-Leste",
-    "630": "Puerto Rico",
-    "634": "Qatar",
-    "642": "Romania",
-    "646": "Rwanda",
-    "682": "Saudi Arabia",
-    "686": "Senegal",
-    "688": "Serbia",
-    "694": "Sierra Leone",
-    "703": "Slovakia",
-    "704": "Vietnam",
-    "705": "Slovenia",
-    "706": "Somalia",
-    "710": "South Africa",
-    "716": "Zimbabwe",
-    "724": "Spain",
-    "728": "S. Sudan",
-    "729": "Sudan",
-    "732": "W. Sahara",
-    "740": "Suriname",
-    "748": "eSwatini",
-    "752": "Sweden",
-    "756": "Switzerland",
-    "760": "Syria",
-    "762": "Tajikistan",
-    "764": "Thailand",
-    "768": "Togo",
-    "780": "Trinidad and Tobago",
-    "784": "United Arab Emirates",
-    "788": "Tunisia",
-    "792": "Turkey",
-    "795": "Turkmenistan",
-    "796": "Turks and Caicos Is.",
-    "800": "Uganda",
-    "804": "Ukraine",
-    "807": "Macedonia",
-    "818": "Egypt",
-    "826": "United Kingdom",
-    "834": "Tanzania",
-    "854": "Burkina Faso",
-    "858": "Uruguay",
-    "860": "Uzbekistan",
-    "887": "Yemen",
-    "894": "Zambia",
+    "BGR": "Bulgaria",
+    "MMR": "Myanmar",
+    "BDI": "Burundi",
+    "BLR": "Belarus",
+    "KHM": "Cambodia",
+    "CMR": "Cameroon",
+    "CYM": "Cayman Is.",
+    "CAF": "Central African Rep.",
+    "LKA": "Sri Lanka",
+    "TCD": "Chad",
+    "CHL": "Chile",
+    "CHN": "China",
+    "TWN": "Taiwan",
+    "COL": "Colombia",
+    "COM": "Comoros",
+    "COG": "Congo",
+    "COD": "Dem. Rep. Congo",
+    "CRI": "Costa Rica",
+    "HRV": "Croatia",
+    "CUB": "Cuba",
+    "CZE": "Czechia",
+    "BEN": "Benin",
+    "DNK": "Denmark",
+    "DOM": "Dominican Rep.",
+    "ECU": "Ecuador",
+    "SLV": "El Salvador",
+    "GNQ": "Eq. Guinea",
+    "ETH": "Ethiopia",
+    "ERI": "Eritrea",
+    "EST": "Estonia",
+    "FIN": "Finland",
+    "FRA": "France",
+    "DJI": "Djibouti",
+    "GAB": "Gabon",
+    "GEO": "Georgia",
+    "GMB": "Gambia",
+    "PSE": "Palestine",
+    "DEU": "Germany",
+    "GHA": "Ghana",
+    "GRC": "Greece",
+    "GRL": "Greenland",
+    "GTM": "Guatemala",
+    "GIN": "Guinea",
+    "GUY": "Guyana",
+    "HTI": "Haiti",
+    "HND": "Honduras",
+    "HUN": "Hungary",
+    "IND": "India",
+    "IDN": "Indonesia",
+    "IRN": "Iran",
+    "IRQ": "Iraq",
+    "IRL": "Ireland",
+    "CIV": "Côte d'Ivoire",
+    "JAM": "Jamaica",
+    "JPN": "Japan",
+    "KAZ": "Kazakhstan",
+    "JOR": "Jordan",
+    "KEN": "Kenya",
+    "PRK": "North Korea",
+    "KOR": "South Korea",
+    "KWT": "Kuwait",
+    "KGZ": "Kyrgyzstan",
+    "LAO": "Laos",
+    "LBN": "Lebanon",
+    "LSO": "Lesotho",
+    "LVA": "Latvia",
+    "LBR": "Liberia",
+    "LBY": "Libya",
+    "LTU": "Lithuania",
+    "LUX": "Luxembourg",
+    "MDG": "Madagascar",
+    "MWI": "Malawi",
+    "MYS": "Malaysia",
+    "MLI": "Mali",
+    "MRT": "Mauritania",
+    "MNG": "Mongolia",
+    "MDA": "Moldova",
+    "MNE": "Montenegro",
+    "MAR": "Morocco",
+    "MOZ": "Mozambique",
+    "OMN": "Oman",
+    "NAM": "Namibia",
+    "NPL": "Nepal",
+    "NLD": "Netherlands",
+    "CUW": "Curaçao",
+    "NIC": "Nicaragua",
+    "NER": "Niger",
+    "NGA": "Nigeria",
+    "NOR": "Norway",
+    "PAK": "Pakistan",
+    "PAN": "Panama",
+    "PNG": "Papua New Guinea",
+    "PRY": "Paraguay",
+    "PER": "Peru",
+    "PHL": "Philippines",
+    "POL": "Poland",
+    "PRT": "Portugal",
+    "GNB": "Guinea-Bissau",
+    "TLS": "Timor-Leste",
+    "PRI": "Puerto Rico",
+    "QAT": "Qatar",
+    "ROU": "Romania",
+    "RWA": "Rwanda",
+    "SAU": "Saudi Arabia",
+    "SEN": "Senegal",
+    "SRB": "Serbia",
+    "SLE": "Sierra Leone",
+    "SVK": "Slovakia",
+    "VNM": "Vietnam",
+    "SVN": "Slovenia",
+    "SOM": "Somalia",
+    "ZAF": "South Africa",
+    "ZWE": "Zimbabwe",
+    "ESP": "Spain",
+    "SSD": "S. Sudan",
+    "SDN": "Sudan",
+    "ESH": "W. Sahara",
+    "SUR": "Suriname",
+    "SWZ": "eSwatini",
+    "SWE": "Sweden",
+    "CHE": "Switzerland",
+    "SYR": "Syria",
+    "TJK": "Tajikistan",
+    "THA": "Thailand",
+    "TGO": "Togo",
+    "TTO": "Trinidad and Tobago",
+    "ARE": "United Arab Emirates",
+    "TUN": "Tunisia",
+    "TUR": "Turkey",
+    "TKM": "Turkmenistan",
+    "TCA": "Turks and Caicos Is.",
+    "UGA": "Uganda",
+    "UKR": "Ukraine",
+    "MKD": "Macedonia",
+    "EGY": "Egypt",
+    "GBR": "United Kingdom",
+    "TZA": "Tanzania",
+    "BFA": "Burkina Faso",
+    "URY": "Uruguay",
+    "UZB": "Uzbekistan",
+    "YEM": "Yemen",
+    "ZMB": "Zambia",
     "GUF": "French Guiana",
-    "068": "Bolivia",
-    "032": "Argentina",
-    "084": "Belize",
-    "044": "Bahamas",
-    "028": "Antigua and Barb.",
-    "052": "Barbados",
-    "048": "Bahrain",
-    "064": "Bhutan",
-    "050": "Bangladesh",
-    "090": "Solomon Is.",
-    "096": "Brunei",
-    "004": "Afghanistan",
-    "051": "Armenia",
-    "031": "Azerbaijan",
-    "056": "Belgium",
-    "012": "Algeria",
-    "040": "Austria",
-    "008": "Albania",
-    "undefined": "Somaliland",
-    "070": "Bosnia and Herz.",
-    "024": "Angola",
-    "072": "Botswana"
+    "BOL": "Bolivia",
+    "ARG": "Argentina",
+    "BLZ": "Belize",
+    "BHS": "Bahamas",
+    "ATG": "Antigua and Barb.",
+    "BRB": "Barbados",
+    "BHR": "Bahrain",
+    "BTN": "Bhutan",
+    "BGD": "Bangladesh",
+    "SLB": "Solomon Is.",
+    "BRN": "Brunei",
+    "AFG": "Afghanistan",
+    "ARM": "Armenia",
+    "AZE": "Azerbaijan",
+    "BEL": "Belgium",
+    "DZA": "Algeria",
+    "AUT": "Austria",
+    "ALB": "Albania",
+    "SOL": "Somaliland",
+    "BIH": "Bosnia and Herz.",
+    "AGO": "Angola",
+    "BWA": "Botswana"
   },
   "allGroups": [
     {
@@ -547,8 +544,8 @@
       "color": "#05d133",
       "countries": [
         "GUF",
-        "740",
-        "328"
+        "SUR",
+        "GUY"
       ]
     },
     {
@@ -556,10 +553,10 @@
       "name": "Nueva Colombia",
       "color": "#f755d1",
       "countries": [
-        "170",
-        "218",
-        "604",
-        "068"
+        "COL",
+        "ECU",
+        "PER",
+        "BOL"
       ]
     },
     {
@@ -567,10 +564,10 @@
       "name": "Argentina",
       "color": "#06f32f",
       "countries": [
-        "152",
-        "032",
-        "600",
-        "858"
+        "CHL",
+        "ARG",
+        "PRY",
+        "URY"
       ]
     },
     {
@@ -578,25 +575,25 @@
       "name": "Estados Unidos de Central America",
       "color": "#d00626",
       "countries": [
-        "320",
-        "084",
-        "340",
-        "222",
-        "558",
-        "188",
-        "192",
-        "388",
-        "214",
-        "332",
-        "630",
-        "044",
-        "796",
-        "136",
-        "028",
-        "052",
-        "531",
-        "780",
-        "591"
+        "GTM",
+        "BLZ",
+        "HND",
+        "SLV",
+        "NIC",
+        "CRI",
+        "CUB",
+        "JAM",
+        "DOM",
+        "HTI",
+        "PRI",
+        "BHS",
+        "TCA",
+        "CYM",
+        "ATG",
+        "BRB",
+        "CUW",
+        "TTO",
+        "PAN"
       ]
     },
     {
@@ -604,13 +601,13 @@
       "name": "Arab States",
       "color": "#ff00ea",
       "countries": [
-        "048",
-        "682",
-        "414",
-        "634",
-        "784",
-        "887",
-        "512"
+        "BHR",
+        "SAU",
+        "KWT",
+        "QAT",
+        "ARE",
+        "YEM",
+        "OMN"
       ]
     },
     {
@@ -618,11 +615,11 @@
       "name": "Greater India",
       "color": "#48ea53",
       "countries": [
-        "356",
-        "524",
-        "064",
-        "144",
-        "050"
+        "IND",
+        "NPL",
+        "BTN",
+        "LKA",
+        "BGD"
       ]
     },
     {
@@ -630,9 +627,9 @@
       "name": "Greater China",
       "color": "#6f621c",
       "countries": [
-        "156",
-        "496",
-        "104"
+        "CHN",
+        "MNG",
+        "MMR"
       ]
     },
     {
@@ -640,10 +637,10 @@
       "name": "Greater Indo-China",
       "color": "#bac98d",
       "countries": [
-        "764",
-        "418",
-        "704",
-        "116"
+        "THA",
+        "LAO",
+        "VNM",
+        "KHM"
       ]
     },
     {
@@ -651,12 +648,12 @@
       "name": "New Indonesia",
       "color": "#b44c69",
       "countries": [
-        "360",
-        "458",
-        "626",
-        "598",
-        "090",
-        "096"
+        "IDN",
+        "MYS",
+        "TLS",
+        "PNG",
+        "SLB",
+        "BRN"
       ]
     },
     {
@@ -664,8 +661,8 @@
       "name": "Pakistan",
       "color": "#ab08c8",
       "countries": [
-        "586",
-        "004"
+        "PAK",
+        "AFG"
       ]
     },
     {
@@ -673,11 +670,11 @@
       "name": "The Stans",
       "color": "#a081cd",
       "countries": [
-        "795",
-        "860",
-        "762",
-        "417",
-        "398"
+        "TKM",
+        "UZB",
+        "TJK",
+        "KGZ",
+        "KAZ"
       ]
     },
     {
@@ -685,10 +682,10 @@
       "name": "New Turkey",
       "color": "#db4af0",
       "countries": [
-        "268",
-        "031",
-        "051",
-        "792"
+        "GEO",
+        "AZE",
+        "ARM",
+        "TUR"
       ]
     },
     {
@@ -696,12 +693,12 @@
       "name": "East Slavia",
       "color": "#42aa4d",
       "countries": [
-        "804",
-        "498",
-        "112",
-        "440",
-        "428",
-        "233"
+        "UKR",
+        "MDA",
+        "BLR",
+        "LTU",
+        "LVA",
+        "EST"
       ]
     },
     {
@@ -709,11 +706,11 @@
       "name": "Nordia",
       "color": "#c0b78c",
       "countries": [
-        "246",
-        "752",
-        "578",
-        "208",
-        "304"
+        "FIN",
+        "SWE",
+        "NOR",
+        "DNK",
+        "GRL"
       ]
     },
     {
@@ -721,9 +718,9 @@
       "name": "Pays Bas",
       "color": "#59e469",
       "countries": [
-        "442",
-        "056",
-        "528"
+        "LUX",
+        "BEL",
+        "NLD"
       ]
     },
     {
@@ -731,10 +728,10 @@
       "name": "MAT",
       "color": "#2e7328",
       "countries": [
-        "504",
-        "012",
-        "788",
-        "732"
+        "MAR",
+        "DZA",
+        "TUN",
+        "ESH"
       ]
     },
     {
@@ -742,8 +739,8 @@
       "name": "Iberia",
       "color": "#bc058f",
       "countries": [
-        "620",
-        "724"
+        "PRT",
+        "ESP"
       ]
     },
     {
@@ -751,9 +748,9 @@
       "name": "Germania",
       "color": "#621512",
       "countries": [
-        "756",
-        "040",
-        "276"
+        "CHE",
+        "AUT",
+        "DEU"
       ]
     },
     {
@@ -761,8 +758,8 @@
       "name": "United Kingdom",
       "color": "#16a51d",
       "countries": [
-        "826",
-        "372"
+        "GBR",
+        "IRL"
       ]
     },
     {
@@ -770,10 +767,10 @@
       "name": "West Asia",
       "color": "#fbd730",
       "countries": [
-        "275",
-        "400",
-        "760",
-        "422"
+        "PSE",
+        "JOR",
+        "SYR",
+        "LBN"
       ]
     },
     {
@@ -781,17 +778,15 @@
       "name": "Balkan States",
       "color": "#4767b6",
       "countries": [
-        "300",
-        "807",
-        "100",
-        "008",
-        null,
-        "499",
-        "070",
-        "191",
-        "705",
-        "688",
-        null
+        "GRC",
+        "MKD",
+        "BGR",
+        "ALB",
+        "MNE",
+        "BIH",
+        "HRV",
+        "SVN",
+        "SRB"
       ]
     },
     {
@@ -799,11 +794,11 @@
       "name": "Central Europe",
       "color": "#7bc682",
       "countries": [
-        "616",
-        "203",
-        "703",
-        "348",
-        "642"
+        "POL",
+        "CZE",
+        "SVK",
+        "HUN",
+        "ROU"
       ]
     },
     {
@@ -811,11 +806,10 @@
       "name": "African Horn Alliance",
       "color": "#5e6f2c",
       "countries": [
-        "232",
-        "262",
-        null,
-        "706",
-        "231"
+        "ERI",
+        "DJI",
+        "SOM",
+        "ETH"
       ]
     },
     {
@@ -823,18 +817,18 @@
       "name": "South African Alliance",
       "color": "#ea886f",
       "countries": [
-        "024",
-        "454",
-        "508",
-        "894",
-        "716",
-        "072",
-        "516",
-        "710",
-        "426",
-        "748",
-        "450",
-        "174"
+        "AGO",
+        "MWI",
+        "MOZ",
+        "ZMB",
+        "ZWE",
+        "BWA",
+        "NAM",
+        "ZAF",
+        "LSO",
+        "SWZ",
+        "MDG",
+        "COM"
       ]
     },
     {
@@ -842,11 +836,11 @@
       "name": "Nile Alliance",
       "color": "#68f274",
       "countries": [
-        "434",
-        "562",
-        "148",
-        "729",
-        "818"
+        "LBY",
+        "NER",
+        "TCD",
+        "SDN",
+        "EGY"
       ]
     },
     {
@@ -854,18 +848,18 @@
       "name": "Central Africa Alliance",
       "color": "#6f0cd7",
       "countries": [
-        "834",
-        "108",
-        "646",
-        "404",
-        "800",
-        "728",
-        "140",
-        "180",
-        "266",
-        "120",
-        "178",
-        "226"
+        "TZA",
+        "BDI",
+        "RWA",
+        "KEN",
+        "UGA",
+        "SSD",
+        "CAF",
+        "COD",
+        "GAB",
+        "CMR",
+        "COG",
+        "GNQ"
       ]
     },
     {
@@ -873,20 +867,20 @@
       "name": "West African Alliance",
       "color": "#36ccdf",
       "countries": [
-        "466",
-        "478",
-        "686",
-        "270",
-        "624",
-        "324",
-        "694",
-        "430",
-        "384",
-        "854",
-        "768",
-        "204",
-        "288",
-        "566"
+        "MLI",
+        "MRT",
+        "SEN",
+        "GMB",
+        "GNB",
+        "GIN",
+        "SLE",
+        "LBR",
+        "CIV",
+        "BFA",
+        "TGO",
+        "BEN",
+        "GHA",
+        "NGA"
       ]
     },
     {
@@ -894,11 +888,11 @@
       "name": "East Asian Alliance",
       "color": "#2d2b99",
       "countries": [
-        "158",
-        "608",
-        "408",
-        "410",
-        "392"
+        "TWN",
+        "PHL",
+        "PRK",
+        "KOR",
+        "JPN"
       ]
     },
     {
@@ -906,25 +900,673 @@
       "name": "Iranshahr",
       "color": "#e06500",
       "countries": [
-        "364",
-        "368"
+        "IRN",
+        "IRQ"
       ]
     },
     {
-      "id": "250",
-      "name": "France",
+      "id": "132",
+      "name": "Cabo Verde",
       "color": "#334155",
       "countries": [
-        "250"
+        "132"
       ],
       "independent": true
     },
     {
-      "id": "undefined",
-      "name": "Somaliland",
+      "id": "184",
+      "name": "Cook Is.",
       "color": "#334155",
       "countries": [
-        "undefined"
+        "184"
+      ],
+      "independent": true
+    },
+    {
+      "id": "212",
+      "name": "Dominica",
+      "color": "#334155",
+      "countries": [
+        "212"
+      ],
+      "independent": true
+    },
+    {
+      "id": "234",
+      "name": "Faeroe Is.",
+      "color": "#334155",
+      "countries": [
+        "234"
+      ],
+      "independent": true
+    },
+    {
+      "id": "239",
+      "name": "S. Geo. and the Is.",
+      "color": "#334155",
+      "countries": [
+        "239"
+      ],
+      "independent": true
+    },
+    {
+      "id": "248",
+      "name": "Åland",
+      "color": "#334155",
+      "countries": [
+        "248"
+      ],
+      "independent": true
+    },
+    {
+      "id": "258",
+      "name": "Fr. Polynesia",
+      "color": "#334155",
+      "countries": [
+        "258"
+      ],
+      "independent": true
+    },
+    {
+      "id": "260",
+      "name": "Fr. S. Antarctic Lands",
+      "color": "#334155",
+      "countries": [
+        "260"
+      ],
+      "independent": true
+    },
+    {
+      "id": "296",
+      "name": "Kiribati",
+      "color": "#334155",
+      "countries": [
+        "296"
+      ],
+      "independent": true
+    },
+    {
+      "id": "308",
+      "name": "Grenada",
+      "color": "#334155",
+      "countries": [
+        "308"
+      ],
+      "independent": true
+    },
+    {
+      "id": "316",
+      "name": "Guam",
+      "color": "#334155",
+      "countries": [
+        "316"
+      ],
+      "independent": true
+    },
+    {
+      "id": "334",
+      "name": "Heard I. and McDonald Is.",
+      "color": "#334155",
+      "countries": [
+        "334"
+      ],
+      "independent": true
+    },
+    {
+      "id": "336",
+      "name": "Vatican",
+      "color": "#334155",
+      "countries": [
+        "336"
+      ],
+      "independent": true
+    },
+    {
+      "id": "352",
+      "name": "Iceland",
+      "color": "#334155",
+      "countries": [
+        "352"
+      ],
+      "independent": true
+    },
+    {
+      "id": "438",
+      "name": "Liechtenstein",
+      "color": "#334155",
+      "countries": [
+        "438"
+      ],
+      "independent": true
+    },
+    {
+      "id": "446",
+      "name": "Macao",
+      "color": "#334155",
+      "countries": [
+        "446"
+      ],
+      "independent": true
+    },
+    {
+      "id": "462",
+      "name": "Maldives",
+      "color": "#334155",
+      "countries": [
+        "462"
+      ],
+      "independent": true
+    },
+    {
+      "id": "470",
+      "name": "Malta",
+      "color": "#334155",
+      "countries": [
+        "470"
+      ],
+      "independent": true
+    },
+    {
+      "id": "480",
+      "name": "Mauritius",
+      "color": "#334155",
+      "countries": [
+        "480"
+      ],
+      "independent": true
+    },
+    {
+      "id": "492",
+      "name": "Monaco",
+      "color": "#334155",
+      "countries": [
+        "492"
+      ],
+      "independent": true
+    },
+    {
+      "id": "500",
+      "name": "Montserrat",
+      "color": "#334155",
+      "countries": [
+        "500"
+      ],
+      "independent": true
+    },
+    {
+      "id": "520",
+      "name": "Nauru",
+      "color": "#334155",
+      "countries": [
+        "520"
+      ],
+      "independent": true
+    },
+    {
+      "id": "533",
+      "name": "Aruba",
+      "color": "#334155",
+      "countries": [
+        "533"
+      ],
+      "independent": true
+    },
+    {
+      "id": "534",
+      "name": "Sint Maarten",
+      "color": "#334155",
+      "countries": [
+        "534"
+      ],
+      "independent": true
+    },
+    {
+      "id": "548",
+      "name": "Vanuatu",
+      "color": "#334155",
+      "countries": [
+        "548"
+      ],
+      "independent": true
+    },
+    {
+      "id": "570",
+      "name": "Niue",
+      "color": "#334155",
+      "countries": [
+        "570"
+      ],
+      "independent": true
+    },
+    {
+      "id": "574",
+      "name": "Norfolk Island",
+      "color": "#334155",
+      "countries": [
+        "574"
+      ],
+      "independent": true
+    },
+    {
+      "id": "580",
+      "name": "N. Mariana Is.",
+      "color": "#334155",
+      "countries": [
+        "580"
+      ],
+      "independent": true
+    },
+    {
+      "id": "583",
+      "name": "Micronesia",
+      "color": "#334155",
+      "countries": [
+        "583"
+      ],
+      "independent": true
+    },
+    {
+      "id": "584",
+      "name": "Marshall Is.",
+      "color": "#334155",
+      "countries": [
+        "584"
+      ],
+      "independent": true
+    },
+    {
+      "id": "585",
+      "name": "Palau",
+      "color": "#334155",
+      "countries": [
+        "585"
+      ],
+      "independent": true
+    },
+    {
+      "id": "612",
+      "name": "Pitcairn Is.",
+      "color": "#334155",
+      "countries": [
+        "612"
+      ],
+      "independent": true
+    },
+    {
+      "id": "652",
+      "name": "St-Barthélemy",
+      "color": "#334155",
+      "countries": [
+        "652"
+      ],
+      "independent": true
+    },
+    {
+      "id": "654",
+      "name": "Saint Helena",
+      "color": "#334155",
+      "countries": [
+        "654"
+      ],
+      "independent": true
+    },
+    {
+      "id": "659",
+      "name": "St. Kitts and Nevis",
+      "color": "#334155",
+      "countries": [
+        "659"
+      ],
+      "independent": true
+    },
+    {
+      "id": "660",
+      "name": "Anguilla",
+      "color": "#334155",
+      "countries": [
+        "660"
+      ],
+      "independent": true
+    },
+    {
+      "id": "662",
+      "name": "Saint Lucia",
+      "color": "#334155",
+      "countries": [
+        "662"
+      ],
+      "independent": true
+    },
+    {
+      "id": "663",
+      "name": "St-Martin",
+      "color": "#334155",
+      "countries": [
+        "663"
+      ],
+      "independent": true
+    },
+    {
+      "id": "666",
+      "name": "St. Pierre and Miquelon",
+      "color": "#334155",
+      "countries": [
+        "666"
+      ],
+      "independent": true
+    },
+    {
+      "id": "670",
+      "name": "St. Vin. and Gren.",
+      "color": "#334155",
+      "countries": [
+        "670"
+      ],
+      "independent": true
+    },
+    {
+      "id": "674",
+      "name": "San Marino",
+      "color": "#334155",
+      "countries": [
+        "674"
+      ],
+      "independent": true
+    },
+    {
+      "id": "678",
+      "name": "São Tomé and Principe",
+      "color": "#334155",
+      "countries": [
+        "678"
+      ],
+      "independent": true
+    },
+    {
+      "id": "690",
+      "name": "Seychelles",
+      "color": "#334155",
+      "countries": [
+        "690"
+      ],
+      "independent": true
+    },
+    {
+      "id": "702",
+      "name": "Singapore",
+      "color": "#334155",
+      "countries": [
+        "702"
+      ],
+      "independent": true
+    },
+    {
+      "id": "776",
+      "name": "Tonga",
+      "color": "#334155",
+      "countries": [
+        "776"
+      ],
+      "independent": true
+    },
+    {
+      "id": "831",
+      "name": "Guernsey",
+      "color": "#334155",
+      "countries": [
+        "831"
+      ],
+      "independent": true
+    },
+    {
+      "id": "832",
+      "name": "Jersey",
+      "color": "#334155",
+      "countries": [
+        "832"
+      ],
+      "independent": true
+    },
+    {
+      "id": "833",
+      "name": "Isle of Man",
+      "color": "#334155",
+      "countries": [
+        "833"
+      ],
+      "independent": true
+    },
+    {
+      "id": "850",
+      "name": "U.S. Virgin Is.",
+      "color": "#334155",
+      "countries": [
+        "850"
+      ],
+      "independent": true
+    },
+    {
+      "id": "862",
+      "name": "Venezuela",
+      "color": "#334155",
+      "countries": [
+        "862"
+      ],
+      "independent": true
+    },
+    {
+      "id": "876",
+      "name": "Wallis and Futuna Is.",
+      "color": "#334155",
+      "countries": [
+        "876"
+      ],
+      "independent": true
+    },
+    {
+      "id": "016",
+      "name": "American Samoa",
+      "color": "#334155",
+      "countries": [
+        "016"
+      ],
+      "independent": true
+    },
+    {
+      "id": "USA",
+      "name": "United States of America",
+      "color": "#334155",
+      "countries": [
+        "USA"
+      ],
+      "independent": true
+    },
+    {
+      "id": "086",
+      "name": "Br. Indian Ocean Ter.",
+      "color": "#334155",
+      "countries": [
+        "086"
+      ],
+      "independent": true
+    },
+    {
+      "id": "FLK",
+      "name": "Falkland Is.",
+      "color": "#334155",
+      "countries": [
+        "FLK"
+      ],
+      "independent": true
+    },
+    {
+      "id": "060",
+      "name": "Bermuda",
+      "color": "#334155",
+      "countries": [
+        "060"
+      ],
+      "independent": true
+    },
+    {
+      "id": "092",
+      "name": "British Virgin Is.",
+      "color": "#334155",
+      "countries": [
+        "092"
+      ],
+      "independent": true
+    },
+    {
+      "id": "SOL",
+      "name": "Siachen Glacier",
+      "color": "#334155",
+      "countries": [
+        "SOL"
+      ],
+      "independent": true
+    },
+    {
+      "id": "WSM",
+      "name": "Samoa",
+      "color": "#334155",
+      "countries": [
+        "WSM"
+      ],
+      "independent": true
+    },
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "color": "#334155",
+      "countries": [
+        "RUS"
+      ],
+      "independent": true
+    },
+    {
+      "id": "NZL",
+      "name": "New Zealand",
+      "color": "#334155",
+      "countries": [
+        "NZL"
+      ],
+      "independent": true
+    },
+    {
+      "id": "MEX",
+      "name": "Mexico",
+      "color": "#334155",
+      "countries": [
+        "MEX"
+      ],
+      "independent": true
+    },
+    {
+      "id": "ITA",
+      "name": "Italy",
+      "color": "#334155",
+      "countries": [
+        "ITA"
+      ],
+      "independent": true
+    },
+    {
+      "id": "ISR",
+      "name": "Israel",
+      "color": "#334155",
+      "countries": [
+        "ISR"
+      ],
+      "independent": true
+    },
+    {
+      "id": "FRA",
+      "name": "France",
+      "color": "#334155",
+      "countries": [
+        "FRA"
+      ],
+      "independent": true
+    },
+    {
+      "id": "NCL",
+      "name": "New Caledonia",
+      "color": "#334155",
+      "countries": [
+        "NCL"
+      ],
+      "independent": true
+    },
+    {
+      "id": "FJI",
+      "name": "Fiji",
+      "color": "#334155",
+      "countries": [
+        "FJI"
+      ],
+      "independent": true
+    },
+    {
+      "id": "CYP",
+      "name": "Cyprus",
+      "color": "#334155",
+      "countries": [
+        "CYP"
+      ],
+      "independent": true
+    },
+    {
+      "id": "HKG",
+      "name": "Hong Kong",
+      "color": "#334155",
+      "countries": [
+        "HKG"
+      ],
+      "independent": true
+    },
+    {
+      "id": "CAN",
+      "name": "Canada",
+      "color": "#334155",
+      "countries": [
+        "CAN"
+      ],
+      "independent": true
+    },
+    {
+      "id": "BRA",
+      "name": "Brazil",
+      "color": "#334155",
+      "countries": [
+        "BRA"
+      ],
+      "independent": true
+    },
+    {
+      "id": "AUS",
+      "name": "Ashmore and Cartier Is.",
+      "color": "#334155",
+      "countries": [
+        "AUS"
+      ],
+      "independent": true
+    },
+    {
+      "id": "020",
+      "name": "Andorra",
+      "color": "#334155",
+      "countries": [
+        "020"
+      ],
+      "independent": true
+    },
+    {
+      "id": "ATA",
+      "name": "Antarctica",
+      "color": "#334155",
+      "countries": [
+        "ATA"
       ],
       "independent": true
     }

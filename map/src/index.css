@@ -230,6 +230,26 @@ body {
   color: var(--text-muted);
 }
 
+.country-list-item {
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 0.78rem;
+  color: var(--text-main);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.15s;
+  user-select: none;
+}
+
+.country-list-item:hover {
+  background-color: var(--hover-color);
+}
+
+.country-list-item.staged {
+  background-color: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
 .actions-row {
   display: flex;
   gap: 10px;

@@ -313,19 +313,18 @@ const Sidebar = ({
             <section>
               <div className="section-title">Countries ({soloCountries.length})</div>
               <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                {soloCountries.map(({ id, name }) => (
-                  <div
-                    key={id}
-                    style={{
-                      padding: '3px 6px',
-                      borderRadius: '3px',
-                      fontSize: '0.78rem',
-                      color: 'var(--text-main)',
-                    }}
-                  >
-                    {name}
-                  </div>
-                ))}
+                {soloCountries.map(({ id, name }) => {
+                  const isStaged = selectedCountries.includes(id);
+                  return (
+                    <div
+                      key={id}
+                      className={`country-list-item${isStaged ? ' staged' : ''}`}
+                      onClick={() => toggleCountrySelection(id, name)}
+                    >
+                      {name}
+                    </div>
+                  );
+                })}
                 {soloCountries.length === 0 && (
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                     All countries are assigned to a group.
