@@ -18,7 +18,7 @@ export default defineConfig({
                 const data = JSON.parse(body);
                 const filename = data.filename;
                 const content = data.content;
-                const savesDir = path.resolve(process.cwd(), '../data/saves');
+                const savesDir = path.resolve(process.cwd(), '../data/map_saves');
 
                 if (!fs.existsSync(savesDir)) {
                   fs.mkdirSync(savesDir, { recursive: true });
@@ -27,7 +27,7 @@ export default defineConfig({
                 fs.writeFileSync(path.join(savesDir, filename), JSON.stringify(content, null, 2));
 
                 res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({ success: true, message: `Saved to data/saves/${filename}` }));
+                res.end(JSON.stringify({ success: true, message: `Saved to data/map_saves/${filename}` }));
               } catch (e) {
                 res.statusCode = 500;
                 res.end(JSON.stringify({ success: false, error: e.message }));

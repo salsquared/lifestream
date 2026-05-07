@@ -6,10 +6,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load a map save file — pass the filename as a CLI arg or use the default
 const saveFile = process.argv[2] ?? 'lifestream_map_v1.json';
-const savePath = resolve(__dirname, '../../data/saves', saveFile);
+const savePath = resolve(__dirname, '../../data/map_saves', saveFile);
 
 const project = JSON.parse(readFileSync(savePath, 'utf-8'));
-const nations = project.unifiedNations;
+const nations = project.allGroups ?? project.unifiedNations;
 
 const results = nations.map(nation => ({
   nation: nation.name,

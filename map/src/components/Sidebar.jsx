@@ -20,7 +20,8 @@ const Sidebar = ({
   importState,
   exportState,
   editingId,
-  setEditingId
+  setEditingId,
+  allCountries,
 }) => {
   const [nationName, setNationName] = useState('');
   const [nationColor, setNationColor] = useState(getRandomColor());
@@ -215,7 +216,7 @@ const Sidebar = ({
           </section>
         )}
 
-        <section style={{ flex: 1 }}>
+        <section>
           <div className="section-title">
             Unified Nations ({unifiedNations.length})
           </div>
@@ -300,6 +301,40 @@ const Sidebar = ({
             )}
           </div>
         </section>
+
+        {Object.keys(allCountries).length > 0 && (() => {
+          const groupedIds = new Set(unifiedNations.flatMap(n => n.countries));
+          const soloCountries = Object.entries(allCountries)
+            .filter(([id]) => !groupedIds.has(id))
+            .map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+          return (
+            <section>
+              <div className="section-title">Countries ({soloCountries.length})</div>
+              <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                {soloCountries.map(({ id, name }) => (
+                  <div
+                    key={id}
+                    style={{
+                      padding: '3px 6px',
+                      borderRadius: '3px',
+                      fontSize: '0.78rem',
+                      color: 'var(--text-main)',
+                    }}
+                  >
+                    {name}
+                  </div>
+                ))}
+                {soloCountries.length === 0 && (
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    All countries are assigned to a group.
+                  </p>
+                )}
+              </div>
+            </section>
+          );
+        })()}
       </div>
     </div>
   );

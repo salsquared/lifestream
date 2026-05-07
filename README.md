@@ -1,4 +1,4 @@
-### Lifestream 
+### LIFEstream 
 
 Folder containing utilities for creating the world of Lifestream.
 

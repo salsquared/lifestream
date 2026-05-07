@@ -12,7 +12,7 @@ import { feature } from 'topojson-client';
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
 
-const Map = ({ selectedCountries, toggleCountrySelection, unifiedNations, setTooltipContent, editingId }) => {
+const Map = ({ selectedCountries, toggleCountrySelection, unifiedNations, setTooltipContent, editingId, onCountriesLoaded }) => {
   const [position, setPosition] = useState({ coordinates: [0, 0], zoom: 1 });
   const [geoFeatures, setGeoFeatures] = useState(null);
 
@@ -22,14 +22,14 @@ const Map = ({ selectedCountries, toggleCountrySelection, unifiedNations, setToo
       .then(topology => {
         // Parse TopoJSON into GeoJSON
         const { features } = feature(topology, topology.objects.countries);
-        
+
         // Find France (ID: 250)
         const franceIndex = features.findIndex(f => f.id === "250");
         if (franceIndex > -1) {
           const france = features[franceIndex];
           const franceCoords = [];
           const fgCoords = [];
-          
+
           if (france.geometry.type === 'MultiPolygon') {
             france.geometry.coordinates.forEach(polygon => {
               // French Guiana is in South America (approx lon -55 to -50, lat 2 to 6)
@@ -41,10 +41,10 @@ const Map = ({ selectedCountries, toggleCountrySelection, unifiedNations, setToo
                 franceCoords.push(polygon);
               }
             });
-            
+
             // Update France
             france.geometry.coordinates = franceCoords;
-            
+
             // Create French Guiana feature
             if (fgCoords.length > 0) {
               const frenchGuiana = {
@@ -60,8 +60,16 @@ const Map = ({ selectedCountries, toggleCountrySelection, unifiedNations, setToo
             }
           }
         }
-        
+
         setGeoFeatures(features);
+
+        if (onCountriesLoaded) {
+          const dict = {};
+          features.forEach(f => {
+            if (f.id && f.properties?.name) dict[f.id] = f.properties.name;
+          });
+          onCountriesLoaded(dict);
+        }
       });
   }, []);
 
@@ -125,12 +133,12 @@ const Map = ({ selectedCountries, toggleCountrySelection, unifiedNations, setToo
                 const unifiedNation = unifiedNations.find(un => un.countries.includes(geo.id));
                 const isEditingNation = editingId && unifiedNation && unifiedNation.id === editingId;
                 
-                let defaultFill = "#334155";
-                
+                let defaultFill = "#3b82f6"; // solo/unassigned = blue
+
                 if (unifiedNation) {
                   defaultFill = unifiedNation.color;
                 } else if (isSelected) {
-                  defaultFill = "#3b82f6";
+                  defaultFill = "#f59e0b"; // actively selected for grouping = amber
                 }
 
                 const showLabel = position.zoom > 3 && geo.properties.name && geo.id !== "010"; 
@@ -157,7 +165,7 @@ const Map = ({ selectedCountries, toggleCountrySelection, unifiedNations, setToo
                           transition: "fill 0.2s"
                         },
                         hover: {
-                          fill: isSelected ? "#2563eb" : unifiedNation ? unifiedNation.color : "#475569",
+                          fill: isSelected ? "#d97706" : unifiedNation ? unifiedNation.color : "#2563eb",
                           stroke: "#f8fafc",
                           strokeWidth: 1 / position.zoom,
                           outline: "none",

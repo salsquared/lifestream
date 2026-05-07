@@ -539,5 +539,394 @@
     "070": "Bosnia and Herz.",
     "024": "Angola",
     "072": "Botswana"
-  }
+  },
+  "allGroups": [
+    {
+      "id": "ec6d919d-faf9-42d6-aad9-f97649b16d7f",
+      "name": "Guyana",
+      "color": "#05d133",
+      "countries": [
+        "GUF",
+        "740",
+        "328"
+      ]
+    },
+    {
+      "id": "3a31e016-d6de-42f2-ae46-5d89e61f1055",
+      "name": "Nueva Colombia",
+      "color": "#f755d1",
+      "countries": [
+        "170",
+        "218",
+        "604",
+        "068"
+      ]
+    },
+    {
+      "id": "e674b554-6788-40ab-968c-59c2aea189d0",
+      "name": "Argentina",
+      "color": "#06f32f",
+      "countries": [
+        "152",
+        "032",
+        "600",
+        "858"
+      ]
+    },
+    {
+      "id": "fd8d3369-6e13-45de-8321-e42151cb5156",
+      "name": "Estados Unidos de Central America",
+      "color": "#d00626",
+      "countries": [
+        "320",
+        "084",
+        "340",
+        "222",
+        "558",
+        "188",
+        "192",
+        "388",
+        "214",
+        "332",
+        "630",
+        "044",
+        "796",
+        "136",
+        "028",
+        "052",
+        "531",
+        "780",
+        "591"
+      ]
+    },
+    {
+      "id": "e4688dcd-8e5e-4512-b428-83413e071cbd",
+      "name": "Arab States",
+      "color": "#ff00ea",
+      "countries": [
+        "048",
+        "682",
+        "414",
+        "634",
+        "784",
+        "887",
+        "512"
+      ]
+    },
+    {
+      "id": "aea61bbe-9d76-4a04-a947-ac5e146b369b",
+      "name": "Greater India",
+      "color": "#48ea53",
+      "countries": [
+        "356",
+        "524",
+        "064",
+        "144",
+        "050"
+      ]
+    },
+    {
+      "id": "80aafb0b-4388-47eb-ad42-4fbe6342a0a8",
+      "name": "Greater China",
+      "color": "#6f621c",
+      "countries": [
+        "156",
+        "496",
+        "104"
+      ]
+    },
+    {
+      "id": "d804c1bb-a955-4194-8da1-5cc37f0c7b8b",
+      "name": "Greater Indo-China",
+      "color": "#bac98d",
+      "countries": [
+        "764",
+        "418",
+        "704",
+        "116"
+      ]
+    },
+    {
+      "id": "0b2c1a1b-ecdb-4282-93cb-9c1ac8ab752f",
+      "name": "New Indonesia",
+      "color": "#b44c69",
+      "countries": [
+        "360",
+        "458",
+        "626",
+        "598",
+        "090",
+        "096"
+      ]
+    },
+    {
+      "id": "7d753218-586b-4bf7-8832-f73c322b5d7b",
+      "name": "Pakistan",
+      "color": "#ab08c8",
+      "countries": [
+        "586",
+        "004"
+      ]
+    },
+    {
+      "id": "210e120a-8ec1-4f32-a1ef-dc8c0e2a154d",
+      "name": "The Stans",
+      "color": "#a081cd",
+      "countries": [
+        "795",
+        "860",
+        "762",
+        "417",
+        "398"
+      ]
+    },
+    {
+      "id": "52db6e72-7898-44a2-80b8-df7ec7f25004",
+      "name": "New Turkey",
+      "color": "#db4af0",
+      "countries": [
+        "268",
+        "031",
+        "051",
+        "792"
+      ]
+    },
+    {
+      "id": "f90ff1bd-1ad8-4ddf-9c65-821e4b51c2e8",
+      "name": "East Slavia",
+      "color": "#42aa4d",
+      "countries": [
+        "804",
+        "498",
+        "112",
+        "440",
+        "428",
+        "233"
+      ]
+    },
+    {
+      "id": "38faf96c-54ac-4a38-b087-c5998f70e2d6",
+      "name": "Nordia",
+      "color": "#c0b78c",
+      "countries": [
+        "246",
+        "752",
+        "578",
+        "208",
+        "304"
+      ]
+    },
+    {
+      "id": "9bc2b407-d62c-48af-abb7-2b4b68006ba4",
+      "name": "Pays Bas",
+      "color": "#59e469",
+      "countries": [
+        "442",
+        "056",
+        "528"
+      ]
+    },
+    {
+      "id": "7c8ac64b-9322-4ff0-993b-e3c41b3182b0",
+      "name": "MAT",
+      "color": "#2e7328",
+      "countries": [
+        "504",
+        "012",
+        "788",
+        "732"
+      ]
+    },
+    {
+      "id": "159c9488-e3b7-4c16-9e96-dfb4ae45f1d8",
+      "name": "Iberia",
+      "color": "#bc058f",
+      "countries": [
+        "620",
+        "724"
+      ]
+    },
+    {
+      "id": "a7d091fc-bb40-4c38-b0df-573f3b5c1bc8",
+      "name": "Germania",
+      "color": "#621512",
+      "countries": [
+        "756",
+        "040",
+        "276"
+      ]
+    },
+    {
+      "id": "7b5cd7a6-9446-49d1-a75f-0d6678700588",
+      "name": "United Kingdom",
+      "color": "#16a51d",
+      "countries": [
+        "826",
+        "372"
+      ]
+    },
+    {
+      "id": "dda900bb-effe-4287-9626-0a9b6da71b77",
+      "name": "West Asia",
+      "color": "#fbd730",
+      "countries": [
+        "275",
+        "400",
+        "760",
+        "422"
+      ]
+    },
+    {
+      "id": "f679d561-686c-4f96-aff7-b83cfb9a6ee2",
+      "name": "Balkan States",
+      "color": "#4767b6",
+      "countries": [
+        "300",
+        "807",
+        "100",
+        "008",
+        null,
+        "499",
+        "070",
+        "191",
+        "705",
+        "688",
+        null
+      ]
+    },
+    {
+      "id": "ea03bc0a-d46d-4935-a534-c15a5115a14f",
+      "name": "Central Europe",
+      "color": "#7bc682",
+      "countries": [
+        "616",
+        "203",
+        "703",
+        "348",
+        "642"
+      ]
+    },
+    {
+      "id": "39652eb1-ea5d-4bd3-88ca-2b64ca70619b",
+      "name": "African Horn Alliance",
+      "color": "#5e6f2c",
+      "countries": [
+        "232",
+        "262",
+        null,
+        "706",
+        "231"
+      ]
+    },
+    {
+      "id": "690fe992-0473-4046-9876-871ca9befd27",
+      "name": "South African Alliance",
+      "color": "#ea886f",
+      "countries": [
+        "024",
+        "454",
+        "508",
+        "894",
+        "716",
+        "072",
+        "516",
+        "710",
+        "426",
+        "748",
+        "450",
+        "174"
+      ]
+    },
+    {
+      "id": "96e62325-17db-4b2f-8574-e5858be51bd1",
+      "name": "Nile Alliance",
+      "color": "#68f274",
+      "countries": [
+        "434",
+        "562",
+        "148",
+        "729",
+        "818"
+      ]
+    },
+    {
+      "id": "f269d4db-5991-4040-a8a4-7cd84aaa1684",
+      "name": "Central Africa Alliance",
+      "color": "#6f0cd7",
+      "countries": [
+        "834",
+        "108",
+        "646",
+        "404",
+        "800",
+        "728",
+        "140",
+        "180",
+        "266",
+        "120",
+        "178",
+        "226"
+      ]
+    },
+    {
+      "id": "f09907e9-1a9a-45d2-861f-0aa50d0177bb",
+      "name": "West African Alliance",
+      "color": "#36ccdf",
+      "countries": [
+        "466",
+        "478",
+        "686",
+        "270",
+        "624",
+        "324",
+        "694",
+        "430",
+        "384",
+        "854",
+        "768",
+        "204",
+        "288",
+        "566"
+      ]
+    },
+    {
+      "id": "f6a7a2b3-9ca8-45ac-a2c0-ad0ab5a20d47",
+      "name": "East Asian Alliance",
+      "color": "#2d2b99",
+      "countries": [
+        "158",
+        "608",
+        "408",
+        "410",
+        "392"
+      ]
+    },
+    {
+      "id": "21c3840c-61c9-4fa4-ad09-e23806b6703a",
+      "name": "Iranshahr",
+      "color": "#e06500",
+      "countries": [
+        "364",
+        "368"
+      ]
+    },
+    {
+      "id": "250",
+      "name": "France",
+      "color": "#334155",
+      "countries": [
+        "250"
+      ],
+      "independent": true
+    },
+    {
+      "id": "undefined",
+      "name": "Somaliland",
+      "color": "#334155",
+      "countries": [
+        "undefined"
+      ],
+      "independent": true
+    }
+  ]
 }

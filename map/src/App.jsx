@@ -75,6 +75,7 @@ function App() {
     setEditingId(null);
   };
 
+  const [allCountries, setAllCountries] = useState({});
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [tooltipContent, setTooltipContent] = useState("");
   const [editingId, setEditingId] = useState(null);
@@ -142,10 +143,26 @@ function App() {
       const versionNum = versionMatch ? versionMatch[0] : '1';
       const filename = `lifestream_map_v${versionNum}.json`;
 
+      const groupedIds = new Set(unifiedNations.flatMap(n => n.countries));
+      const independentGroups = Object.entries(allCountries)
+        .filter(([id]) => !groupedIds.has(id))
+        .map(([id, name]) => ({
+          id,
+          name,
+          color: "#334155",
+          countries: [id],
+          independent: true,
+        }));
+
+      const exportData = {
+        ...currentProject,
+        allGroups: [...unifiedNations, ...independentGroups],
+      };
+
       const response = await fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename, content: currentProject })
+        body: JSON.stringify({ filename, content: exportData })
       });
       
       const result = await response.json();
@@ -206,7 +223,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <Sidebar 
+      <Sidebar
         projects={projects}
         currentProjectId={currentProjectId}
         setCurrentProjectId={(id) => {
@@ -227,15 +244,17 @@ function App() {
         exportState={exportState}
         editingId={editingId}
         setEditingId={setEditingId}
+        allCountries={allCountries}
       />
       
       <div style={{ position: 'relative', flex: 1 }}>
-        <Map 
+        <Map
           selectedCountries={selectedCountries}
           toggleCountrySelection={toggleCountrySelection}
           unifiedNations={unifiedNations}
           setTooltipContent={setTooltipContent}
           editingId={editingId}
+          onCountriesLoaded={setAllCountries}
         />
         
         {tooltipContent && (
