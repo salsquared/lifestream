@@ -905,470 +905,470 @@
       ]
     },
     {
-      "id": "132",
+      "id": "CPV",
       "name": "Cabo Verde",
       "color": "#334155",
       "countries": [
-        "132"
+        "CPV"
       ],
       "independent": true
     },
     {
-      "id": "184",
+      "id": "COK",
       "name": "Cook Is.",
       "color": "#334155",
       "countries": [
-        "184"
+        "COK"
       ],
       "independent": true
     },
     {
-      "id": "212",
+      "id": "DMA",
       "name": "Dominica",
       "color": "#334155",
       "countries": [
-        "212"
+        "DMA"
       ],
       "independent": true
     },
     {
-      "id": "234",
+      "id": "FRO",
       "name": "Faeroe Is.",
       "color": "#334155",
       "countries": [
-        "234"
+        "FRO"
       ],
       "independent": true
     },
     {
-      "id": "239",
+      "id": "SGS",
       "name": "S. Geo. and the Is.",
       "color": "#334155",
       "countries": [
-        "239"
+        "SGS"
       ],
       "independent": true
     },
     {
-      "id": "248",
+      "id": "ALA",
       "name": "Åland",
       "color": "#334155",
       "countries": [
-        "248"
+        "ALA"
       ],
       "independent": true
     },
     {
-      "id": "258",
+      "id": "PYF",
       "name": "Fr. Polynesia",
       "color": "#334155",
       "countries": [
-        "258"
+        "PYF"
       ],
       "independent": true
     },
     {
-      "id": "260",
+      "id": "ATF",
       "name": "Fr. S. Antarctic Lands",
       "color": "#334155",
       "countries": [
-        "260"
+        "ATF"
       ],
       "independent": true
     },
     {
-      "id": "296",
+      "id": "KIR",
       "name": "Kiribati",
       "color": "#334155",
       "countries": [
-        "296"
+        "KIR"
       ],
       "independent": true
     },
     {
-      "id": "308",
+      "id": "GRD",
       "name": "Grenada",
       "color": "#334155",
       "countries": [
-        "308"
+        "GRD"
       ],
       "independent": true
     },
     {
-      "id": "316",
+      "id": "GUM",
       "name": "Guam",
       "color": "#334155",
       "countries": [
-        "316"
+        "GUM"
       ],
       "independent": true
     },
     {
-      "id": "334",
+      "id": "HMD",
       "name": "Heard I. and McDonald Is.",
       "color": "#334155",
       "countries": [
-        "334"
+        "HMD"
       ],
       "independent": true
     },
     {
-      "id": "336",
+      "id": "VAT",
       "name": "Vatican",
       "color": "#334155",
       "countries": [
-        "336"
+        "VAT"
       ],
       "independent": true
     },
     {
-      "id": "352",
+      "id": "ISL",
       "name": "Iceland",
       "color": "#334155",
       "countries": [
-        "352"
+        "ISL"
       ],
       "independent": true
     },
     {
-      "id": "438",
+      "id": "LIE",
       "name": "Liechtenstein",
       "color": "#334155",
       "countries": [
-        "438"
+        "LIE"
       ],
       "independent": true
     },
     {
-      "id": "446",
+      "id": "MAC",
       "name": "Macao",
       "color": "#334155",
       "countries": [
-        "446"
+        "MAC"
       ],
       "independent": true
     },
     {
-      "id": "462",
+      "id": "MDV",
       "name": "Maldives",
       "color": "#334155",
       "countries": [
-        "462"
+        "MDV"
       ],
       "independent": true
     },
     {
-      "id": "470",
+      "id": "MLT",
       "name": "Malta",
       "color": "#334155",
       "countries": [
-        "470"
+        "MLT"
       ],
       "independent": true
     },
     {
-      "id": "480",
+      "id": "MUS",
       "name": "Mauritius",
       "color": "#334155",
       "countries": [
-        "480"
+        "MUS"
       ],
       "independent": true
     },
     {
-      "id": "492",
+      "id": "MCO",
       "name": "Monaco",
       "color": "#334155",
       "countries": [
-        "492"
+        "MCO"
       ],
       "independent": true
     },
     {
-      "id": "500",
+      "id": "MSR",
       "name": "Montserrat",
       "color": "#334155",
       "countries": [
-        "500"
+        "MSR"
       ],
       "independent": true
     },
     {
-      "id": "520",
+      "id": "NRU",
       "name": "Nauru",
       "color": "#334155",
       "countries": [
-        "520"
+        "NRU"
       ],
       "independent": true
     },
     {
-      "id": "533",
+      "id": "ABW",
       "name": "Aruba",
       "color": "#334155",
       "countries": [
-        "533"
+        "ABW"
       ],
       "independent": true
     },
     {
-      "id": "534",
+      "id": "SXM",
       "name": "Sint Maarten",
       "color": "#334155",
       "countries": [
-        "534"
+        "SXM"
       ],
       "independent": true
     },
     {
-      "id": "548",
+      "id": "VUT",
       "name": "Vanuatu",
       "color": "#334155",
       "countries": [
-        "548"
+        "VUT"
       ],
       "independent": true
     },
     {
-      "id": "570",
+      "id": "NIU",
       "name": "Niue",
       "color": "#334155",
       "countries": [
-        "570"
+        "NIU"
       ],
       "independent": true
     },
     {
-      "id": "574",
+      "id": "NFK",
       "name": "Norfolk Island",
       "color": "#334155",
       "countries": [
-        "574"
+        "NFK"
       ],
       "independent": true
     },
     {
-      "id": "580",
+      "id": "MNP",
       "name": "N. Mariana Is.",
       "color": "#334155",
       "countries": [
-        "580"
+        "MNP"
       ],
       "independent": true
     },
     {
-      "id": "583",
+      "id": "FSM",
       "name": "Micronesia",
       "color": "#334155",
       "countries": [
-        "583"
+        "FSM"
       ],
       "independent": true
     },
     {
-      "id": "584",
+      "id": "MHL",
       "name": "Marshall Is.",
       "color": "#334155",
       "countries": [
-        "584"
+        "MHL"
       ],
       "independent": true
     },
     {
-      "id": "585",
+      "id": "PLW",
       "name": "Palau",
       "color": "#334155",
       "countries": [
-        "585"
+        "PLW"
       ],
       "independent": true
     },
     {
-      "id": "612",
+      "id": "PCN",
       "name": "Pitcairn Is.",
       "color": "#334155",
       "countries": [
-        "612"
+        "PCN"
       ],
       "independent": true
     },
     {
-      "id": "652",
+      "id": "BLM",
       "name": "St-Barthélemy",
       "color": "#334155",
       "countries": [
-        "652"
+        "BLM"
       ],
       "independent": true
     },
     {
-      "id": "654",
+      "id": "SHN",
       "name": "Saint Helena",
       "color": "#334155",
       "countries": [
-        "654"
+        "SHN"
       ],
       "independent": true
     },
     {
-      "id": "659",
+      "id": "KNA",
       "name": "St. Kitts and Nevis",
       "color": "#334155",
       "countries": [
-        "659"
+        "KNA"
       ],
       "independent": true
     },
     {
-      "id": "660",
+      "id": "AIA",
       "name": "Anguilla",
       "color": "#334155",
       "countries": [
-        "660"
+        "AIA"
       ],
       "independent": true
     },
     {
-      "id": "662",
+      "id": "LCA",
       "name": "Saint Lucia",
       "color": "#334155",
       "countries": [
-        "662"
+        "LCA"
       ],
       "independent": true
     },
     {
-      "id": "663",
+      "id": "MAF",
       "name": "St-Martin",
       "color": "#334155",
       "countries": [
-        "663"
+        "MAF"
       ],
       "independent": true
     },
     {
-      "id": "666",
+      "id": "SPM",
       "name": "St. Pierre and Miquelon",
       "color": "#334155",
       "countries": [
-        "666"
+        "SPM"
       ],
       "independent": true
     },
     {
-      "id": "670",
+      "id": "VCT",
       "name": "St. Vin. and Gren.",
       "color": "#334155",
       "countries": [
-        "670"
+        "VCT"
       ],
       "independent": true
     },
     {
-      "id": "674",
+      "id": "SMR",
       "name": "San Marino",
       "color": "#334155",
       "countries": [
-        "674"
+        "SMR"
       ],
       "independent": true
     },
     {
-      "id": "678",
+      "id": "STP",
       "name": "São Tomé and Principe",
       "color": "#334155",
       "countries": [
-        "678"
+        "STP"
       ],
       "independent": true
     },
     {
-      "id": "690",
+      "id": "SYC",
       "name": "Seychelles",
       "color": "#334155",
       "countries": [
-        "690"
+        "SYC"
       ],
       "independent": true
     },
     {
-      "id": "702",
+      "id": "SGP",
       "name": "Singapore",
       "color": "#334155",
       "countries": [
-        "702"
+        "SGP"
       ],
       "independent": true
     },
     {
-      "id": "776",
+      "id": "TON",
       "name": "Tonga",
       "color": "#334155",
       "countries": [
-        "776"
+        "TON"
       ],
       "independent": true
     },
     {
-      "id": "831",
+      "id": "GGY",
       "name": "Guernsey",
       "color": "#334155",
       "countries": [
-        "831"
+        "GGY"
       ],
       "independent": true
     },
     {
-      "id": "832",
+      "id": "JEY",
       "name": "Jersey",
       "color": "#334155",
       "countries": [
-        "832"
+        "JEY"
       ],
       "independent": true
     },
     {
-      "id": "833",
+      "id": "IMN",
       "name": "Isle of Man",
       "color": "#334155",
       "countries": [
-        "833"
+        "IMN"
       ],
       "independent": true
     },
     {
-      "id": "850",
+      "id": "VIR",
       "name": "U.S. Virgin Is.",
       "color": "#334155",
       "countries": [
-        "850"
+        "VIR"
       ],
       "independent": true
     },
     {
-      "id": "862",
+      "id": "VEN",
       "name": "Venezuela",
       "color": "#334155",
       "countries": [
-        "862"
+        "VEN"
       ],
       "independent": true
     },
     {
-      "id": "876",
+      "id": "WLF",
       "name": "Wallis and Futuna Is.",
       "color": "#334155",
       "countries": [
-        "876"
+        "WLF"
       ],
       "independent": true
     },
     {
-      "id": "016",
+      "id": "ASM",
       "name": "American Samoa",
       "color": "#334155",
       "countries": [
-        "016"
+        "ASM"
       ],
       "independent": true
     },
@@ -1382,11 +1382,11 @@
       "independent": true
     },
     {
-      "id": "086",
+      "id": "IOT",
       "name": "Br. Indian Ocean Ter.",
       "color": "#334155",
       "countries": [
-        "086"
+        "IOT"
       ],
       "independent": true
     },
@@ -1400,20 +1400,20 @@
       "independent": true
     },
     {
-      "id": "060",
+      "id": "BMU",
       "name": "Bermuda",
       "color": "#334155",
       "countries": [
-        "060"
+        "BMU"
       ],
       "independent": true
     },
     {
-      "id": "092",
+      "id": "VGB",
       "name": "British Virgin Is.",
       "color": "#334155",
       "countries": [
-        "092"
+        "VGB"
       ],
       "independent": true
     },
@@ -1553,11 +1553,11 @@
       "independent": true
     },
     {
-      "id": "020",
+      "id": "AND",
       "name": "Andorra",
       "color": "#334155",
       "countries": [
-        "020"
+        "AND"
       ],
       "independent": true
     },
