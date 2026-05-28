@@ -1,0 +1,176 @@
+﻿Legend
+Act
+* SQ (SQ)
+   * Scene (SC)
+      * Beat (B)
+         * Shot (S)
+            * Frame (Still)
+Act 1:
+1. SQ: Rustbucket Test Flight
+   1. SC: Rustbucket in Death Valley desert before dawn.
+      1. X sits in his scrappy spaceplane in a dried Mojave lakebed pre-dawn, glowing eyes in a dark cockpit
+      2. X commands AL to begin an audio recording
+   2. SC: Flashback of X’s School —X’s Old Middle School
+      1. Flashback: a child puts on neural gear at a classroom desk
+   3. SC: Big Bang Visualization — School HoloVision Lesson
+      1. Teacher's voice intros a cosmology lesson — "how you and I got here" — with a religion-disclaimer aside
+      2. A 3D grid flickers in, rotates, collapses inward; red glow blooms at center
+      3. Sphere ignites red-white, goes transparent, blue and yellow streaks shoot outward — Big Bang
+   4. SC: Test Flight from Mojave Floor to LEA
+      1. Intercut: X tells AL to start the reactor ignition SQ
+      2. AL counts down, X braces, "Ignition!" — craft launches
+      3. AL relays flight info through the Gs; reactor cuts off; X flips the craft upside-down relative to Earth
+   5. SC: Low Earth Atmosphere/Inside Rustbucket Cockpit
+      1. X takes in the view of Neo LA sprawling across SoCal, Earth Tower 1 spearing out of Disaster Ridge — a beat of peace
+      2. Adan radios in, scolds X for the delivery delay, invokes their father's memory to twist the knife
+      3. X ends the call, annoyed; reclines and tells AL to head to the usual drop-off (abandoned gas station, edge of Neo LA)
+      4. Before AL can confirm, the craft punches through a glowing blue radiation cloud
+      5. Catastrophic electrical failure; AI knocked out; craft tumbles into ballistic reentry
+      6. X yanks on an oxygen mask above his head.
+   6. SC: Memory/Flashback
+      1. Breathing hard, eyes closed — flash: memory of his mother's asphyxiation, his own phobia, the DIY mask ripping off
+      2. Flash: his father in military uniform, North Korean War — snaps X back
+   7. SC 4B: Inside Rustbucket Cockpit
+      1. X unbuckles, reaches behind his seat, hits the ignition restart
+      2. A few thousand feet up the craft comes back to life; AL is back online
+
+
+2. SQ: Downtown Neo LA Chase
+   1. SC: X falls out of the sky
+         1. AL: LAPD Anti-Terrorist Division intercepts in 2 minutes
+   2. SC: Main Chase Sequence
+      1. X turns toward the city instead of away; weaves past buildings and automated craft lanes
+      2. LAPD cuts into the cockpit speakers on emergency freq, orders surrender
+      3. X uses the reactor upgrade to outrun every cruiser — Akira-style chase montage
+         1. S:
+            1. FR: Cut: interior of the last cruiser; the officer calls in death bots
+      4. X notices the cruisers fall off, slows to look for a landing spot
+      5. Cockpit screen cracks from an ion round; AL reorients away from the line of fire
+      6. AL: three LAPD death bots, AI-piloted, ion cannons that bust tanks; one more hit and they're gone; first shot was a probe to ID human vs AI pilot
+      7. Cabin alert: acid rain storm closing from the opposite direction
+      8. X turns 180° upwards, straight toward the storm
+      9. AL panics; X asks how fast they have to go for the bow shock to flash the acid to vapor before it reaches the hull
+      10. "Mach 4!" — and warns that the g-load to get there and hold the line will knock X out
+      11. X hands control to AL — no human could fly the burn conscious — reclines and braces as the reactor spools up
+      12. The craft accelerates under AL's hands, leaving the death bots firing wildly behind; stacked sonic booms hammer past as it crosses Mach 4; X greys toward blackout under the Gs
+      13. At the storm wall the shock layer vaporizes the incoming acid; AL threads the craft straight through
+      14. The Rustbucket punches out the far side — nose and leading edges pitted and scarred, but intact — and vanishes into the mist
+      15. The death bots follow at their slower intercept speed; too slow to raise a shock sheath of their own, they're caught bare in the acid and dissolve
+   3. SC: X lands and hides the Rustbucket
+      1. X coasts to the city outskirts, lands, hides the Rustbucket
+      2. X transfers the vials Opal from the storage compartment to a satchel — still intact, still within spec
+
+
+3. SQ: GZVA Donation — Old Korea Town
+   1. SC 1: Random Bus Stop — Near Socal Hills
+      1. X walks to a bus stop to wait for his ride back into the city
+   2. SC 2: GZVA — Old Korea Town
+      1. A well covered man is dropped off with a duffel bag in front of an old rundown building in downtown LA in the rain. 
+      2. A wet and well covered figure knocks on a door inside the building. 
+      3. At first the door opens slowly with a distrustful eye peeking through and quickly letting out a sigh and greeting to the figure in the doorway. 
+      4. The figure steps in before taking his hood off and revealing it's X. 
+      5. X delivers Opal to his dad's best friend and the ground zero veteran's association from his military days. 
+
+
+4. SQ: X returns home to Min-Seo and Adan — Castaneda House & Garage
+   1. SC: X explains what happened to Adan and Min-Seo
+      1. X returns home to shock from the room.         
+      2. His girlfriend is anxiously waiting at the door from the chase and scolds him. 
+      3. Adan asks what happened. 
+      4. X explains and takes some drops when he ends the conversation. 
+   2. SC: Opal Trance
+      1. The first trance-like SC takes place. 
+      2. Trance transforms to memory. 
+      3. X is confronted with the memory of his mother's death briefly before waking up. 
+
+
+5. SQ: Castaneda Garage
+   1. SC: X prepares for the stream — Castaneda Garage
+      1. The dream transitions to X getting ready to broadcast an illegal LIFEstream
+      2. Adan helps X connect the broadcast umbilical cord to the back of X’s head.
+      3. Adan wishes X good luck and rushes back to his desk to monitor the situation. 
+   2. SC: Audience Members Introduction
+      1. A quick montage of the audience of people that consume illegal live LIFEstreams.
+      2. A teenager excitedly sets up his older brother’s system
+      3. A security guard at work has a non-LIFEstream, livestream of the event on his HoloVision while at work
+   3. SC: X streams his virtual race and lived experience — Castaneda Garage & Tunnels
+      1. X starts up the Rustbucket. 
+      2. The custom DFD engine starts up, bringing the room to life. Wind and light bounces everywhere while it starts up. 
+      3. X grabs the LIFEstream broadcast connector and inserts it into the back of his head. 
+      4. Adan establishes communication and checks LIFEstream connection and server healthchecks
+         1. A quick montage of the hardware involved like the Neuputer, LS Connector, LS Broadcast Server, etc. 
+      5. Checks clear and Adan starts to countdown to LS broadcast and race start. 
+      6. Adan ends the countdown and X takes off into the tunnels. 
+      7. We see on Adan’s HoloVision the different feeds coming in.
+         1. First we see X's actual view with metrics of the stream and X’s bio data around it.
+         2. Then we see a rendering of an environment where the camera moves like X does in real life.
+         3. The third and final view is a composite of the two. It's X’s experience superimposed into the virtual world. 
+         4. As C catches speed Adan informs him that they're live and X floors it.
+
+
+6. SQ: The Raid
+   1. SC: The Goons attack
+      1. The private security force drops everyone from their grip. 
+   2. SC: The Cop Enters
+      1. The Detective enters the conversation. 
+      2. He scans the room first and whistles.
+   3. SC: The Negotiation
+      1. Moto joins the goons, the detective and the crew. 
+      2. Moto seems shocked to see X and Adan on their knees and guns pointed at their heads. 
+      3. Moto gestures at the Detective and the Goon Leader to come talk to him. 
+      4. They whisper amongst each other while Moto pieces together what is happening. 
+      5. Moto seems displeased but continues the conversation. He does not however make the goons let the boys go.
+      6. Moto starts to walk around 
+7. SQ: Blastoff to Japan
+   1. SC: X and the crew go to the local Mojave Space Port. 
+   2. They board a Point-to-Point SpaceV Reusable Shuttle.
+Act 2: 
+1. SQ: Big in Japan
+   1. SC: X and his crew land in Japan
+   2. SC: X and his crew meet the Seki Sports Engineer Division. The first meeting does not go well. 
+   3. 2. SQ: Team Race Prep
+   1. SC: X, his crew and moto’s crew get ready for the races.
+3. SQ: Practice Run
+   1.  SC: In the testing phase 2 racers die during a friendly practice race. 
+4. SQ: Meet n Greet
+   1. X and his crew meet the competition at a pre race event.
+5. SQ: First Interview
+   1. SC: X and his team (Adan, Min Seo, Moto, Rocko and Laika) are interviewed by the race media. 
+   2. SC: A young female reporter ambushes the group during the pre-race event. 
+   3. SC: She asks the silent and reserved X some basic questions enthusiastically for the cameras. 
+   4. 6. SQ: First Race 
+   1. SC: X enters the first race.
+   2. SC: Some racers start making odd mistakes and miscalculations that end up causing them their lives. 
+   3. SC: X gets 4th place while trying to survive. 
+
+
+Act 3:
+1. SQ: Second Race
+   1. SC: The second race starts.
+   2. SC: Two pilots crash into each other at the beginning of the race. 
+   3. SC: Even more pilots die. 
+   4. SC: The race ends with only 8 racers left.
+2. SQ: Journey to Atlas
+   1. SC: X and the crew go to Atlas, ET1’s counterweight. 
+3. SQ: Third Race
+   1. SC: The third race starts.
+   2. SC: 
+4. SQ: The Final Hack
+   1. X is succumbing to a stronger version of the manipulation lifestream hack.
+   2. Under the influence of the hack, X slows his craft down to start descending into the atmosphere. 
+   3. All X can do is scream and curse.
+   4. The antagonist technically wins the last race.
+5. SQ: Rentry
+   1. X burns through the densest part of the atmosphere, creating a cloud of plasma around him creating enough interference for X to break out of the hack.
+   2. X manually puts the craft in retrograde and fires his DFD at full thrust. 
+   3. As X plummets the plasma cuts into the cabin and sets him and the cabin on fire. 
+   4. The DFD is able to cut through the plasma and slow him down enough for a rough soft landing in the ocean causing X to pass out cold.
+6. SQ: Tartarus Run Aftermath
+   1. X wakes up in a hospital surrounded by Adan and Min Seo. 
+   2. Adan and Min explain what happened.
+   3. X realizes he can't move and looks down to his limbs. 
+   4. He finds metal limbs past his forearms and knees. 
+   5. Min hugs him in an attempt to calm him down. Adan tells him to breathe
+   6. X asks how long he's been out. Adan says it's been 6 months. 
+   7. Adan tells X there's one more thing. More important than the rest of what he's told him. 
+   8. X stares vacantly back before Adan says - The Enceladus is on its way back.

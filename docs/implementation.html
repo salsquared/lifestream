@@ -1,0 +1,1317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>LIFEstream Visualizer — Implementation Plan</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #14171c;
+    --panel: #1c2027;
+    --panel-2: #232831;
+    --ink: #e6e6e6;
+    --muted: #8a93a0;
+    --rule: #2a2f38;
+    --accent: #e07a6a;
+    --accent-2: #6ea8d4;
+    --accent-3: #a8c878;
+    --accent-4: #b89adf;
+    --accent-5: #e6c46a;
+    --code-bg: #232831;
+  }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    max-width: 940px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem 6rem;
+  }
+  h1 { font-size: 1.9rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.2rem; margin: 2.25rem 0 .65rem; border-bottom: 1px solid var(--rule); padding-bottom: .25rem; }
+  .lede { color: var(--muted); margin: 0 0 1.6rem; }
+  pre, code { font-family: "SF Mono", Menlo, monospace; font-size: 12.5px; }
+  code { background: var(--code-bg); padding: .05em .35em; border-radius: 3px; }
+  ul { padding-left: 1.4rem; }
+  a { color: var(--accent-2); }
+
+  .meta-grid { display: grid; grid-template-columns: 110px 1fr; gap: .35rem .9rem; font-size: .92rem; margin: 0; }
+  .meta-grid dt { color: var(--muted); }
+  .meta-grid dd { margin: 0; }
+
+  ol.resolved { padding-left: 1.4rem; }
+  ol.resolved li { margin: .25rem 0; }
+
+  .progress-row { display: flex; align-items: center; gap: 14px; margin: .25rem 0 .5rem; }
+  progress {
+    flex: 1; height: 10px; appearance: none;
+    border: 1px solid var(--rule); border-radius: 5px;
+    background: var(--panel);
+  }
+  progress::-webkit-progress-bar { background: var(--panel); border-radius: 5px; }
+  progress::-webkit-progress-value { background: var(--accent-3); border-radius: 5px; transition: width .25s; }
+  progress::-moz-progress-bar { background: var(--accent-3); border-radius: 5px; }
+  #progress-stats { color: var(--muted); font-variant-numeric: tabular-nums; font-size: .9rem; min-width: 110px; text-align: right; }
+
+  details.phase {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    margin: 10px 0;
+    overflow: hidden;
+  }
+  details.phase[open] { box-shadow: 0 0 0 1px var(--rule); }
+  details.phase > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 13px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    user-select: none;
+  }
+  details.phase > summary::-webkit-details-marker { display: none; }
+  details.phase > summary::before {
+    content: "▸";
+    color: var(--muted);
+    font-size: .8rem;
+    transition: transform .15s;
+    flex-shrink: 0;
+  }
+  details.phase[open] > summary::before { transform: rotate(90deg); }
+  .phase-id {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: .82rem;
+    color: var(--accent-5);
+    font-weight: 700;
+    background: var(--panel-2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .phase-title { flex: 1; font-weight: 600; font-size: 1.02rem; }
+  .phase-count {
+    font-family: "SF Mono", Menlo, monospace;
+    color: var(--muted);
+    font-size: .82rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .phase-count.complete { color: var(--accent-3); }
+  .phase-body {
+    padding: 4px 22px 16px;
+    border-top: 1px solid var(--rule);
+  }
+  .phase-goal {
+    color: var(--muted);
+    font-style: italic;
+    margin: 12px 0 12px;
+    font-size: .93rem;
+  }
+
+  ul.tasks { list-style: none; padding: 0; margin: 0; }
+  ul.tasks > li.task { margin: 2px 0; }
+  .task-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 3px 0;
+  }
+  .task-row > input[type="checkbox"] {
+    margin: 7px 0 0 0;
+    flex-shrink: 0;
+    accent-color: var(--accent-3);
+    width: 14px; height: 14px;
+    cursor: pointer;
+  }
+  .task-row > details { flex: 1; min-width: 0; }
+  .task-row > details > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 4px 0;
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+  }
+  .task-row > details > summary::-webkit-details-marker { display: none; }
+  .task-row > details > summary::before {
+    content: "▸";
+    color: var(--muted);
+    font-size: .68rem;
+    transition: transform .15s;
+    flex-shrink: 0;
+    position: relative;
+    top: -1px;
+  }
+  .task-row > details[open] > summary::before { transform: rotate(90deg); }
+  .task-id {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: .76rem;
+    color: var(--accent-2);
+    background: var(--panel-2);
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .task-title { font-size: .95rem; }
+  .task-row.done .task-title { text-decoration: line-through; color: var(--muted); }
+
+  .task-detail {
+    padding: 6px 0 10px 8px;
+    color: var(--muted);
+    font-size: .9rem;
+    margin-left: 6px;
+    border-left: 1px solid var(--rule);
+    padding-left: 14px;
+  }
+  .task-detail p { margin: 4px 0 8px; }
+
+  ul.subtasks { list-style: none; padding: 0; margin: 6px 0 0; }
+  ul.subtasks > li {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    padding: 2px 0;
+    color: var(--ink);
+    font-size: .9rem;
+  }
+  ul.subtasks > li > input[type="checkbox"] {
+    flex-shrink: 0;
+    accent-color: var(--accent-3);
+    width: 12px; height: 12px;
+    margin: 0;
+    cursor: pointer;
+    position: relative; top: 1px;
+  }
+  ul.subtasks > li.done .sub-title { text-decoration: line-through; color: var(--muted); }
+  .sub-id {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: .72rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .sub-title { flex: 1; }
+
+  .controls-row {
+    display: flex; gap: 10px; align-items: center;
+    font-size: .82rem; color: var(--muted);
+    margin: .25rem 0 1rem;
+  }
+  .controls-row button {
+    background: var(--panel); color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 4px;
+    padding: 3px 9px; cursor: pointer; font-size: .82rem;
+  }
+  .controls-row button:hover { color: var(--ink); border-color: var(--muted); }
+
+  .callout {
+    background: var(--panel);
+    border-left: 3px solid var(--accent-2);
+    padding: .65rem .9rem;
+    margin: 1rem 0;
+    font-size: .9rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>Visualizer — implementation plan</h1>
+<p class="lede">Phased build plan for the LIFEstream visualizer: one shell + four mounted views over one SQLite DB. Tasks indexed <code>PX.Y.Z</code>. Checkbox state saves to <code>localStorage</code> on this device. Companion to <a href="architecture.html">architecture.html</a>.</p>
+
+<h2>Stack (decided)</h2>
+<dl class="meta-grid">
+  <dt>Shell</dt>
+  <dd>Vite + React + TypeScript + React Router + <code>zustand</code> (shared selection / filters / active-save / registry cache).</dd>
+  <dt>3D views</dt>
+  <dd>Time Corridor + Tech Tree: <code>three</code> + <code>@react-three/fiber</code> + <code>@react-three/drei</code> + <code>@react-three/postprocessing</code>. <code>d3-scale</code> for time math, <code>d3-zoom</code> for trackpad input.</dd>
+  <dt>2D Map</dt>
+  <dd><code>d3-geo</code> + <code>topojson-client</code> → plain SVG <code>&lt;path&gt;</code> elements. No wrapper library. Any d3 projection swappable at runtime (Mercator / Equal-Earth / Natural Earth II / Robinson / orthographic / Winkel Tripel …).</dd>
+  <dt>2D Family Trees</dt>
+  <dd><code>@xyflow/react</code> (react-flow) for node-graph rendering + <code>d3-hierarchy</code> for initial tree layout.</dd>
+  <dt>Backend</dt>
+  <dd>Hono on Node (TypeScript). Serves <code>/api/*</code>.</dd>
+  <dt>Database</dt>
+  <dd>SQLite at <code>data/lifestream.db</code>, accessed via <code>drizzle-orm</code> + <code>better-sqlite3</code>. Migrations via <code>drizzle-kit</code>.</dd>
+  <dt>Tooling</dt>
+  <dd>npm workspaces (<code>client/</code>, <code>server/</code>, <code>shared/</code>), shared <code>tsconfig.base.json</code>, ESLint + Prettier at root.</dd>
+  <dt>Export</dt>
+  <dd>View state → a <code>Document</code> IR (block tree) → renderers. v1 ships an <b>HTML</b> renderer only (mermaid diagrams render via the CDN script; browser handles PDF via print). Markdown / PDF / Google Docs deferred. See architecture §7.</dd>
+</dl>
+
+<h2>Resolved decisions</h2>
+<ol class="resolved">
+  <li><b>Date precision.</b> Every event has a <code>when</code> datetime (date + time of day, single timezone). For fuzzy source dates ("Late 2071"), the event points at bracketing events via <code>range_before_event_id</code> / <code>range_after_event_id</code>; their <code>when</code> values bound the roll. Roller is its own utility (P8).</li>
+  <li><b>Rename chains.</b> One <code>Location</code> per place. A rename is an <code>event</code> located there, chained to the prior name via a <code>renames</code> relation. No <code>event.kind</code> field — dropped as redundant with category + tags.</li>
+  <li><b>Characters / Locations / Projects registry.</b> First-class tables alongside events. Lifespan / project dates are plain date columns (not event refs).</li>
+  <li><b>Era overlap.</b> Events whose date falls in both an era and an adjacent era appear in both — by design.</li>
+  <li><b>Relations.</b> Three types — <code>precedes</code> / <code>partOf</code> / <code>renames</code>. Stored once with a canonical direction; reverse views ("what succeeds X?") derived at query time. Tag overlap on create surfaces relation suggestions; user confirms.</li>
+  <li><b>One app, four views.</b> Unified shell — no separate apps. Existing <code>map/</code> rebuilt as a view; the standalone folder goes away.</li>
+  <li><b>Family Trees renderer.</b> <code>react-flow</code> — gets pan / zoom / drag / minimap / connect-to-edit for free.</li>
+  <li><b>Saves model.</b> Every editable row carries <code>save_id</code>. Active save lives in the shell. Forking copies all per-save rows (FKs into global tables — <code>tag</code>, <code>country</code> — copied verbatim, never remapped). Replaces <code>map/</code>'s localStorage "projects" concept across the whole app.</li>
+  <li><b>character_relation scope.</b> v1 family-only (<code>parent-of</code> / <code>sibling-of</code> / <code>spouse-of</code> / <code>clone-of</code>). Stored once; symmetric types (spouse / sibling) use canonical ordering. Other types add later without schema change.</li>
+  <li><b>Map renderer.</b> Plain <code>d3-geo</code> + SVG. <code>react-simple-maps</code> dropped. A 3D-globe view via <code>react-globe.gl</code> is parked as a future second map view (see architecture §9).</li>
+  <li><b>Selection model.</b> <code>useSelection</code> holds a single <code>primary</code> ({type, id}) plus a derived <code>glow</code> set; <code>setPrimary</code> recomputes glow by following FKs. No flat per-type id fields. (architecture §3.2)</li>
+  <li><b>Tags global.</b> <code>tag</code> has no <code>save_id</code> — one canonical list shared across saves so timeline membership rules stay stable across forks. <code>event_tag</code> assignments remain per-save.</li>
+  <li><b>URL state.</b> <code>primary</code> + active save + filters all serialize to URL search params at the shell level — shareable, reload-restorable. <code>glow</code> is derived on load.</li>
+  <li><b>Closed enums.</b> <code>event.category</code> ∈ {tech, political, military, disaster, scientific, cultural, personal, project}. <code>event.tech_lane</code> ∈ {energy, propulsion, computing, neural, biomedical, megastructure} (only when category=tech).</li>
+  <li><b>Groupings.</b> A <code>grouping</code> carries its members as a <code>country_ids</code> jsonb array (ISO-numeric) — no <code>grouping_country</code> join table.</li>
+  <li><b>Country key.</b> Canonical country id = <b>ISO 3166-1 numeric</b> (joins the topojson + UN WPP directly; alpha-3 kept only as a display column). Reverses the recent alpha-3 migration. (architecture §3.1)</li>
+  <li><b>Simulation chain.</b> The economic/epidemic pipelines live under <code>server/src/services/simulation/</code> (route <code>/api/simulation</code>), not <code>megacorp</code> — the megacorp list is just the chain's last step. Order: project per-country → BF sim → combine → classify. <b>Modular</b>: each stage is independently runnable (<code>simulate &lt;stage|all&gt;</code> / <code>POST /api/simulation/&lt;stage&gt;</code>), handing off only through persisted tables. A <b>harness</b> orchestrates the DAG and versions each <i>run</i> (<code>sim_run</code> ledger + <code>run_id</code> on outputs) — runs are a second version axis on top of saves. Held until open questions are resolved. (architecture §3, esp. §3.5)</li>
+</ol>
+
+<h2>Progress</h2>
+<div class="progress-row">
+  <progress id="progress-bar" value="0" max="100"></progress>
+  <span id="progress-stats">0 / 0 done</span>
+</div>
+<div class="controls-row">
+  <button id="expand-all">expand all</button>
+  <button id="collapse-all">collapse all</button>
+  <button id="reset-progress">reset progress</button>
+  <span style="margin-left:auto;">saved locally on this device</span>
+</div>
+
+<h2>Phases</h2>
+
+<!-- ========================= P0 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P0</span>
+    <span class="phase-title">Setup &amp; shell</span>
+    <span class="phase-count" data-phase="P0"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: <code>npm run dev</code> opens a Vite app with a top bar, four tab routes (Map / Corridor / Tech / Family) showing empty placeholders. Backend serves <code>/api/health</code>. <code>data/lifestream.db</code> exists with empty schema.</p>
+    <ul class="tasks">
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P0.1">
+        <details><summary><span class="task-id">P0.1</span><span class="task-title">Initialize monorepo</span></summary>
+        <div class="task-detail">
+          <p>Three workspaces: <code>client/</code> (browser app), <code>server/</code> (Hono API), <code>shared/</code> (types and pure utils both sides import).</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P0.1.1"><span class="sub-id">P0.1.1</span><span class="sub-title">Create <code>client/</code>, <code>server/</code>, <code>shared/</code> directories</span></li>
+            <li><input type="checkbox" data-task-id="P0.1.2"><span class="sub-id">P0.1.2</span><span class="sub-title">Root <code>package.json</code> with <code>workspaces</code> field</span></li>
+            <li><input type="checkbox" data-task-id="P0.1.3"><span class="sub-id">P0.1.3</span><span class="sub-title">Shared <code>tsconfig.base.json</code> (strict, ES2022); each workspace extends it</span></li>
+            <li><input type="checkbox" data-task-id="P0.1.4"><span class="sub-id">P0.1.4</span><span class="sub-title">ESLint + Prettier at root, single config</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P0.2">
+        <details><summary><span class="task-id">P0.2</span><span class="task-title">Scaffold the backend (Hono on Node)</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P0.2.1"><span class="sub-id">P0.2.1</span><span class="sub-title">Install <code>hono</code>, <code>@hono/node-server</code>, <code>tsx</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.2.2"><span class="sub-id">P0.2.2</span><span class="sub-title"><code>server/src/index.ts</code> with <code>/api/health → { ok: true }</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.2.3"><span class="sub-id">P0.2.3</span><span class="sub-title">CORS middleware for dev</span></li>
+            <li><input type="checkbox" data-task-id="P0.2.4"><span class="sub-id">P0.2.4</span><span class="sub-title">Route folder structure: <code>routes/{events,timelines,relations,map,registry,saves,simulation,export}.ts</code> as empty placeholders</span></li>
+            <li><input type="checkbox" data-task-id="P0.2.5"><span class="sub-id">P0.2.5</span><span class="sub-title"><code>server</code> dev script: <code>tsx watch src/index.ts</code></span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P0.3">
+        <details><summary><span class="task-id">P0.3</span><span class="task-title">Scaffold the frontend (Vite + React + TS)</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P0.3.1"><span class="sub-id">P0.3.1</span><span class="sub-title"><code>npm create vite@latest client -- --template react-ts</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.3.2"><span class="sub-id">P0.3.2</span><span class="sub-title">Install React Router, <code>zustand</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.3.3"><span class="sub-id">P0.3.3</span><span class="sub-title">Vite proxy: <code>/api/*</code> → <code>http://localhost:3001</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.3.4"><span class="sub-id">P0.3.4</span><span class="sub-title">Smoke check: client calls <code>/api/health</code> and renders the result</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P0.4">
+        <details><summary><span class="task-id">P0.4</span><span class="task-title">Install per-view rendering deps</span></summary>
+        <div class="task-detail">
+          <p>Install every renderer up front so each view stub can mount its actual canvas immediately when we get to it.</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P0.4.1"><span class="sub-id">P0.4.1</span><span class="sub-title">3D: <code>three</code>, <code>@react-three/fiber</code>, <code>@react-three/drei</code>, <code>@react-three/postprocessing</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.4.2"><span class="sub-id">P0.4.2</span><span class="sub-title">Map: <code>d3-geo</code>, <code>topojson-client</code> (no <code>react-simple-maps</code>)</span></li>
+            <li><input type="checkbox" data-task-id="P0.4.3"><span class="sub-id">P0.4.3</span><span class="sub-title">Family Trees: <code>@xyflow/react</code>, <code>d3-hierarchy</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.4.4"><span class="sub-id">P0.4.4</span><span class="sub-title">Shared utilities: <code>d3-scale</code>, <code>d3-zoom</code></span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P0.5">
+        <details><summary><span class="task-id">P0.5</span><span class="task-title">AppShell + router + view stubs</span></summary>
+        <div class="task-detail">
+          <p>Top bar with view tabs and (empty) save picker / command palette buttons. Four routes mount empty placeholder components.</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P0.5.1"><span class="sub-id">P0.5.1</span><span class="sub-title"><code>client/src/shell/AppShell.tsx</code> — top bar layout</span></li>
+            <li><input type="checkbox" data-task-id="P0.5.2"><span class="sub-id">P0.5.2</span><span class="sub-title">React Router with <code>/v/map</code>, <code>/v/timeline</code>, <code>/v/tech</code>, <code>/v/family</code> routes; default redirect to <code>/v/timeline</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.5.3"><span class="sub-id">P0.5.3</span><span class="sub-title">View-switcher tabs in top bar (active state highlighted)</span></li>
+            <li><input type="checkbox" data-task-id="P0.5.4"><span class="sub-id">P0.5.4</span><span class="sub-title">Empty placeholder components in <code>views/map/</code>, <code>views/timeline/</code>, <code>views/tech-tree/</code>, <code>views/family-trees/</code></span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P0.6">
+        <details><summary><span class="task-id">P0.6</span><span class="task-title">Shared zustand stores (selection / filters / save / registry)</span></summary>
+        <div class="task-detail">
+          <p>Empty stores in <code>shell/stores/</code> that the views will hook into starting in P3. Selection + filters as documented in <a href="architecture.html">architecture.html</a> §3.2.</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P0.6.1"><span class="sub-id">P0.6.1</span><span class="sub-title"><code>stores/selection.ts</code> — <code>primary: {type, id} | null</code> + derived <code>glow</code> set; <code>setPrimary()</code> recomputes glow by FK-following</span></li>
+            <li><input type="checkbox" data-task-id="P0.6.2"><span class="sub-id">P0.6.2</span><span class="sub-title"><code>stores/filters.ts</code> — categories, tags, search, timeRange</span></li>
+            <li><input type="checkbox" data-task-id="P0.6.3"><span class="sub-id">P0.6.3</span><span class="sub-title"><code>stores/save.ts</code> — active save id (placeholder until P2)</span></li>
+            <li><input type="checkbox" data-task-id="P0.6.4"><span class="sub-id">P0.6.4</span><span class="sub-title"><code>stores/registry.ts</code> — characters / locations / projects cache (loaded once per save)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P0.7">
+        <details><summary><span class="task-id">P0.7</span><span class="task-title">SQLite + Drizzle (empty schema)</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P0.7.1"><span class="sub-id">P0.7.1</span><span class="sub-title">Install <code>drizzle-orm</code>, <code>drizzle-kit</code>, <code>better-sqlite3</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.7.2"><span class="sub-id">P0.7.2</span><span class="sub-title"><code>drizzle.config.ts</code> pointing at <code>../data/lifestream.db</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.7.3"><span class="sub-id">P0.7.3</span><span class="sub-title">Gitignore <code>data/*.db</code>, <code>data/*.db-journal</code></span></li>
+            <li><input type="checkbox" data-task-id="P0.7.4"><span class="sub-id">P0.7.4</span><span class="sub-title">Root scripts: <code>db:generate</code>, <code>db:migrate</code>, <code>db:studio</code>, <code>db:reset</code>, <code>db:seed</code></span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P0.8">
+        <details><summary><span class="task-id">P0.8</span><span class="task-title">Dev orchestration — one command starts everything</span></summary>
+        <div class="task-detail">
+          <p>Use <code>concurrently</code> so root <code>npm run dev</code> starts the server, the client, and (optionally) <code>drizzle-kit studio</code>, with colored prefixed logs.</p>
+        </div></details>
+      </div></li>
+
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P1 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P1</span>
+    <span class="phase-title">Data layer — full schema, seed, read APIs</span>
+    <span class="phase-count" data-phase="P1"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: every table from <a href="architecture.html">architecture.html</a> §2 exists. The Bible's World Timeline and the existing <code>data/map_saves/lifestream_map_v1.json</code> are both seeded. Reading any timeline through <code>/api/timelines/:id/resolve</code> returns the correct event list. Reading the map returns the same groupings the current <code>map/</code> sees.</p>
+    <ul class="tasks">
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.1">
+        <details><summary><span class="task-id">P1.1</span><span class="task-title">Schema: core + saves</span></summary>
+        <div class="task-detail">
+          <p>The <code>save</code> table is foundational — every per-save row references it. Implementing this first prevents a painful migration later.</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P1.1.1"><span class="sub-id">P1.1.1</span><span class="sub-title"><code>save</code>: id, name, description, created_at, parent_save_id?, is_archived</span></li>
+            <li><input type="checkbox" data-task-id="P1.1.2"><span class="sub-id">P1.1.2</span><span class="sub-title"><code>tag</code> (<b>global</b> — no save_id: id, name, color, description?), <code>event_tag</code> join (per-save via event_id)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.2">
+        <details><summary><span class="task-id">P1.2</span><span class="task-title">Schema: registry (character / location / project / character_relation)</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P1.2.1"><span class="sub-id">P1.2.1</span><span class="sub-title"><code>character</code>: id, save_id, name, lifespan_start?, lifespan_end?, role, bio?, portrait_path?</span></li>
+            <li><input type="checkbox" data-task-id="P1.2.2"><span class="sub-id">P1.2.2</span><span class="sub-title"><code>location</code>: id, save_id, name, description?, lat?, lng?, map_ref_kind? ('country'|'grouping'), map_ref_value?</span></li>
+            <li><input type="checkbox" data-task-id="P1.2.3"><span class="sub-id">P1.2.3</span><span class="sub-title"><code>project</code>: id, save_id, name, description, date_start?, date_end?, status (planned/active/succeeded/failed/cancelled), lead_character_id?</span></li>
+            <li><input type="checkbox" data-task-id="P1.2.4"><span class="sub-id">P1.2.4</span><span class="sub-title"><code>character_relation</code>: id, save_id, from_character_id, to_character_id, type (family-only enum for v1). Stored once; symmetric types use canonical ordering (lower id as <code>from</code>)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.3">
+        <details><summary><span class="task-id">P1.3</span><span class="task-title">Schema: timeline (events / timelines / relations)</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P1.3.1"><span class="sub-id">P1.3.1</span><span class="sub-title"><code>event</code>: id, save_id, title, description, when, range_before_event_id?, range_after_event_id?, category (closed enum), tech_lane? (only when category=tech), location_id?, project_id?</span></li>
+            <li><input type="checkbox" data-task-id="P1.3.2"><span class="sub-id">P1.3.2</span><span class="sub-title"><code>timeline</code>: id, save_id, name, description?, membership_rules? (jsonb: {byTag?, byCategory?, byTimeRange?, byLocation?}). Display fields (color, default viewport) as UI extras.</span></li>
+            <li><input type="checkbox" data-task-id="P1.3.3"><span class="sub-id">P1.3.3</span><span class="sub-title">Join tables: <code>timeline_parent</code> (DAG edges), <code>timeline_member</code> (manual roster), <code>event_actor</code> (event ↔ character, with <code>role</code> text field)</span></li>
+            <li><input type="checkbox" data-task-id="P1.3.4"><span class="sub-id">P1.3.4</span><span class="sub-title"><code>relation</code>: id, save_id, from_event_id, to_event_id, type (<code>precedes</code> / <code>partOf</code> / <code>renames</code>), note. Canonical direction; reverse derived.</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.4">
+        <details><summary><span class="task-id">P1.4</span><span class="task-title">Schema: map (country / overrides / groupings / horizontals)</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P1.4.1"><span class="sub-id">P1.4.1</span><span class="sub-title"><code>country</code>: iso_numeric PK, alpha3 (display/debug), name. <b>Global, not per-save.</b></span></li>
+            <li><input type="checkbox" data-task-id="P1.4.2"><span class="sub-id">P1.4.2</span><span class="sub-title"><code>country_override</code>: save_id + iso_numeric PK, name (per-save rename)</span></li>
+            <li><input type="checkbox" data-task-id="P1.4.3"><span class="sub-id">P1.4.3</span><span class="sub-title"><code>grouping</code>: id, save_id, name, color, country_ids (jsonb array of ISO-numeric) — no join table</span></li>
+            <li><input type="checkbox" data-task-id="P1.4.4"><span class="sub-id">P1.4.4</span><span class="sub-title"><code>nation_horizontal</code>: save_id + grouping_id PK, horizontal, score, computed_at (populated later by the simulation chain — architecture §3)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.5">
+        <details><summary><span class="task-id">P1.5</span><span class="task-title">Drizzle migration #1 + shared types</span></summary>
+        <div class="task-detail">
+          <p>Run <code>drizzle-kit generate</code> to emit the first migration. Export inferred TS types into <code>shared/types/</code> so the client and any future CLI reuse them.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.6">
+        <details><summary><span class="task-id">P1.6</span><span class="task-title">Seed countries (global, real-world)</span></summary>
+        <div class="task-detail">
+          <p>One-time import of all countries keyed by <b>ISO-numeric</b>, with alpha-3 as a display column + default names, from <code>data/iso-numeric-to-alpha3.json</code> (already in repo — it's exactly the numeric↔alpha-3 lookup we need).</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.7">
+        <details><summary><span class="task-id">P1.7</span><span class="task-title">Seed the default save + map data</span></summary>
+        <div class="task-detail">
+          <p>Create save <code>v1</code>. Import existing <code>data/map_saves/lifestream_map_v1.json</code> into <code>grouping</code> + <code>country_override</code> under this save.</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P1.7.1"><span class="sub-id">P1.7.1</span><span class="sub-title">Insert <code>save</code> row "v1 (Bible canon)"</span></li>
+            <li><input type="checkbox" data-task-id="P1.7.2"><span class="sub-id">P1.7.2</span><span class="sub-title">Importer reads the JSON's <code>allGroups</code> → one <code>grouping</code> row per nation; maps each <code>countries[]</code> code to ISO-numeric → <code>country_ids</code></span></li>
+            <li><input type="checkbox" data-task-id="P1.7.3"><span class="sub-id">P1.7.3</span><span class="sub-title">Importer reads <code>countryNames</code> → <code>country_override</code></span></li>
+            <li><input type="checkbox" data-task-id="P1.7.4"><span class="sub-id">P1.7.4</span><span class="sub-title">Validate: row counts match the JSON; unified-nation membership round-trips</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.8">
+        <details><summary><span class="task-id">P1.8</span><span class="task-title">Seed registry from Bible</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P1.8.1"><span class="sub-id">P1.8.1</span><span class="sub-title">Characters: Lazaro, Ines, Adan, X, Min-Seo, Bruce Deng, Atticus Pallas, Deimos Vane, Dal, Kim Jung Un, Moto, Max Lauda, Rocko, Laika</span></li>
+            <li><input type="checkbox" data-task-id="P1.8.2"><span class="sub-id">P1.8.2</span><span class="sub-title">Locations: Disaster Ridge (one entity covering its rename chain), Mojave / New Mojave, LA / Neo LA, Gran Sasso, Kauai lab, Hoover Dam, ET1, Port Charon, Atlas, Erebus, Etna, Chrysus</span></li>
+            <li><input type="checkbox" data-task-id="P1.8.3"><span class="sub-id">P1.8.3</span><span class="sub-title">Projects: NSPD-51A, Xero, Athena, Aurum, Afterlife</span></li>
+            <li><input type="checkbox" data-task-id="P1.8.4"><span class="sub-id">P1.8.4</span><span class="sub-title">Family relations (Castaneda: Lazaro-Ines spouse, parent-of Adan + X, Adan-X siblings; Pallas: Atticus clone-of Deimos)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.9">
+        <details><summary><span class="task-id">P1.9</span><span class="task-title">Seed events from Bible's World Timeline</span></summary>
+        <div class="task-detail">
+          <p>~50 events from <code>data/story_docs/LIFEstream Bible.txt</code> (line 886+), up to the 2084-04-25 cutoff. Fuzzy dates (e.g. <i>Late 2071</i>) set <code>range_before_event_id</code> / <code>range_after_event_id</code> to bracketing events and roll <code>when</code> via the P8 utility; hard-code reasonable picks for the seed.</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P1.9.1"><span class="sub-id">P1.9.1</span><span class="sub-title">Pre-Big One (~6 events)</span></li>
+            <li><input type="checkbox" data-task-id="P1.9.2"><span class="sub-id">P1.9.2</span><span class="sub-title">NK War (~5 events)</span></li>
+            <li><input type="checkbox" data-task-id="P1.9.3"><span class="sub-id">P1.9.3</span><span class="sub-title">BF Era (~15 events)</span></li>
+            <li><input type="checkbox" data-task-id="P1.9.4"><span class="sub-id">P1.9.4</span><span class="sub-title">Reconstruction (~25 events through 2084-04-25)</span></li>
+            <li><input type="checkbox" data-task-id="P1.9.5"><span class="sub-id">P1.9.5</span><span class="sub-title">For each event, set <code>category</code>, <code>location_id</code>, <code>project_id</code>, <code>event_actor</code> rows (with <code>role</code>), <code>tech_lane</code> for tech events</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.10">
+        <details><summary><span class="task-id">P1.10</span><span class="task-title">Seed timelines + relations</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P1.10.1"><span class="sub-id">P1.10.1</span><span class="sub-title">Eras as time-range timelines: Pre-Big One, NK War, BF Era, Reconstruction</span></li>
+            <li><input type="checkbox" data-task-id="P1.10.2"><span class="sub-id">P1.10.2</span><span class="sub-title">Project threads: Xero, Athena, Aurum, Afterlife, NSPD-51A</span></li>
+            <li><input type="checkbox" data-task-id="P1.10.3"><span class="sub-id">P1.10.3</span><span class="sub-title">Tech threads: Propulsion, Neucomp evolution, HoloVision → LIFEstream</span></li>
+            <li><input type="checkbox" data-task-id="P1.10.4"><span class="sub-id">P1.10.4</span><span class="sub-title">Build threads: ET1 construction, Megablocks, Disaster Ridge</span></li>
+            <li><input type="checkbox" data-task-id="P1.10.5"><span class="sub-id">P1.10.5</span><span class="sub-title">Character threads: Lazaro's life, X's life, Ines's life, Adan's life</span></li>
+            <li><input type="checkbox" data-task-id="P1.10.6"><span class="sub-id">P1.10.6</span><span class="sub-title">Relations: <code>precedes</code> chains (Li-6 → fusion → DFD → ET1; NK bomb → Sour Rain; NSPD-51 → 51A; Athena → Aurum), <code>renames</code> (Disaster Ridge chain), <code>partOf</code> (events → project milestones)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.11">
+        <details><summary><span class="task-id">P1.11</span><span class="task-title">Implement <code>resolve(timeline)</code> in the backend</span></summary>
+        <div class="task-detail">
+          <p>Resolves <i>membership only</i> — unions <code>manual</code> roster with <code>membership_rules</code> (byTag / byCategory / byTimeRange / byLocation) plus recursive child timelines (DAG, not tree). Live <code>useFilters</code> is <b>not</b> part of resolve — it's a separate client-side <code>applyFilters()</code> pass over the resolved set (keeps the memo key stable; see architecture §2.6).</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P1.11.1"><span class="sub-id">P1.11.1</span><span class="sub-title">In-memory cache keyed by <code>(save_id, timeline_id)</code> only, invalidated on any per-save write</span></li>
+            <li><input type="checkbox" data-task-id="P1.11.2"><span class="sub-id">P1.11.2</span><span class="sub-title">Reverse index <code>eventId → Set&lt;timelineId&gt;</code> for "also in"</span></li>
+            <li><input type="checkbox" data-task-id="P1.11.3"><span class="sub-id">P1.11.3</span><span class="sub-title">Cycle detection on the DAG (also rejected at write time)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P1.12">
+        <details><summary><span class="task-id">P1.12</span><span class="task-title">Read APIs (everything views need)</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P1.12.1"><span class="sub-id">P1.12.1</span><span class="sub-title"><code>GET /api/events</code>, <code>GET /api/events/:id</code> (includes "also in")</span></li>
+            <li><input type="checkbox" data-task-id="P1.12.2"><span class="sub-id">P1.12.2</span><span class="sub-title"><code>GET /api/timelines</code>, <code>GET /api/timelines/:id</code>, <code>GET /api/timelines/:id/resolve</code></span></li>
+            <li><input type="checkbox" data-task-id="P1.12.3"><span class="sub-id">P1.12.3</span><span class="sub-title"><code>GET /api/relations?event=:id</code> with direction filter</span></li>
+            <li><input type="checkbox" data-task-id="P1.12.4"><span class="sub-id">P1.12.4</span><span class="sub-title"><code>GET /api/registry</code> (characters, locations, projects, character_relations)</span></li>
+            <li><input type="checkbox" data-task-id="P1.12.5"><span class="sub-id">P1.12.5</span><span class="sub-title"><code>GET /api/map/countries</code>, <code>GET /api/map/groupings</code> (current save's view)</span></li>
+            <li><input type="checkbox" data-task-id="P1.12.6"><span class="sub-id">P1.12.6</span><span class="sub-title">Typed fetch client in <code>client/src/api/</code> sharing types from <code>shared/</code></span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P2 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P2</span>
+    <span class="phase-title">Saves UI &amp; active-save plumbing</span>
+    <span class="phase-count" data-phase="P2"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: a save picker in the top bar lets you switch / fork / rename / archive saves. Every API call carries the active <code>save_id</code>; switching saves reloads the views without a hard refresh.</p>
+    <ul class="tasks">
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P2.1">
+        <details><summary><span class="task-id">P2.1</span><span class="task-title">Save mutation endpoints</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P2.1.1"><span class="sub-id">P2.1.1</span><span class="sub-title"><code>POST /api/saves</code> — create blank</span></li>
+            <li><input type="checkbox" data-task-id="P2.1.2"><span class="sub-id">P2.1.2</span><span class="sub-title"><code>POST /api/saves/:id/fork</code> — copy all per-save rows under a new save id</span></li>
+            <li><input type="checkbox" data-task-id="P2.1.3"><span class="sub-id">P2.1.3</span><span class="sub-title"><code>PATCH /api/saves/:id</code> — rename / edit description</span></li>
+            <li><input type="checkbox" data-task-id="P2.1.4"><span class="sub-id">P2.1.4</span><span class="sub-title"><code>DELETE /api/saves/:id</code> — soft delete (<code>is_archived</code>)</span></li>
+            <li><input type="checkbox" data-task-id="P2.1.5"><span class="sub-id">P2.1.5</span><span class="sub-title"><code>POST /api/saves/:id/dump</code> &amp; <code>POST /api/saves/import</code> — JSON dump and load (distinct from <code>/api/export</code> in P12, which renders documents)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P2.2">
+        <details><summary><span class="task-id">P2.2</span><span class="task-title">Server-side fork procedure</span></summary>
+        <div class="task-detail">
+          <p>Single transaction. For each per-save table, <code>INSERT INTO ... SELECT ...</code> rewriting <code>save_id</code> and any <b>per-save→per-save</b> foreign keys (event ids, character ids, <code>range_*_event_id</code>, <code>relation</code> self-refs, etc.) via an id-remapping table built as we go. FKs into <b>global</b> tables are copied verbatim — <code>event_tag.tag_id</code> → <code>tag</code>, grouping <code>country_ids</code> → <code>country</code> — never remapped.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P2.3">
+        <details><summary><span class="task-id">P2.3</span><span class="task-title">Active-save plumbing on the client</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P2.3.1"><span class="sub-id">P2.3.1</span><span class="sub-title">Active save id in <code>stores/save.ts</code>; persisted to <code>localStorage</code></span></li>
+            <li><input type="checkbox" data-task-id="P2.3.2"><span class="sub-id">P2.3.2</span><span class="sub-title">API client wrapper appends <code>?save=:id</code> to every request</span></li>
+            <li><input type="checkbox" data-task-id="P2.3.3"><span class="sub-id">P2.3.3</span><span class="sub-title">On save switch, invalidate all query caches; views re-fetch</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P2.4">
+        <details><summary><span class="task-id">P2.4</span><span class="task-title">Save picker UI</span></summary>
+        <div class="task-detail">
+          <p>Top-bar dropdown showing current save name. Actions: switch, fork (with name prompt), rename, archive, export, import.</p>
+        </div></details>
+      </div></li>
+
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P3 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P3</span>
+    <span class="phase-title">World Map view (d3-geo + SVG, fresh build)</span>
+    <span class="phase-count" data-phase="P3"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: open <code>/v/map</code> and see the world rendered via <code>d3-geo</code>. Click countries to group them; pick a projection from a sidebar dropdown. Reads/writes go through the API; the active save scopes everything. Replaces the old <code>map/</code> folder entirely.</p>
+    <ul class="tasks">
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P3.1">
+        <details><summary><span class="task-id">P3.1</span><span class="task-title">Carry over the topojson data file</span></summary>
+        <div class="task-detail">
+          <p>Move the world borders topojson (e.g. <code>world-110m</code> or <code>countries-50m</code>) from the existing <code>map/public/</code> into <code>client/public/topojson/</code>. Drop any other react-simple-maps-specific assets.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P3.2">
+        <details><summary><span class="task-id">P3.2</span><span class="task-title">d3-geo SVG renderer</span></summary>
+        <div class="task-detail">
+          <p>Core map component. Loads topojson, converts to GeoJSON, computes paths, emits SVG. No wrapper library.</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P3.2.1"><span class="sub-id">P3.2.1</span><span class="sub-title">Load topojson via <code>fetch</code>; convert features with <code>topojson-client.feature()</code></span></li>
+            <li><input type="checkbox" data-task-id="P3.2.2"><span class="sub-id">P3.2.2</span><span class="sub-title">Projection registry: Equal-Earth (default), Mercator, Natural Earth II, Robinson, Winkel Tripel, orthographic (2D globe look)</span></li>
+            <li><input type="checkbox" data-task-id="P3.2.3"><span class="sub-id">P3.2.3</span><span class="sub-title"><code>d3.geoPath(projection)</code> generates <code>d</code> strings; map features into <code>&lt;path&gt;</code> elements</span></li>
+            <li><input type="checkbox" data-task-id="P3.2.4"><span class="sub-id">P3.2.4</span><span class="sub-title">Sphere + graticule layers behind the countries for orthographic projection</span></li>
+            <li><input type="checkbox" data-task-id="P3.2.5"><span class="sub-id">P3.2.5</span><span class="sub-title">Zoom + pan via <code>d3-zoom</code> applied to a wrapping <code>&lt;g transform&gt;</code></span></li>
+            <li><input type="checkbox" data-task-id="P3.2.6"><span class="sub-id">P3.2.6</span><span class="sub-title">Drag-to-rotate on orthographic (clamp latitude, free longitude)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P3.3">
+        <details><summary><span class="task-id">P3.3</span><span class="task-title">Country interactions</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P3.3.1"><span class="sub-id">P3.3.1</span><span class="sub-title">Hover state — outline + tooltip with country name (uses <code>country_override</code> if set, else <code>country.default_name</code>)</span></li>
+            <li><input type="checkbox" data-task-id="P3.3.2"><span class="sub-id">P3.3.2</span><span class="sub-title">Click — toggles country into the currently-editing grouping (or <code>setPrimary({type:'country', id})</code> when no grouping is being edited)</span></li>
+            <li><input type="checkbox" data-task-id="P3.3.3"><span class="sub-id">P3.3.3</span><span class="sub-title">Right-click — rename country (writes a <code>country_override</code> for the active save)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P3.4">
+        <details><summary><span class="task-id">P3.4</span><span class="task-title">Sidebar: groupings UI</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P3.4.1"><span class="sub-id">P3.4.1</span><span class="sub-title">List of groupings for active save, with color swatches</span></li>
+            <li><input type="checkbox" data-task-id="P3.4.2"><span class="sub-id">P3.4.2</span><span class="sub-title">Create new grouping (name + color)</span></li>
+            <li><input type="checkbox" data-task-id="P3.4.3"><span class="sub-id">P3.4.3</span><span class="sub-title">"Edit this grouping" toggle — clicks on the map mutate its country list</span></li>
+            <li><input type="checkbox" data-task-id="P3.4.4"><span class="sub-id">P3.4.4</span><span class="sub-title">Rename / recolor / delete grouping</span></li>
+            <li><input type="checkbox" data-task-id="P3.4.5"><span class="sub-id">P3.4.5</span><span class="sub-title">Projection picker at the top of the sidebar</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P3.5">
+        <details><summary><span class="task-id">P3.5</span><span class="task-title">Wire to API reads</span></summary>
+        <div class="task-detail">
+          <p>On mount, fetch <code>/api/map/countries</code> (default names) and <code>/api/map/groupings</code> (active save's grouping list + member countries + per-save renames).</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P3.6">
+        <details><summary><span class="task-id">P3.6</span><span class="task-title">Map mutation endpoints + wiring</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P3.6.1"><span class="sub-id">P3.6.1</span><span class="sub-title"><code>POST /api/groupings</code>, <code>PATCH /api/groupings/:id</code>, <code>DELETE /api/groupings/:id</code></span></li>
+            <li><input type="checkbox" data-task-id="P3.6.2"><span class="sub-id">P3.6.2</span><span class="sub-title"><code>PUT /api/groupings/:id/countries</code> — replace membership in one call</span></li>
+            <li><input type="checkbox" data-task-id="P3.6.3"><span class="sub-id">P3.6.3</span><span class="sub-title"><code>POST /api/country-overrides</code> — per-save country rename</span></li>
+            <li><input type="checkbox" data-task-id="P3.6.4"><span class="sub-id">P3.6.4</span><span class="sub-title">Optimistic UI: click flips immediately; rollback on API error</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P3.7">
+        <details><summary><span class="task-id">P3.7</span><span class="task-title">Cross-link out (Map → store)</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P3.7.1"><span class="sub-id">P3.7.1</span><span class="sub-title">Click country (when not editing a grouping) → <code>setPrimary({type:'country', id})</code></span></li>
+            <li><input type="checkbox" data-task-id="P3.7.2"><span class="sub-id">P3.7.2</span><span class="sub-title">Click grouping label in the sidebar → <code>setPrimary({type:'grouping', id})</code></span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P3.8">
+        <details><summary><span class="task-id">P3.8</span><span class="task-title">Cross-link in (store → Map)</span></summary>
+        <div class="task-detail">
+          <p>Subscribe to <code>useSelection.glow</code>. Glow any country/grouping whose id is in <code>glow.countryIds</code> / <code>glow.groupingIds</code> — these are derived upstream when a located event or a character is the primary (via <code>event_actor</code> + <code>event.location_id</code> + <code>location.map_ref_*</code>).</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P3.9">
+        <details><summary><span class="task-id">P3.9</span><span class="task-title">Remove the old standalone <code>map/</code> folder</span></summary>
+        <div class="task-detail">
+          <p>Once the new view is verified working — including saves, projections, and parity with the existing v1 map data — delete <code>map/</code> from the root. Update any remaining doc references.</p>
+        </div></details>
+      </div></li>
+
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P4 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P4</span>
+    <span class="phase-title">Time Corridor — events on a 3D time axis (first visual)</span>
+    <span class="phase-count" data-phase="P4"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: open <code>/v/timeline</code> and see all seeded events as glowing nodes along a 3D time axis. Horizontal trackpad scroll pans the camera along time. No depth strata yet — that's P5.</p>
+    <ul class="tasks">
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P4.1">
+        <details><summary><span class="task-id">P4.1</span><span class="task-title">Fetch events for the world timeline</span></summary>
+        <div class="task-detail">
+          <p><code>GET /api/timelines/tl_world/resolve</code>. Cache in the events store; selector hooks for the view.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P4.2">
+        <details><summary><span class="task-id">P4.2</span><span class="task-title">Time scale + 3D layout</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P4.2.1"><span class="sub-id">P4.2.1</span><span class="sub-title"><code>d3.scaleTime()</code> from earliest seeded event to <code>2084-04-25</code> → world x</span></li>
+            <li><input type="checkbox" data-task-id="P4.2.2"><span class="sub-id">P4.2.2</span><span class="sub-title">Per-event 3D position: <code>[xScale(when), yJitterByCategory, 0]</code> (depth=0 for now)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P4.3">
+        <details><summary><span class="task-id">P4.3</span><span class="task-title"><code>EventNode</code> component (shared with Tech Tree)</span></summary>
+        <div class="task-detail">
+          <p>Place this in <code>views/_shared/</code> since the Tech Tree will reuse it in P10.</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P4.3.1"><span class="sub-id">P4.3.1</span><span class="sub-title">Sphere + emissive material</span></li>
+            <li><input type="checkbox" data-task-id="P4.3.2"><span class="sub-id">P4.3.2</span><span class="sub-title">Drei <code>&lt;Text&gt;</code> label (billboarded)</span></li>
+            <li><input type="checkbox" data-task-id="P4.3.3"><span class="sub-id">P4.3.3</span><span class="sub-title">Hover scale tween via <code>onPointerOver</code></span></li>
+            <li><input type="checkbox" data-task-id="P4.3.4"><span class="sub-id">P4.3.4</span><span class="sub-title">Category color palette in <code>shared/colors.ts</code></span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P4.4">
+        <details><summary><span class="task-id">P4.4</span><span class="task-title">Scene chrome (camera, bloom, starfield)</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P4.4.1"><span class="sub-id">P4.4.1</span><span class="sub-title">PerspectiveCamera looking down the time axis</span></li>
+            <li><input type="checkbox" data-task-id="P4.4.2"><span class="sub-id">P4.4.2</span><span class="sub-title"><code>EffectComposer</code> + <code>Bloom</code> tuned</span></li>
+            <li><input type="checkbox" data-task-id="P4.4.3"><span class="sub-id">P4.4.3</span><span class="sub-title">Drei <code>&lt;Stars&gt;</code> backdrop</span></li>
+            <li><input type="checkbox" data-task-id="P4.4.4"><span class="sub-id">P4.4.4</span><span class="sub-title">Soft ambient + rim light</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P4.5">
+        <details><summary><span class="task-id">P4.5</span><span class="task-title">Pan input (horizontal scroll)</span></summary>
+        <div class="task-detail">
+          <p>Custom controls — not OrbitControls. <code>d3-zoom</code> reads wheel/touchpad; we feed deltas into <code>camera.x</code> with inertia. Clamp to time bounds.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P4.6">
+        <details><summary><span class="task-id">P4.6</span><span class="task-title">HUD overlay (current date, cutoff marker)</span></summary>
+        <div class="task-detail">
+          <p>Top center: current camera date. "2084-04-25 cutoff" warning fades in when within 6 months.</p>
+        </div></details>
+      </div></li>
+
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P5 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P5</span>
+    <span class="phase-title">Time Corridor — multi-stratum (depth + parallax)</span>
+    <span class="phase-count" data-phase="P5"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: vertical scroll moves the camera through depth. Eras / threads / clusters / events live on different Z layers; only the focused stratum is bright. Per-stratum time scales give parallax for free.</p>
+    <ul class="tasks">
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P5.1"><details><summary><span class="task-id">P5.1</span><span class="task-title">Define stratum Z constants (era / thread / cluster / event)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P5.2"><details><summary><span class="task-id">P5.2</span><span class="task-title">Render era slabs (translucent planes at z = era)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P5.3"><details><summary><span class="task-id">P5.3</span><span class="task-title">Render thread bars at z = thread</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P5.4"><details><summary><span class="task-id">P5.4</span><span class="task-title">Derive cluster nodes (group events by tag + time proximity)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P5.5"><details><summary><span class="task-id">P5.5</span><span class="task-title">Stratum cross-fade by camera Z</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P5.6"><details><summary><span class="task-id">P5.6</span><span class="task-title">Per-stratum time scale (parallax)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P5.7"><details><summary><span class="task-id">P5.7</span><span class="task-title">Vertical scroll → camera Z (with snap-to-stratum)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P5.8"><details><summary><span class="task-id">P5.8</span><span class="task-title">Right-edge depth gauge HUD</span></summary><div class="task-detail"></div></details></div></li>
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P6 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P6</span>
+    <span class="phase-title">Time Corridor — focus &amp; cross-jump</span>
+    <span class="phase-count" data-phase="P6"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: click an event → expand inline detail panel. Click an "also in" pill → camera transitions to the new root timeline. Back/forward stack works.</p>
+    <ul class="tasks">
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P6.1"><details><summary><span class="task-id">P6.1</span><span class="task-title">Focus state — <code>setPrimary({type:'event', id})</code>; glow (location, actors, project, tags) derives automatically</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P6.2"><details><summary><span class="task-id">P6.2</span><span class="task-title">Inline detail panel via drei <code>&lt;Html&gt;</code></span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P6.3"><details><summary><span class="task-id">P6.3</span><span class="task-title">"Also in" pills (from reverse index)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P6.4"><details><summary><span class="task-id">P6.4</span><span class="task-title">Smooth camera transitions (~700ms ease-in-out)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P6.5"><details><summary><span class="task-id">P6.5</span><span class="task-title">Viewport stack (back/forward + keyboard)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P6.6"><details><summary><span class="task-id">P6.6</span><span class="task-title">Breadcrumb HUD (top-left, clickable segments)</span></summary><div class="task-detail"></div></details></div></li>
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P7 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P7</span>
+    <span class="phase-title">Time Corridor — relations &amp; filters</span>
+    <span class="phase-count" data-phase="P7"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: focused event glows + drawn arcs to related events; category chips filter the visible set; viewport + filters reproducible via URL hash.</p>
+    <ul class="tasks">
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P7.1"><details><summary><span class="task-id">P7.1</span><span class="task-title">Fetch relations for focused event; render drei <code>&lt;Line&gt;</code> arcs</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P7.2"><details><summary><span class="task-id">P7.2</span><span class="task-title">Relation-type styling (color + dash per type)</span></summary><div class="task-detail">
+        <ul class="subtasks">
+          <li><input type="checkbox" data-task-id="P7.2.1"><span class="sub-id">P7.2.1</span><span class="sub-title"><code>precedes</code> → blue arrowed (the enablement/succession edge)</span></li>
+          <li><input type="checkbox" data-task-id="P7.2.2"><span class="sub-id">P7.2.2</span><span class="sub-title"><code>partOf</code> → gray thin</span></li>
+          <li><input type="checkbox" data-task-id="P7.2.3"><span class="sub-id">P7.2.3</span><span class="sub-title"><code>renames</code> → yellow with location label</span></li>
+        </ul>
+      </div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P7.3"><details><summary><span class="task-id">P7.3</span><span class="task-title">Animated draw-on-focus (dash-offset tween ~400ms)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P7.4"><details><summary><span class="task-id">P7.4</span><span class="task-title">Category filter chips (HUD); faded-not-removed for filtered-out events</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P7.5"><details><summary><span class="task-id">P7.5</span><span class="task-title">Persist filters via the shell URL sync (search params)</span></summary><div class="task-detail"><p>Filters + <code>primary</code> + active save serialize to URL search params at the shell level (architecture §3.3), so a shared link reopens the same filtered selection. Corridor-local viewport (camera position) stays in the per-view back/forward stack from P6.5.</p></div></details></div></li>
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P8 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P8</span>
+    <span class="phase-title">Random date utility</span>
+    <span class="phase-count" data-phase="P8"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: a small utility for picking a uniform random datetime in a given range. Reusable from the editor (P9) and as a standalone route.</p>
+    <ul class="tasks">
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P8.1"><details><summary><span class="task-id">P8.1</span><span class="task-title">Roller function in <code>shared/rollDate.ts</code></span></summary><div class="task-detail"><p><code>rollDate(start, end) → Date</code>. Uniform across [start, end] inclusive; time-of-day clamped 00:01–23:59. Pure, seedable for tests.</p></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P8.2"><details><summary><span class="task-id">P8.2</span><span class="task-title">Range picker UI (start + end inputs, presets row)</span></summary><div class="task-detail"><p>Preset row: "January 2042", "Late 2071", "Early 2050s", "Q1 2046" — each fills both inputs.</p></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P8.3"><details><summary><span class="task-id">P8.3</span><span class="task-title">Roll &amp; re-roll + last-5-history list</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P8.4"><details><summary><span class="task-id">P8.4</span><span class="task-title">Standalone <code>/utils/random-date</code> route</span></summary><div class="task-detail"></div></details></div></li>
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P9 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P9</span>
+    <span class="phase-title">Editors (events + timelines)</span>
+    <span class="phase-count" data-phase="P9"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: full add/edit/delete for events and timelines from inside the Corridor. Uses the random date utility (P8) and bidirectional relation creation with tag-overlap suggestions.</p>
+    <ul class="tasks">
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P9.1">
+        <details><summary><span class="task-id">P9.1</span><span class="task-title">Event side panel (not modal)</span></summary>
+        <div class="task-detail">
+          <p>Slide-in panel on the right. Doesn't cover the canvas; stays open while you scroll.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P9.2">
+        <details><summary><span class="task-id">P9.2</span><span class="task-title">Event form fields</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P9.2.1"><span class="sub-id">P9.2.1</span><span class="sub-title">Title, description, category (closed enum), tech_lane (shown only when category=tech), project</span></li>
+            <li><input type="checkbox" data-task-id="P9.2.2"><span class="sub-id">P9.2.2</span><span class="sub-title">Date: exact datetime, or pick bracketing events + "Roll random in range…" (calls P8)</span></li>
+            <li><input type="checkbox" data-task-id="P9.2.3"><span class="sub-id">P9.2.3</span><span class="sub-title">Tags: autocomplete from existing tags</span></li>
+            <li><input type="checkbox" data-task-id="P9.2.4"><span class="sub-id">P9.2.4</span><span class="sub-title">Actors: multi-select from characters registry</span></li>
+            <li><input type="checkbox" data-task-id="P9.2.5"><span class="sub-id">P9.2.5</span><span class="sub-title">Location: single-select from locations registry</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P9.3">
+        <details><summary><span class="task-id">P9.3</span><span class="task-title">Relation builder (bidirectional, stored once)</span></summary>
+        <div class="task-detail">
+          <p>"Add relation" → pick type, pick target event (autocomplete by title), optional note. Stores one row; reverse view is derived.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P9.4">
+        <details><summary><span class="task-id">P9.4</span><span class="task-title">Tag-overlap suggestion on save</span></summary>
+        <div class="task-detail">
+          <p>After save, surface "These N events share tags — link any?" with one-click confirm. Dismissable.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P9.5">
+        <details><summary><span class="task-id">P9.5</span><span class="task-title">Backend writes + cache invalidation</span></summary>
+        <div class="task-detail">
+          <p><code>POST /api/events</code>, <code>PATCH /api/events/:id</code>, <code>DELETE /api/events/:id</code>. Resolve cache (P1.11.1) invalidates on every write.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P9.6">
+        <details><summary><span class="task-id">P9.6</span><span class="task-title">Optimistic updates + rollback on error</span></summary>
+        <div class="task-detail"></div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P9.7">
+        <details><summary><span class="task-id">P9.7</span><span class="task-title">Timeline create/edit form</span></summary>
+        <div class="task-detail">
+          <p>Name, description, color, default viewport, parents (DAG-validated — no cycles).</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P9.8">
+        <details><summary><span class="task-id">P9.8</span><span class="task-title">Membership rule editors</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P9.8.1"><span class="sub-id">P9.8.1</span><span class="sub-title">Manual roster picker</span></li>
+            <li><input type="checkbox" data-task-id="P9.8.2"><span class="sub-id">P9.8.2</span><span class="sub-title">byTag rule (chip input, opt-in)</span></li>
+            <li><input type="checkbox" data-task-id="P9.8.3"><span class="sub-id">P9.8.3</span><span class="sub-title">byCategory rule (multi-select)</span></li>
+            <li><input type="checkbox" data-task-id="P9.8.4"><span class="sub-id">P9.8.4</span><span class="sub-title">byTimeRange rule (used by eras)</span></li>
+            <li><input type="checkbox" data-task-id="P9.8.5"><span class="sub-id">P9.8.5</span><span class="sub-title">byLocation rule</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P9.9">
+        <details><summary><span class="task-id">P9.9</span><span class="task-title">Live preview of the resolved event set</span></summary>
+        <div class="task-detail"><p>As you change rules, a preview list shows which events would be included.</p></div></details>
+      </div></li>
+
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P10 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P10</span>
+    <span class="phase-title">Tech Tree view</span>
+    <span class="phase-count" data-phase="P10"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: open <code>/v/tech</code> and see all tech events in swimlanes by family (energy / propulsion / computing / neural / biomedical / megastructure) with arrows showing <code>precedes</code> / <code>partOf</code>. Visually consistent with the Corridor — reuses <code>EventNode</code>.</p>
+    <ul class="tasks">
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P10.1">
+        <details><summary><span class="task-id">P10.1</span><span class="task-title">R3F scene scaffolding in <code>views/tech-tree/</code></span></summary>
+        <div class="task-detail">
+          <p>Canvas + camera + bloom + stars, same as the Corridor. Different layout, same rendering primitives.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P10.2">
+        <details><summary><span class="task-id">P10.2</span><span class="task-title">Fetch tech events + their relations</span></summary>
+        <div class="task-detail">
+          <p><code>GET /api/events?category=tech</code> + <code>GET /api/relations?types=precedes,partOf</code> scoped to those events.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P10.3">
+        <details><summary><span class="task-id">P10.3</span><span class="task-title">Layout: X = date, Y = lane</span></summary>
+        <div class="task-detail">
+          <p>X uses the same <code>d3.scaleTime</code> as the Corridor (so cross-jumping feels coherent). Y is a fixed lane assigned via the <code>event.tech_lane</code> column. No graph-layout library — explicit lane numbers.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P10.4">
+        <details><summary><span class="task-id">P10.4</span><span class="task-title">Reuse <code>EventNode</code> from <code>views/_shared/</code></span></summary>
+        <div class="task-detail">
+          <p>Confirms it's a shared component. Same hover/click semantics; cross-view selection works automatically.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P10.5">
+        <details><summary><span class="task-id">P10.5</span><span class="task-title">Edges with arrowheads (drei <code>&lt;Line&gt;</code>)</span></summary>
+        <div class="task-detail">
+          <p>Bezier-curved between source/target node positions. Per-type styling consistent with P7.2.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P10.6">
+        <details><summary><span class="task-id">P10.6</span><span class="task-title">Cross-links</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P10.6.1"><span class="sub-id">P10.6.1</span><span class="sub-title">Click node → <code>setPrimary({type:'event', id})</code>; highlight upstream/downstream <code>precedes</code> chain</span></li>
+            <li><input type="checkbox" data-task-id="P10.6.2"><span class="sub-id">P10.6.2</span><span class="sub-title">If <code>primary</code> is a tech event, focus and highlight its chain</span></li>
+            <li><input type="checkbox" data-task-id="P10.6.3"><span class="sub-id">P10.6.3</span><span class="sub-title">Otherwise glow nodes in <code>glow.eventIds</code> (e.g. a primary character lights its inventions — Bruce Deng → fusion, Dal → HoloVision lineage)</span></li>
+            <li><input type="checkbox" data-task-id="P10.6.4"><span class="sub-id">P10.6.4</span><span class="sub-title">If <code>useFilters.timeRange</code> is set, fade nodes outside it</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P10.7">
+        <details><summary><span class="task-id">P10.7</span><span class="task-title">Drag-to-create-relation editor</span></summary>
+        <div class="task-detail">
+          <p>Drag from one node to another → popover picks relation type → POST relation. New row appears in the Corridor too on next focus.</p>
+        </div></details>
+      </div></li>
+
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P11 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P11</span>
+    <span class="phase-title">Family Trees view</span>
+    <span class="phase-count" data-phase="P11"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: open <code>/v/family</code> and see classic family trees per cluster (Castaneda, Pallas) plus a singleton row for the rest of the cast. Drag a character's handle to another to create a family relation.</p>
+    <ul class="tasks">
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P11.1">
+        <details><summary><span class="task-id">P11.1</span><span class="task-title">View scaffolding (<code>@xyflow/react</code>)</span></summary>
+        <div class="task-detail">
+          <p>Empty <code>&lt;ReactFlow&gt;</code> with pan/zoom/minimap controls. Already installed in P0.4.3.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P11.2">
+        <details><summary><span class="task-id">P11.2</span><span class="task-title">Compute clusters + initial positions</span></summary>
+        <div class="task-detail">
+          <p>Group characters by transitive family connection (union-find over <code>character_relation</code>). For each cluster, run <code>d3-hierarchy.tree()</code> → assign coordinates. Singletons → wrap-around grid below the trees.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P11.3">
+        <details><summary><span class="task-id">P11.3</span><span class="task-title">Custom character-card node component</span></summary>
+        <div class="task-detail">
+          <p>HTML + CSS card showing name, lifespan, role. Top/bottom/left/right handles for react-flow connections.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P11.4">
+        <details><summary><span class="task-id">P11.4</span><span class="task-title">Render edges per relation type</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P11.4.1"><span class="sub-id">P11.4.1</span><span class="sub-title"><code>spouse-of</code> → horizontal coral line above couple</span></li>
+            <li><input type="checkbox" data-task-id="P11.4.2"><span class="sub-id">P11.4.2</span><span class="sub-title"><code>parent-of</code> → green tree line down to children</span></li>
+            <li><input type="checkbox" data-task-id="P11.4.3"><span class="sub-id">P11.4.3</span><span class="sub-title"><code>sibling-of</code> → blue connector (derived from common parent when possible)</span></li>
+            <li><input type="checkbox" data-task-id="P11.4.4"><span class="sub-id">P11.4.4</span><span class="sub-title"><code>clone-of</code> → dashed coral line with arrow</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P11.5">
+        <details><summary><span class="task-id">P11.5</span><span class="task-title">Cross-links</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P11.5.1"><span class="sub-id">P11.5.1</span><span class="sub-title">Click card → <code>setPrimary({type:'character', id})</code></span></li>
+            <li><input type="checkbox" data-task-id="P11.5.2"><span class="sub-id">P11.5.2</span><span class="sub-title">Glow every card whose id is in <code>glow.characterIds</code> (set when a character is primary, or derived from an event's <code>event_actor</code>)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P11.6">
+        <details><summary><span class="task-id">P11.6</span><span class="task-title">Editor — add character / add family relation</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P11.6.1"><span class="sub-id">P11.6.1</span><span class="sub-title">"Add character" form (name, role, lifespan_start / lifespan_end, bio, portrait)</span></li>
+            <li><input type="checkbox" data-task-id="P11.6.2"><span class="sub-id">P11.6.2</span><span class="sub-title">Drag handle-to-handle → popover picks relation type (parent-of / sibling-of / spouse-of / clone-of)</span></li>
+            <li><input type="checkbox" data-task-id="P11.6.3"><span class="sub-id">P11.6.3</span><span class="sub-title">POST <code>/api/characters</code>, <code>/api/character-relations</code>; re-layout cluster on save</span></li>
+            <li><input type="checkbox" data-task-id="P11.6.4"><span class="sub-id">P11.6.4</span><span class="sub-title">Delete character / relation (with confirm)</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P12 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P12</span>
+    <span class="phase-title">Export pipeline (HTML)</span>
+    <span class="phase-count" data-phase="P12"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: pick a view + scope and get a standalone dark-mode HTML doc — prose, tables, and mermaid diagrams rendered via the CDN script. Manifests bundle multiple views into one artifact. Markdown / PDF / Google Docs are deferred (architecture §7).</p>
+    <ul class="tasks">
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P12.1">
+        <details><summary><span class="task-id">P12.1</span><span class="task-title">Document IR types (<code>shared/types/export.ts</code>)</span></summary>
+        <div class="task-detail">
+          <p>The contract between builders and renderers. Defined upfront so future formats slot in without per-view rework (N×M → N+M).</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P12.1.1"><span class="sub-id">P12.1.1</span><span class="sub-title"><code>Block</code> union: heading / paragraph / list / table / callout / image (mermaid? | svg?) / anchor / link / pageBreak</span></li>
+            <li><input type="checkbox" data-task-id="P12.1.2"><span class="sub-id">P12.1.2</span><span class="sub-title"><code>Document</code>: title, meta {saveId, exportedAt, scope, viewSource}, blocks[]</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P12.2">
+        <details><summary><span class="task-id">P12.2</span><span class="task-title">Builders — one per view (<code>server/src/services/export/builders/</code>)</span></summary>
+        <div class="task-detail">
+          <p>Each turns a (view, scope) into a <code>Document</code>. Accept a <code>{ diagrams, text }</code> option pair.</p>
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P12.2.1"><span class="sub-id">P12.2.1</span><span class="sub-title"><code>timeline.ts</code> — heading per era, then list/paragraph per event (date, title, desc, actors + location as inline chips)</span></li>
+            <li><input type="checkbox" data-task-id="P12.2.2"><span class="sub-id">P12.2.2</span><span class="sub-title"><code>map.ts</code> — table of groupings (members, color, horizontal if computed) + an <code>image</code> block with the d3-geo map SVG</span></li>
+            <li><input type="checkbox" data-task-id="P12.2.3"><span class="sub-id">P12.2.3</span><span class="sub-title"><code>tech.ts</code> — mermaid flowchart <code>image</code> + list of tech events with their outgoing <code>precedes</code> edges</span></li>
+            <li><input type="checkbox" data-task-id="P12.2.4"><span class="sub-id">P12.2.4</span><span class="sub-title"><code>family.ts</code> — per cluster: indented list (always) + react-flow SVG <code>image</code> when target supports it (mermaid doesn't do genealogy idiomatically); singletons as a final list</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P12.3">
+        <details><summary><span class="task-id">P12.3</span><span class="task-title">HTML renderer (<code>renderers/html.ts</code>) — v1, the only renderer</span></summary>
+        <div class="task-detail">
+          <p>Pure function <code>(doc: Document) → string</code>. Walks the block tree → standalone dark-mode HTML matching the planning-doc aesthetic. <code>image.mermaid</code> blocks become <code>&lt;div class="mermaid"&gt;…&lt;/div&gt;</code> + the same CDN script this plan uses; <code>image.svg</code> inlined directly. No server deps, no headless browser.</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P12.4">
+        <details><summary><span class="task-id">P12.4</span><span class="task-title">Scope resolution</span></summary>
+        <div class="task-detail">
+          <p>Resolve the four scopes into the row set a builder receives: <b>all</b> (whole save), <b>view</b> (active view's content), <b>selection</b> (current <code>primary</code> + its glow), <b>filter</b> (current <code>useFilters</code>).</p>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P12.5">
+        <details><summary><span class="task-id">P12.5</span><span class="task-title">Manifests (multi-view bundles)</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P12.5.1"><span class="sub-id">P12.5.1</span><span class="sub-title"><code>manifest</code> table: title + ordered <code>(view, scope)</code> items, per save</span></li>
+            <li><input type="checkbox" data-task-id="P12.5.2"><span class="sub-id">P12.5.2</span><span class="sub-title">Concatenate each item's <code>Document</code> into one (e.g. the "World Bible") — re-runnable after edits</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P12.6">
+        <details><summary><span class="task-id">P12.6</span><span class="task-title">Backend + UI + CLI</span></summary>
+        <div class="task-detail">
+          <ul class="subtasks">
+            <li><input type="checkbox" data-task-id="P12.6.1"><span class="sub-id">P12.6.1</span><span class="sub-title"><code>POST /api/export</code> { saveId, view | manifestId, scope } → HTML string / artifact URL</span></li>
+            <li><input type="checkbox" data-task-id="P12.6.2"><span class="sub-id">P12.6.2</span><span class="sub-title"><code>GET/POST/PATCH/DELETE /api/export/manifests</code> — CRUD</span></li>
+            <li><input type="checkbox" data-task-id="P12.6.3"><span class="sub-id">P12.6.3</span><span class="sub-title">Shell export dialog — view/scope picker; "download .html" or "preview in side panel"</span></li>
+            <li><input type="checkbox" data-task-id="P12.6.4"><span class="sub-id">P12.6.4</span><span class="sub-title"><code>scripts/export.ts</code> — run a manifest from the terminal</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task"><div class="task-row">
+        <input type="checkbox" data-task-id="P12.7">
+        <details><summary><span class="task-id">P12.7</span><span class="task-title">(Deferred) Markdown / PDF / Google Docs</span></summary>
+        <div class="task-detail">
+          <p>Not in v1. When needed: <b>Markdown</b> via <code>turndown</code> over the HTML artifact (or an IR renderer); <b>PDF</b> via browser print or <code>pandoc</code>/<code>weasyprint</code> (no Playwright); <b>Google Docs</b> via copy-paste from HTML, or later an IR renderer emitting a <code>googleapis</code> <code>batchUpdate</code>. The IR + builders are already in place, so each is one new renderer.</p>
+        </div></details>
+      </div></li>
+
+    </ul>
+  </div>
+</details>
+
+<!-- ========================= P13 ========================= -->
+<details class="phase">
+  <summary>
+    <span class="phase-id">P13</span>
+    <span class="phase-title">Polish</span>
+    <span class="phase-count" data-phase="P13"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: feels like a real app, not a prototype. Applies to all four views.</p>
+    <ul class="tasks">
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P13.1"><details><summary><span class="task-id">P13.1</span><span class="task-title">Animation easing pass (camera transitions, cross-fades, panel slides)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P13.2"><details><summary><span class="task-id">P13.2</span><span class="task-title">Loading / empty / error states across views</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P13.3"><details><summary><span class="task-id">P13.3</span><span class="task-title">Cmd-K command palette (switch view, jump to entity)</span></summary><div class="task-detail"><p>"go to Lazaro", "show Project Xero", "switch save: Movie canon".</p></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P13.4"><details><summary><span class="task-id">P13.4</span><span class="task-title">Keyboard shortcuts (Alt+← / Alt+→, +/-, /, ?)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P13.5"><details><summary><span class="task-id">P13.5</span><span class="task-title">Performance audit (500 events + 1000 relations stress test)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P13.6"><details><summary><span class="task-id">P13.6</span><span class="task-title">Accessibility + <code>prefers-reduced-motion</code></span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P13.7"><details><summary><span class="task-id">P13.7</span><span class="task-title">DB backup/restore CLIs (<code>db:export</code> / <code>db:import</code>)</span></summary><div class="task-detail"></div></details></div></li>
+      <li class="task"><div class="task-row"><input type="checkbox" data-task-id="P13.8"><details><summary><span class="task-id">P13.8</span><span class="task-title">Touch input (pan / pinch / tap-and-hold)</span></summary><div class="task-detail"></div></details></div></li>
+    </ul>
+  </div>
+</details>
+
+<script>
+(function() {
+  const PREFIX = 'lifestream.task.';
+
+  function load(id)    { return localStorage.getItem(PREFIX + id) === '1'; }
+  function save(id, v) { localStorage.setItem(PREFIX + id, v ? '1' : '0'); }
+
+  const allBoxes = document.querySelectorAll('input[type="checkbox"][data-task-id]');
+
+  allBoxes.forEach(cb => { cb.checked = load(cb.dataset.taskId); });
+
+  function recount() {
+    document.querySelectorAll('details.phase').forEach(phase => {
+      const cbs = phase.querySelectorAll('input[type="checkbox"][data-task-id]');
+      const done = Array.from(cbs).filter(c => c.checked).length;
+      const total = cbs.length;
+      const counter = phase.querySelector('.phase-count');
+      if (counter) {
+        counter.textContent = total > 0 && done === total
+          ? '✓ ' + done + ' / ' + total
+          : done + ' / ' + total;
+        counter.classList.toggle('complete', total > 0 && done === total);
+      }
+    });
+    const done = Array.from(allBoxes).filter(c => c.checked).length;
+    const total = allBoxes.length;
+    const stats = document.getElementById('progress-stats');
+    const bar = document.getElementById('progress-bar');
+    if (stats) stats.textContent = done + ' / ' + total + ' done';
+    if (bar)   bar.value = total ? (done / total * 100) : 0;
+    document.querySelectorAll('li.task').forEach(li => {
+      const cb = li.querySelector(':scope > .task-row > input[type="checkbox"]');
+      li.querySelector(':scope > .task-row')?.classList.toggle('done', !!cb && cb.checked);
+    });
+    document.querySelectorAll('ul.subtasks > li').forEach(li => {
+      const cb = li.querySelector('input[type="checkbox"]');
+      li.classList.toggle('done', !!cb && cb.checked);
+    });
+  }
+
+  allBoxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+      save(cb.dataset.taskId, cb.checked);
+      recount();
+    });
+  });
+
+  document.getElementById('expand-all').addEventListener('click', () => {
+    document.querySelectorAll('details').forEach(d => d.open = true);
+  });
+  document.getElementById('collapse-all').addEventListener('click', () => {
+    document.querySelectorAll('details').forEach(d => d.open = false);
+  });
+  document.getElementById('reset-progress').addEventListener('click', () => {
+    if (!confirm('Clear all checkbox progress on this device?')) return;
+    allBoxes.forEach(cb => {
+      cb.checked = false;
+      save(cb.dataset.taskId, false);
+    });
+    recount();
+  });
+
+  recount();
+})();
+</script>
+
+</body>
+</html>
