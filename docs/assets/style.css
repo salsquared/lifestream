@@ -1,0 +1,1011 @@
+/* docs/assets/style.css
+ * Shared stylesheet for HTML docs under docs/.
+ * Link with: <link rel="stylesheet" href="./assets/style.css">
+ *   (or "../assets/style.css" from a subdir).
+ *
+ * Heading font (Sora 800) loaded via Google Fonts in each doc's <head>:
+ *   <link rel="preconnect" href="https://fonts.googleapis.com">
+ *   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ *   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@800&display=swap" rel="stylesheet">
+ */
+
+:root {
+  --bg: #141414;
+  --surface: #1e1e1e;
+  --surface-2: #262626;
+  --border: rgba(255, 255, 255, 0.09);
+  --text: #e5e5e5;
+  --text-muted: #a3a3a3;
+
+  /* Accent palette (Ocean — cool blues / greens, no purples) */
+  --white: #fafafa;     /* h1 title */
+  --blue:  #60a5fa;     /* h2, links, depth-1 task, default callout */
+  --blue-light: #93c5fd;/* inline <code> */
+  --green: #4ade80;     /* h3, link-hover, depth-2 task, tip callout */
+  --teal:  #2dd4bf;     /* h4, depth-3 task */
+  --sky:   #38bdf8;     /* depth-4 task */
+  --lime:  #a3e635;     /* depth-5+ task */
+  --code-block: #86efac;/* <pre><code> text — light green, distinct from h2 */
+  --amber: #f59e0b;     /* warn callout */
+  --red:   #ef4444;     /* danger callout */
+
+  /* Darkening scale — the section/ToC box is the lightest tier, then task
+     cards step ~5% darker per nesting depth (1 → 5+). */
+  --box:     #282828;   /* section-body + ToC box — same tier as task d1 */
+  --task-d1: #282828;
+  --task-d2: #222222;
+  --task-d3: #1c1c1c;
+  --task-d4: #161616;
+  --task-d5: #101010;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", "Menlo", monospace;
+  font-size: 15px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 3rem 1.75rem 5rem;
+  line-height: 1.65;
+}
+
+/* ── Headings — Sora 800, UPPERCASE, hierarchy by color + size ────── */
+
+h1, h2, h3, h4 {
+  font-family: "Sora", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+h1 { font-size: 2.3rem;  color: var(--white); letter-spacing: 0.01em; margin: 0 0 0.35rem; }
+h2 { font-size: 1.45rem; color: var(--blue);  letter-spacing: 0.02em; margin-top: 3rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h3 { font-size: 1.1rem;  color: var(--green); letter-spacing: 0.03em; margin-top: 2rem; }
+h4 { font-size: 1rem;    color: var(--teal);  letter-spacing: 0.04em; margin-top: 1.75rem; }
+
+/* ── Sections — numbered + collapsible <details class="section"> ────
+   Auto-numbered by a CSS counter (matches the ToC's auto-numbering, so
+   reordering or adding sections never desyncs the numbers). The <h2> lives
+   inside <summary>; section margin/border move up to the details wrapper. */
+
+body { counter-reset: section; }
+
+details.section { margin-top: 3rem; }
+details.section:first-of-type { margin-top: 0; }
+
+details.section > summary {
+  counter-increment: section;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  user-select: none;
+}
+details.section > summary::-webkit-details-marker { display: none; }
+
+details.section > summary::before {
+  content: "▸";
+  color: var(--text-muted);
+  font-size: 1.2em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+details.section[open] > summary::before { content: "▾"; }
+
+/* Heading inside the summary (h2 for numbered sections, h3 for the ToC):
+   strip its own block chrome (summary owns it). The section number prefixes
+   the h2 only — no-count sections (ToC) use h3 and get no number. */
+details.section > summary :is(h2, h3) {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+details.section > summary h2::before {
+  content: counter(section) ". ";
+}
+
+/* Subsections — auto-numbered <section>.<sub> within each section (matches the
+   section counter). CONVENTION: every section carries at least one *named*
+   .section-body <h3> (its X.1), so any content is referenceable as X.Y even
+   when there's only one. Authors write just the name; CSS supplies the number. */
+details.section > .section-body { counter-reset: subsection; }
+details.section > .section-body h3 { counter-increment: subsection; }
+details.section > .section-body h3::before {
+  content: counter(section) "." counter(subsection) "\00a0\00a0";
+}
+
+/* Section content sits in its own grey box, set off from the header underline. */
+details.section > .section-body {
+  background: var(--box);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  margin-top: 1rem;
+}
+details.section > .section-body > *:first-child { margin-top: 0; }
+details.section > .section-body > *:last-child { margin-bottom: 0; }
+
+/* Inner cards (code, diagrams) drop to the page bg so they recess inside the
+   lighter section-body box — borders keep their edges crisp. (Tasks shade by
+   depth instead — see the task section below.) */
+details.section > .section-body :is(pre, .mermaid) {
+  background: var(--bg);
+}
+
+/* .no-count variant — collapsible section with a header but NO number
+   (used by the table of contents). Skips the counter so it doesn't consume
+   a section number, and suppresses the numeric prefix. */
+details.section.no-count > summary { counter-increment: none; }
+details.section.no-count > summary h2::before { content: none; }
+
+/* .toc variant — "Contents" header + arrow sit plain; only the LIST is boxed. */
+details.section.toc { margin-bottom: 3rem; }
+details.section.toc > summary {
+  border-bottom: none;        /* no full-width divider above the box */
+  padding-bottom: 0.25rem;
+}
+
+/* Kicker / eyebrow — project name above the doc <h1> title. */
+h4.kicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  margin-bottom: 3.5rem;
+  font-size: 0.95rem;
+}
+
+p, li { color: var(--text); }
+
+/* ── Code ─────────────────────────────────────────────────────────── */
+
+code {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", "Menlo", monospace;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: var(--blue-light);
+}
+
+pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", "Menlo", monospace;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  color: var(--code-block);
+  font-size: 0.875rem;
+}
+
+/* Syntax highlighting (highlight.js, loaded per-doc via the module script).
+   On-brand token theme keyed to the palette — no external theme CSS needed.
+   If hljs fails to load (offline), code falls back to the flat --code-block green. */
+pre code.hljs { color: var(--text); padding: 0; background: transparent; }
+.hljs-comment, .hljs-quote, .hljs-meta { color: var(--text-muted); font-style: italic; }
+.hljs-keyword, .hljs-built_in, .hljs-literal, .hljs-name, .hljs-selector-tag { color: var(--blue); }
+.hljs-string, .hljs-regexp, .hljs-addition { color: var(--code-block); }
+.hljs-number, .hljs-symbol, .hljs-bullet { color: var(--amber); }
+.hljs-title, .hljs-title.function_, .hljs-title.class_, .hljs-section, .hljs-type { color: var(--teal); }
+.hljs-attr, .hljs-attribute, .hljs-property, .hljs-variable, .hljs-template-variable { color: var(--sky); }
+.hljs-punctuation, .hljs-operator { color: var(--text-muted); }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 700; }
+
+/* ── Callouts — neutral (blue) by default; modifier classes override ─ */
+
+.callout {
+  background: rgba(96, 165, 250, 0.08);
+  border-left: 3px solid var(--blue);
+  padding: 0.85rem 1rem;
+  margin: 1.5rem 0;
+  border-radius: 0 6px 6px 0;
+  color: var(--text-muted);
+}
+.callout strong { color: var(--blue); }
+
+.callout.tip { background: rgba(74, 222, 128, 0.08); border-left-color: var(--green); }
+.callout.tip strong { color: var(--green); }
+
+.callout.warn { background: rgba(245, 158, 11, 0.08); border-left-color: var(--amber); }
+.callout.warn strong { color: var(--amber); }
+
+.callout.danger { background: rgba(239, 68, 68, 0.08); border-left-color: var(--red); }
+.callout.danger strong { color: var(--red); }
+
+/* ── Open-question detail — the options / lean / status (or decided rationale)
+   that follows an OQ. The *question* alone lives in the highlighted .callout
+   banner; this sits just below it as regular body text, hugging the banner and
+   indented to align with the callout's text. Keep the banner to the question.
+   For an open OQ, .oq-detail is a <div> wrapping the options as a <ul.oq-options>
+   list (one per line for legibility) + a trailing Lean/Status <p>; for a decided
+   OQ it's a single <p> of rationale. */
+.oq-detail {
+  margin: -1rem 0 1.5rem;
+  padding-left: calc(1rem + 3px);
+  color: var(--text);
+}
+/* When .oq-detail wraps blocks, keep it hugging the banner and don't let inner
+   block margins reopen the ~0.5rem gap the negative top margin buys. */
+.oq-detail > :first-child { margin-top: 0; }
+.oq-detail > :last-child { margin-bottom: 0; }
+/* Each option is lettered — lead every <li> with an accented <strong>(a)</strong>
+   label so it's nameable (OQ5a, OQ5b) and the Lean/Decision can cite the pick by
+   letter. The label replaces the list marker, so suppress the bullet. */
+.oq-options { margin: 0 0 0.5rem; padding-left: 0; list-style: none; }
+.oq-options li { margin: 0.5rem 0; }
+.oq-options li > strong:first-child { color: var(--sky); margin-right: 0.35rem; }
+
+blockquote {
+  border-left: 3px solid var(--border);
+  margin: 1.25rem 0;
+  padding: 0.5rem 1rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Tables ───────────────────────────────────────────────────────── */
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  font-size: 0.95em;
+}
+
+/* Wrap a wide/many-column table in <div class="table-wrap"> so it scrolls
+   horizontally inside its section instead of overflowing the box. The wrapper
+   owns the vertical margin; the inner table drops its own so spacing matches a
+   bare table. */
+.table-wrap {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+.table-wrap > table {
+  margin: 0;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  color: var(--blue);
+  font-family: "Sora", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Links ────────────────────────────────────────────────────────── */
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--blue);
+}
+
+a:hover {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+/* ── Lists — indexable markers so items can be referenced without counting.
+   :is() (not :where()) so deeper selectors outrank the shallow ul/ol rule.
+   Depth 1: a, b, c   Depth 2: i, ii, iii   Depth 3: 1, 2, 3   Depth 4: A, B, C
+   Tasks use <details class="task"> and are unaffected. */
+
+ul, ol {
+  padding-left: 1.6rem;
+  list-style-type: lower-alpha;
+}
+:is(ul, ol) :is(ul, ol) { list-style-type: lower-roman; }
+:is(ul, ol) :is(ul, ol) :is(ul, ol) { list-style-type: decimal; }
+:is(ul, ol) :is(ul, ol) :is(ul, ol) :is(ul, ol) { list-style-type: upper-alpha; }
+li::marker { color: var(--blue); font-weight: 600; }
+
+/* ── Note — a de-emphasized aside; the quiet counterpart to .callout. Use when
+   a clarification shouldn't claim the visual weight of a boxed callout: as a
+   block (<p class="note">) for a trailing footnote, or inline (<span
+   class="note">) for a parenthetical such as a landed-on date. */
+.note { color: var(--text-muted); font-size: 0.92rem; }
+p.note { margin: 0.4rem 0 0; }
+
+/* ── Task list — a lightweight checked list for retrospectives and status
+   summaries whose items carry their own ☑ / ☐ glyph. The indexable markers
+   above would double up ("a. ☑ …"), so drop the marker and its indent.
+   NOT for live checklists — those use <details class="task"> with a real
+   <input type="checkbox">, which the design-doc archetype stubs. */
+ul.task-list { list-style: none; padding-left: 0; }
+ul.task-list > li { margin: 0.5rem 0; }
+
+/* ── Glossary — anchored term entries for dictionary / reference docs ─
+   <dl class="glossary"> with one linkable <dt id="slug"> per term and a <dd>
+   definition; close the <dd> with <span class="see"> for the canonical-home
+   pointer. Unlike headings, <dt> is NOT uppercased, so code identifiers
+   (RoundDispatcher, /iris/geotiff/1.0.0) keep their exact casing. Terms sit a
+   rung below the section <h3>: teal, like h4. */
+
+dl.glossary { margin: 1.25rem 0 0; }
+dl.glossary dt {
+  font-family: "Sora", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  color: var(--teal);
+  letter-spacing: 0.01em;
+  margin-top: 1.2rem;
+  scroll-margin-top: 1.5rem;   /* offset anchor jumps from the viewport top */
+}
+dl.glossary dt:first-of-type { margin-top: 0; }
+/* code/math inside a term keeps its own treatment (mono pill), not the dt color */
+dl.glossary dt code { color: var(--blue-light); font-weight: 700; }
+dl.glossary dd { margin: 0.3rem 0 0; color: var(--text); }
+dl.glossary dd + dt { margin-top: 1.4rem; }
+dl.glossary .see { color: var(--text-muted); }
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+/* ── Footer — copyright, every doc ends with <footer class="doc-footer"> */
+
+footer.doc-footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+/* ── Table of contents — <ol class="toc-list"> inside a .no-count section.
+   Decimal numbering matches the section counter (1, 2, 3…). */
+
+ol.toc-list {
+  list-style-type: decimal;
+  background: var(--box);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.85rem 1.1rem 0.85rem 2.7rem;
+  margin: 0.4rem 0 0;
+}
+ol.toc-list ol { list-style-type: lower-alpha; margin: 0.2rem 0; padding-left: 1.2rem; }
+ol.toc-list li { margin: 0.15rem 0; }
+ol.toc-list li::marker { color: var(--text-muted); font-weight: 600; }
+ol.toc-list a { border-bottom: none; }
+ol.toc-list a:hover { border-bottom: 1px dotted var(--green); }
+
+/* Offset anchor jumps so headings aren't flush against the viewport top */
+:is(h2, h3, h4)[id] { scroll-margin-top: 1.5rem; }
+
+/* ── Mermaid diagram container ────────────────────────────────────── */
+
+.mermaid {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  text-align: center;
+  position: relative;          /* anchors the pan/zoom controls */
+}
+
+/* Once svg-pan-zoom is attached (JS adds .pannable), the diagram fills a
+   bounded, clipped viewport: drag to pan, scroll or the control buttons to
+   zoom. fit+center on init shows the whole diagram first. */
+.mermaid.pannable {
+  height: min(70vh, 540px);
+  padding: 0;
+  overflow: hidden;
+  cursor: grab;
+}
+.mermaid.pannable:active { cursor: grabbing; }
+.mermaid.pannable svg { max-width: none; width: 100%; height: 100%; }
+
+/* svg-pan-zoom built-in control icons, themed to the palette */
+.svg-pan-zoom-control { cursor: pointer; }
+.svg-pan-zoom-control-background { fill: var(--bg); opacity: 0.7; }
+.svg-pan-zoom-control-element { fill: var(--text-muted); }
+.svg-pan-zoom-control:hover .svg-pan-zoom-control-element { fill: var(--text); }
+
+/* ── Tasks — collapsible <details>, id naming P<phase>.<task>.<sub> ─
+   Task-id + checkbox accent are colored by nesting depth via cascading
+   specificity. Depth N: blue → green → teal → sky → lime (5+ inherits). */
+
+details.task {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin: 0.5rem 0;
+  background: var(--task-d1);   /* depth 1; deeper levels darken (below) */
+}
+
+details.task > summary {
+  cursor: pointer;
+  padding: 0.55rem 0.85rem;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  user-select: none;
+}
+
+details.task > summary::-webkit-details-marker { display: none; }
+
+details.task > summary::before {
+  content: "▸";
+  color: var(--text-muted);
+  font-size: 0.85em;
+  width: 0.8em;
+  flex-shrink: 0;
+}
+details.task[open] > summary::before { content: "▾"; }
+
+details.task > summary input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--blue);
+  flex-shrink: 0;
+}
+
+details.task > summary .task-id {
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  color: var(--blue);
+  font-size: 0.85em;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+details.task > summary .task-title {
+  color: var(--text);
+  font-weight: 700;
+}
+
+details.task > summary:has(input[type="checkbox"]:checked) .task-title {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+details.task > summary:has(input[type="checkbox"]:checked) .task-id {
+  opacity: 0.55;
+}
+
+/* Depth-coloured task-id + checkbox accent (specificity rises with nesting) */
+details.task .task-body details.task > summary .task-id { color: var(--green); }
+details.task .task-body details.task > summary input[type="checkbox"] { accent-color: var(--green); }
+details.task .task-body details.task .task-body details.task > summary .task-id { color: var(--teal); }
+details.task .task-body details.task .task-body details.task > summary input[type="checkbox"] { accent-color: var(--teal); }
+details.task .task-body details.task .task-body details.task .task-body details.task > summary .task-id { color: var(--sky); }
+details.task .task-body details.task .task-body details.task .task-body details.task > summary input[type="checkbox"] { accent-color: var(--sky); }
+details.task .task-body details.task .task-body details.task .task-body details.task .task-body details.task > summary .task-id { color: var(--lime); }
+details.task .task-body details.task .task-body details.task .task-body details.task .task-body details.task > summary input[type="checkbox"] { accent-color: var(--lime); }
+
+/* Depth-graded card background — darker each level (specificity rises with nesting) */
+details.task .task-body details.task { background: var(--task-d2); }
+details.task .task-body details.task .task-body details.task { background: var(--task-d3); }
+details.task .task-body details.task .task-body details.task .task-body details.task { background: var(--task-d4); }
+details.task .task-body details.task .task-body details.task .task-body details.task .task-body details.task { background: var(--task-d5); }
+
+details.task > .task-body {
+  padding: 0 0.85rem 0.85rem 2.4rem;
+  color: var(--text-muted);
+}
+
+details.task > .task-body > *:first-child { margin-top: 0; }
+details.task > .task-body > *:last-child { margin-bottom: 0; }
+
+/* Nested sub-tasks: align flush-left inside their parent's body */
+details.task .task-body details.task { margin-left: 0; }
+
+/* ── API reference (generated by scripts/gen-api-docs.ts) ──────────────────── */
+.api-route {
+  background: var(--task-d2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  margin: 0.9rem 0;
+}
+.api-route-head { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.api-path { font-size: 1.02rem; color: var(--blue-light); }
+
+/* HTTP method badges — color by verb */
+.api-method {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+  padding: 0.12rem 0.46rem; border-radius: 5px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.api-method.get    { color: var(--blue);  border-color: color-mix(in srgb, var(--blue) 45%, transparent); }
+.api-method.post   { color: var(--green); border-color: color-mix(in srgb, var(--green) 45%, transparent); }
+.api-method.patch  { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
+.api-method.put    { color: var(--teal);  border-color: color-mix(in srgb, var(--teal) 45%, transparent); }
+.api-method.delete { color: var(--red);   border-color: color-mix(in srgb, var(--red) 45%, transparent); }
+
+/* Fact chips — auth guard, cache, external services */
+.api-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.55rem 0 0; }
+.api-chip {
+  font-size: 0.72rem; padding: 0.1rem 0.46rem; border-radius: 5px;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+}
+.api-chip.auth  { color: var(--sky); }
+.api-chip.cache { color: var(--green); }
+.api-chip.ext   { color: var(--amber); }
+
+.api-purpose { margin: 0.6rem 0 0; color: var(--text); }
+.api-notes { margin: 0.4rem 0 0; color: var(--text-muted); font-size: 0.92rem; }
+.api-muted { color: var(--text-muted); }
+.api-schema-label { margin: 0.7rem 0 0.25rem; font-size: 0.86rem; color: var(--text-muted); }
+.api-route pre { margin: 0.25rem 0 0; }
+.api-src { margin: 0.6rem 0 0; font-size: 0.78rem; color: var(--text-muted); opacity: 0.75; }
+
+/* ── Figures — a diagram/table plus its caption. The caption is centred under
+   the figure and muted, so it reads as annotation rather than body copy. */
+
+figure { margin: 1.5rem 0; }
+figure > *:first-child { margin-top: 0; }
+figure > *:last-child { margin-bottom: 0; }
+
+figcaption {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Checklist chrome — progress bar, controls, count badges and leaf rows.
+   For a doc that tracks live task state (checkboxes persisted per-device),
+   these are the surrounding controls the .task cards don't provide. */
+
+/* Progress bar — <div class="progress-row"><progress><span class="progress-stats"> */
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.progress-row progress {
+  flex: 1;
+  height: 10px;
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+}
+.progress-row progress::-webkit-progress-bar { background: var(--surface); border-radius: 5px; }
+.progress-row progress::-webkit-progress-value { background: var(--green); border-radius: 5px; transition: width 0.25s; }
+.progress-row progress::-moz-progress-bar { background: var(--green); border-radius: 5px; }
+
+.progress-stats {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  min-width: 7rem;
+  text-align: right;
+}
+
+/* Controls — expand / collapse / reset buttons above a checklist. */
+.controls-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0.25rem 0 1rem;
+}
+
+.controls-row button {
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+.controls-row button:hover { color: var(--text); border-color: var(--text-muted); }
+.controls-row .spacer { margin-left: auto; }
+
+/* Count badge — "3 / 8" progress on a task summary; turns green when complete.
+   Sits flush right via margin-left:auto inside the flex summary. */
+.count-badge {
+  margin-left: auto;
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.count-badge.complete { color: var(--green); }
+
+/* Leaf checklist rows — the deepest checkable unit, with no body of its own.
+   A <details class="task"> would render a disclosure arrow that opens nothing,
+   so leaves are <li class="task-leaf"> inside a <ul class="task-list">. */
+ul.task-list > li.task-leaf {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  margin: 0.15rem 0;
+  font-size: 0.92rem;
+}
+
+li.task-leaf > input[type="checkbox"] {
+  flex-shrink: 0;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--teal);
+  position: relative;
+  top: 1px;
+}
+
+li.task-leaf > .task-id {
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  font-size: 0.8em;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+li.task-leaf > .task-title { flex: 1; color: var(--text); }
+li.task-leaf:has(input[type="checkbox"]:checked) > .task-title {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+li.task-leaf:has(input[type="checkbox"]:checked) > .task-id { opacity: 0.55; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PLANNING-DOC COMPONENTS
+   Ported from the inline <style> blocks that docs/architecture.html and
+   docs/implementation.html used to carry, when those docs moved onto this
+   sheet. Everything the sheet already provides — body/typography, pre/code,
+   links, base tables, figures, the .callout base, .progress-row,
+   .controls-row — was DROPPED rather than re-stated, so the docs inherit
+   the shared design instead of overriding it back.
+
+   Rewritten in this sheet's variables; there is no second :root, and no
+   --ink / --accent-N survives.
+
+   THE .task COLLISION: this sheet's canonical checklist vocabulary is
+   <details class="task"> + .task-body (+ li.task-leaf). implementation.html
+   is a structurally different shape — ul.tasks > li.task > .task-row >
+   <details> > summary + .task-detail, with ul.subtasks > li as leaves — and
+   its progress script derives leaf/parent state from exactly that DOM, so
+   the markup cannot be renamed. The sheet's details.task WINS as canonical:
+   every rule below is scoped through li.task / .task-row / .subtasks and so
+   can never match a details.task card. The two stay visually coherent by
+   sharing the same conventions — blue task id, muted leaf id, blue parent
+   checkbox / teal leaf checkbox, --box card, id chips recessed to --bg.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Shared by both docs ─────────────────────────────────────────────── */
+
+/* .lede — the standfirst under the <h1>. Same role as .subtitle; these two
+   docs call it .lede and their markup is frozen. */
+p.lede {
+  color: var(--text-muted);
+  margin: 0 0 2rem;
+  font-size: 0.95rem;
+}
+
+/* Table refinements generalized from the migrated docs: their tables are
+   dense and multi-line, so cells top-align, and the last row drops its rule
+   so the table ends cleanly against the section it sits in. */
+th, td { vertical-align: top; }
+tr:last-child > td { border-bottom: none; }
+
+/* A callout that opens with its own heading: strip the h4's block chrome and
+   its uppercase/tracking so a full-sentence title reads as the callout's own
+   title rather than as a new document section. Colour follows the modifier,
+   the same way .callout strong does. */
+.callout h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  color: var(--blue);
+}
+.callout.tip h4    { color: var(--green); }
+.callout.warn h4   { color: var(--amber); }
+.callout.danger h4 { color: var(--red); }
+.callout > *:first-child { margin-top: 0; }
+.callout > *:last-child { margin-bottom: 0; }
+
+/* Extra callout modifiers beyond the sheet's tip / warn / danger.
+   canon    — established, authoritative (green, like .tip)
+   deferred — deliberately not being built in v1 (red: a stop, not a warning)
+   contract — a fixed interface both sides must honour (teal) */
+.callout.canon { background: rgba(74, 222, 128, 0.08); border-left-color: var(--green); }
+.callout.canon strong, .callout.canon h4 { color: var(--green); }
+
+.callout.deferred { background: rgba(239, 68, 68, 0.08); border-left-color: var(--red); }
+.callout.deferred strong, .callout.deferred h4 { color: var(--red); }
+
+.callout.contract { background: rgba(45, 212, 191, 0.08); border-left-color: var(--teal); }
+.callout.contract strong, .callout.contract h4 { color: var(--teal); }
+
+/* ── Status pills ────────────────────────────────────────────────────── */
+
+/* .pill — an inline provenance/status marker (DEFERRED, CANON, AUTHORED,
+   NORMATIVE, note). It appears INSIDE <h3>, so it must opt out of the
+   heading's Sora / uppercase / color treatment. */
+.pill {
+  display: inline-block;
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", "Menlo", monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  vertical-align: middle;
+  padding: 1px 7px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  margin-right: 0.25rem;
+}
+.pill.deferred { color: var(--red);   border-color: color-mix(in srgb, var(--red) 50%, transparent); }
+.pill.canon    { color: var(--green); border-color: color-mix(in srgb, var(--green) 50%, transparent); }
+.pill.authored { color: var(--sky);   border-color: color-mix(in srgb, var(--sky) 50%, transparent); }
+
+/* .new — a bare (borderless) revision badge inside a task title:
+   NEW / REWRITTEN / MOVED EARLY / "1 of 4". */
+.new {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", "Menlo", monospace;
+  font-size: 0.72rem;
+  color: var(--green);
+  white-space: nowrap;
+}
+
+/* ── Plan-doc front matter ───────────────────────────────────────────── */
+
+/* Stack table — a two-column <dl>, label rail + value. */
+.meta-grid {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 0.35rem 0.9rem;
+  font-size: 0.92rem;
+  margin: 0;
+}
+.meta-grid dt { color: var(--text-muted); }
+.meta-grid dd { margin: 0; }
+
+/* Resolved-decisions list — DECIMAL, not the sheet's default lower-alpha:
+   it runs well past 26 entries, and each <li id="dec-*"> is deep-linked from
+   all over both docs, so entries need an anchor offset. */
+ol.resolved { list-style-type: decimal; }
+ol.resolved > li { margin: 0.4rem 0; scroll-margin-top: 1.5rem; }
+
+/* Sequencing rationale — a muted note paragraph above the phase table. */
+.seq { color: var(--text-muted); font-size: 0.9rem; margin: 0.35rem 0 1rem; }
+
+/* .seq-table — the gridded variant of the base table: every cell ruled, so a
+   wide phase/dependency matrix stays readable across columns. Only the
+   additions are declared; typography and spacing come from the base table. */
+table.seq-table th, table.seq-table td { border: 1px solid var(--border); }
+table.seq-table th { background: var(--bg); }
+table.seq-table tr:last-child > td { border-bottom: 1px solid var(--border); }
+table.seq-table td code { background: transparent; padding: 0; }
+
+/* The progress readout carries an id, not the .progress-stats class — the
+   plan's script reads it via getElementById and the markup is frozen. Same
+   treatment as .progress-stats above. */
+#progress-stats {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  min-width: 7rem;
+  text-align: right;
+}
+
+/* ── Plan-doc phase chrome ───────────────────────────────────────────── */
+
+/* A phase is the outermost checklist container — same tier as a .section-body
+   box, with its task rows sitting directly on it. */
+details.phase {
+  background: var(--box);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0.6rem 0;
+  overflow: hidden;
+}
+
+details.phase > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.8rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  user-select: none;
+}
+details.phase > summary::-webkit-details-marker { display: none; }
+
+/* Glyph swap, matching details.section / details.task rather than rotating. */
+details.phase > summary::before {
+  content: "▸";
+  color: var(--text-muted);
+  font-size: 0.9em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+details.phase[open] > summary::before { content: "▾"; }
+
+.phase-id {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", "Menlo", monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--amber);
+  background: var(--bg);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.phase-title {
+  flex: 1;
+  font-family: "Sora", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+/* Same role as .count-badge on a task summary. */
+.phase-count {
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.phase-count.complete { color: var(--green); }
+
+.phase-body {
+  padding: 0.25rem 1.35rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.phase-goal {
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0.75rem 0;
+  font-size: 0.93rem;
+}
+
+/* ── Plan-doc checklist — ul.tasks > li.task > .task-row > <details> ──── */
+
+ul.tasks { list-style: none; padding: 0; margin: 0; }
+ul.tasks > li.task { margin: 0.15rem 0; }
+
+.task-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.2rem 0;
+}
+
+/* Parent checkbox — blue, matching details.task's depth-1 accent. */
+.task-row > input[type="checkbox"] {
+  margin: 0.45rem 0 0;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--blue);
+}
+
+.task-row > details { flex: 1; min-width: 0; }
+.task-row > details > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.25rem 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+.task-row > details > summary::-webkit-details-marker { display: none; }
+.task-row > details > summary::before {
+  content: "▸";
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+.task-row > details[open] > summary::before { content: "▾"; }
+
+/* Task id — blue, like details.task's depth-1 .task-id; chipped and recessed
+   to the page bg so it reads against the lighter phase card. */
+li.task .task-id {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", "Menlo", monospace;
+  font-size: 0.76rem;
+  color: var(--blue);
+  background: var(--bg);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+li.task .task-title { font-size: 0.95rem; color: var(--text); }
+
+.task-row.done .task-title { color: var(--text-muted); text-decoration: line-through; }
+.task-row.done .task-id { opacity: 0.55; }
+
+.task-detail {
+  padding: 0.35rem 0 0.6rem 0.85rem;
+  margin-left: 0.4rem;
+  border-left: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.task-detail > p { margin: 0.25rem 0 0.5rem; }
+.task-detail > *:first-child { margin-top: 0; }
+.task-detail > *:last-child { margin-bottom: 0; }
+
+/* Sub-tasks are the LEAVES of this doc's checklist — same conventions as
+   li.task-leaf above: teal checkbox, muted monospace id, no card of its own. */
+ul.subtasks { list-style: none; padding: 0; margin: 0.4rem 0 0; }
+ul.subtasks > li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.1rem 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  scroll-margin-top: 1.5rem;
+}
+ul.subtasks > li > input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--teal);
+  position: relative;
+  top: 1px;
+}
+.sub-id {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", "Menlo", monospace;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.sub-title { flex: 1; }
+ul.subtasks > li.done .sub-title { color: var(--text-muted); text-decoration: line-through; }
+ul.subtasks > li.done .sub-id { opacity: 0.55; }
+
+/* ── Deep links ──────────────────────────────────────────────────────── */
+
+/* Every task id is its own anchor; the link is invisible inside the id chip. */
+a.anchor { color: inherit; text-decoration: none; border-bottom: none; }
+a.anchor:hover { color: inherit; text-decoration: underline; border-bottom: none; }
+
+/* Landing on a task highlights its id. */
+li.task:target > .task-row > details > summary .task-id,
+ul.subtasks > li:target .sub-id {
+  outline: 1px solid var(--amber);
+  color: var(--amber);
+}
+li.task:target { scroll-margin-top: 1.5rem; }
+
+/* Cross-references to task ids read as ids, not as prose. */
+.task-detail a[href^="#P"],
+.phase-goal a[href^="#P"] {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", "Menlo", monospace;
+  font-size: 0.85em;
+}
