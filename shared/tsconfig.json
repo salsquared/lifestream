@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // `composite` is inherited from the base config; build mode needs these alongside it.
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    // No ambient type packages: this workspace runs in the browser and on the server,
+    // so neither `node` nor DOM globals may leak into it.
+    "types": []
+  },
+  "include": ["src/**/*.ts"]
+}

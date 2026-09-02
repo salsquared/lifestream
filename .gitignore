@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local database — rebuilt from migrations + seed. Never committed.
+data/*.db
+data/*.db-journal
+# NOT data/save_dumps/ — those are the committed backups (P11).
+
+# TypeScript build-mode incremental state (composite: true in tsconfig.base.json)
+*.tsbuildinfo

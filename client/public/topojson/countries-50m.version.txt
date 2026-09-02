@@ -1,0 +1,15 @@
+world-atlas@2.0.2
+file: countries-50m.json  (copied verbatim from node_modules/world-atlas/countries-50m.json)
+source: https://github.com/topojson/world-atlas — pre-built TopoJSON from Natural Earth 1:50m
+vendored: P0.6
+
+Committed on purpose, not gitignored. Two reasons:
+  1. the app must load the world offline — no CDN fetch at runtime;
+  2. the P1 country seed reads country names from this file's feature properties,
+     so the seed is only reproducible against a fixed geometry vintage.
+
+50m, not 110m: 110m carries ~177 features and the authored groupings reference 237
+country codes, so 110m cannot represent the data.
+
+Re-vendoring: bump world-atlas in client/package.json, re-copy the file, update the
+version above, and re-run the country seed — feature ids/names can move between vintages.

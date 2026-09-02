@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // tsconfig.base.json still sets `baseUrl`, which TypeScript 6 deprecates (TS5101).
+    // Drop this once the root config expresses its `paths` without a baseUrl.
+    "ignoreDeprecations": "6.0",
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"]
+}

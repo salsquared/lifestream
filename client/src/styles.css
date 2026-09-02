@@ -1,0 +1,163 @@
+/*
+ * Shell-only styling (P0.7). Deliberately minimal and self-contained — the design pass
+ * happens later; this is just enough chrome to see which view is mounted.
+ */
+
+:root {
+  --bg: #14171c;
+  --bg-bar: #1c2027;
+  --fg: #e6e6e6;
+  --fg-muted: #8a929e;
+  --rule: #2b313a;
+  --accent: #a8c878;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    14px/1.5 ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.shell__bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: none;
+  padding: 0 16px;
+  height: 44px;
+  background: var(--bg-bar);
+  border-bottom: 1px solid var(--rule);
+}
+
+.shell__brand {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.shell__tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.shell__tab {
+  padding: 4px 12px;
+  border-radius: 4px;
+  color: var(--fg-muted);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.shell__tab:hover {
+  color: var(--fg);
+  background: #232833;
+}
+
+.shell__tab--active {
+  color: var(--bg);
+  background: var(--accent);
+}
+
+.shell__tab--active:hover {
+  color: var(--bg);
+  background: var(--accent);
+}
+
+.shell__spacer {
+  flex: 1;
+}
+
+.shell__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shell__button {
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg-muted);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.shell__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.shell__main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.health {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fg-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.health__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--fg-muted);
+}
+
+.health--ok .health__dot {
+  background: var(--accent);
+}
+
+.health--error .health__dot {
+  background: #d2705c;
+}
+
+.view-stub {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--fg-muted);
+}
+
+.view-stub__title {
+  font-size: 15px;
+  color: var(--fg);
+}
+
+.view-stub__note {
+  font-size: 12px;
+}

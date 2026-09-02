@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // Specs are typechecked, never emitted, so this project opts out of the build graph
+    // that `composite` in the base config opts every workspace into. Root `npm run
+    // typecheck` is `tsc -b client server shared` and does not reference `tests/`.
+    "composite": false,
+    "noEmit": true,
+    "declaration": false,
+    "types": ["node"]
+  },
+  // `vitest.config.ts` is pulled in so the spec that reads its alias table typechecks
+  // against the real thing rather than a redeclared copy.
+  "include": ["**/*.ts", "../vitest.config.ts"]
+}
