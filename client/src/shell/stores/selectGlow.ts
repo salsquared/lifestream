@@ -3,7 +3,9 @@ import { useMemo } from 'react';
 import { useRegistry } from './registry';
 import { useSelection } from './selection';
 import { useWorld } from './world';
-import type { Glow, Grouping, HydratedEvent, Location, Primary, PrimaryRef } from './types';
+import type { RegistryData } from './registry';
+import type { WorldData } from './world';
+import type { Glow, HydratedEvent, Location, Primary, PrimaryRef, Project } from './types';
 
 /**
  * The glow derivation. Architecture §2.6 (why it is a selector), §6 (the
@@ -22,8 +24,12 @@ import type { Glow, Grouping, HydratedEvent, Location, Primary, PrimaryRef } fro
  */
 
 type EventMap = Record<string, HydratedEvent>;
-type GroupingMap = Record<string, Grouping>;
 type LocationMap = Record<string, Location>;
+type ProjectMap = Record<string, Project>;
+
+/** The two slices this selector reads, one per source store (architecture §4.2). */
+export type GlowWorld = Pick<WorldData, 'events' | 'groupingOf'>;
+export type GlowRegistry = Pick<RegistryData, 'locations' | 'projects'>;
 /** `country_id -> grouping_id`; see the signature note on `selectGlow`. */
 type GroupingOf = Record<string, string>;
 
@@ -52,12 +58,13 @@ export const EMPTY_GLOW: Glow = Object.freeze(emptyGlow());
  * map reference (`map_ref_kind` / `map_ref_value`, §2.5). Only a location
  * scoped to a country resolves here.
  *
- * KNOWN GAP: §2.2 gives locations a rename chain (`superseded_by_location_id`)
- * and §2.6's `byLocation` predicate resolves a location to the canonical head
- * of that chain before matching. §6 does not say whether glow should do the
- * same, so this deliberately does not walk the chain — an event pointing at a
- * superseded location row will not glow its country. Worth settling before P2
- * renames anything.
+ * DELIBERATE ASYMMETRY (architecture §6, decided 2026-09-02): glow does NOT
+ * walk the `superseded_by_location_id` rename chain, even though §2.6's
+ * `byLocation` membership predicate DOES resolve a location to the canonical
+ * head before matching. Membership is a statement about what a timeline
+ * contains and must survive a rename; glow is a statement about what the user
+ * just clicked and should stay literal. An event pointing at a superseded
+ * location row therefore does not glow its country.
  */
 function countryOfEvent(event: HydratedEvent, locations: LocationMap): string | undefined {
   if (event.locationId === undefined) return undefined;
@@ -79,9 +86,9 @@ function countryOfEvent(event: HydratedEvent, locations: LocationMap): string | 
 function computeGlow(
   primary: PrimaryRef,
   events: EventMap,
-  groupings: GroupingMap,
-  locations: LocationMap,
   groupingOf: GroupingOf,
+  locations: LocationMap,
+  projects: ProjectMap,
 ): Glow {
   const glow = emptyGlow();
 
@@ -125,12 +132,13 @@ function computeGlow(
         for (const characterId of event.actorIds) glow.characterIds.add(characterId);
         if (event.locationId !== undefined) glow.locationIds.add(event.locationId);
       }
-      // MISSING INPUT: §6 also wants the project's `lead_character_id` in
-      // characterIds ("lead + actors"), and §4.2 repeats it for the Family
-      // Trees. That column lives on `registry.projects`, which is NOT one of
-      // the four inputs §4.2 gives this selector. Left underived rather than
-      // guessed at; resolving it means either passing `registry.projects` in
-      // or moving the lead onto something already here.
+      // §6 wants "lead + actors", and the lead lives on `registry.projects`
+      // (§2.2), which is why this selector takes a registry slice rather than
+      // a bare location map.
+      const project = projects[primary.id];
+      if (project?.leadCharacterId !== undefined) {
+        glow.characterIds.add(project.leadCharacterId);
+      }
       break;
     }
 
@@ -202,9 +210,9 @@ function computeGlow(
 type Memo = {
   primary: Primary;
   events: EventMap;
-  groupings: GroupingMap;
-  locations: LocationMap;
   groupingOf: GroupingOf;
+  locations: LocationMap;
+  projects: ProjectMap;
   glow: Glow;
 };
 
@@ -218,52 +226,46 @@ function samePrimary(a: Primary, b: Primary): boolean {
 }
 
 /**
- * `selectGlow(primary, world.events, world.groupings, registry.locations)` —
- * the §4.2 signature, memoized on its inputs.
+ * The §4.2 selector, memoized on its inputs.
  *
- * The memo is a single last-call entry: the store objects it takes are stable
+ * The memo is a single last-call entry: the maps it reads are stable
  * references that only change when the shell re-hydrates, so one entry is
- * enough to make every `useGlow()` caller in a render pass share one
+ * enough for every `useGlow()` caller in a render pass to share one
  * computation. It is intentionally NOT keyed on the save — every input changes
  * on a save switch anyway, and `setActive` clears the primary (§7.3).
  *
- * SIGNATURE NOTE: `groupingOf` is a fifth, optional input that §4.2's
- * signature does not list, and the §6 country and grouping rules cannot be
- * derived without it. `groupings` (`{id, save_id, name, color}`) carries no
- * membership at all since the grouping-membership decision moved members into
- * the `grouping_country` join table — the members reach the client as
- * `useWorld.groupingOf`. It is optional so a caller written against the
- * documented four-argument signature still type-checks; such a call derives a
- * country's or grouping's own id and nothing around it. `useGlow()` always
- * passes it.
+ * SIGNATURE (revised 2026-09-02): two grouped arguments, one per source store,
+ * rather than a positional list of maps. The original four-argument form could
+ * not compute three of its own §6 rules: `groupings` lost all derivable
+ * content when grouping membership moved to the `grouping_country` join table
+ * (members now reach the client as `world.groupingOf`), and a project's lead
+ * lives on `registry.projects`. Grouping by store means the next rule that
+ * needs another column widens a `Pick`, not the parameter list.
  */
-export function selectGlow(
-  primary: Primary,
-  events: EventMap,
-  groupings: GroupingMap,
-  locations: LocationMap,
-  groupingOf: GroupingOf = {},
-): Glow {
+export function selectGlow(primary: Primary, world: GlowWorld, registry: GlowRegistry): Glow {
+  const { events, groupingOf } = world;
+  const { locations, projects } = registry;
+
   if (
     memo !== null &&
     samePrimary(memo.primary, primary) &&
     memo.events === events &&
-    memo.groupings === groupings &&
+    memo.groupingOf === groupingOf &&
     memo.locations === locations &&
-    memo.groupingOf === groupingOf
+    memo.projects === projects
   ) {
     return memo.glow;
   }
 
   const glow =
-    primary === null ? EMPTY_GLOW : computeGlow(primary, events, groupings, locations, groupingOf);
-  memo = { primary, events, groupings, locations, groupingOf, glow };
+    primary === null ? EMPTY_GLOW : computeGlow(primary, events, groupingOf, locations, projects);
+  memo = { primary, events, groupingOf, locations, projects, glow };
   return glow;
 }
 
 /**
- * Hook wrapper. Recomputes when ANY of the inputs changes — the primary the
- * user clicked, or the world/registry data landing underneath it.
+ * Hook wrapper. Recomputes when ANY input changes — the primary the user
+ * clicked, or the world/registry data landing underneath it.
  *
  * Views read `primary` to know what was clicked and `glow` to know what to
  * highlight around it.
@@ -271,12 +273,12 @@ export function selectGlow(
 export function useGlow(): Glow {
   const primary = useSelection((state) => state.primary);
   const events = useWorld((state) => state.events);
-  const groupings = useWorld((state) => state.groupings);
   const groupingOf = useWorld((state) => state.groupingOf);
   const locations = useRegistry((state) => state.locations);
+  const projects = useRegistry((state) => state.projects);
 
-  return useMemo(
-    () => selectGlow(primary, events, groupings, locations, groupingOf),
-    [primary, events, groupings, locations, groupingOf],
-  );
+  const world = useMemo<GlowWorld>(() => ({ events, groupingOf }), [events, groupingOf]);
+  const registry = useMemo<GlowRegistry>(() => ({ locations, projects }), [locations, projects]);
+
+  return useMemo(() => selectGlow(primary, world, registry), [primary, world, registry]);
 }

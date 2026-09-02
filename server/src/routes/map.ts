@@ -1,10 +1,13 @@
 /**
- * `/api/map` — country and grouping reads for the World Map.
+ * Country and grouping data for the World Map.
  *
- * Placeholder. `GET /countries` and `GET /groupings` land in P1; the grouping edit
- * surface lands in P2 alongside the view. Note that architecture.html §5.1 puts the
- * grouping and rename writes at top-level `/api/groupings` and `/api/country-overrides`
- * rather than under this prefix — those mounts are added when the handlers exist.
+ * Mounted at THREE prefixes per architecture.html §4.4 and §5.1: `/api/map` (the
+ * `/countries` and `/groupings` reads), plus top-level `/api/groupings` and
+ * `/api/country-overrides` for the writes, which the architecture deliberately places
+ * outside the `/api/map` namespace.
+ *
+ * Placeholder. The reads land in P1; the grouping edit surface lands in P2 alongside
+ * the view.
  */
 import { Hono } from 'hono';
 

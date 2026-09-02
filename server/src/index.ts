@@ -39,15 +39,28 @@ if (process.env.NODE_ENV !== 'production') {
 app.get('/api/health', (c) => c.json({ ok: true }));
 
 // Every route module is an empty placeholder at P0; each one names the phase that fills it.
+//
+// The nine modules are a FILE layout, not a URL layout: two of them own more than one
+// prefix, because architecture.html §5.1/§5.2 specifies the URLs and those URLs do not all
+// sit under a namesake path. In particular there is no /api/registry prefix.
 app.route('/api/events', eventRoutes);
 app.route('/api/timelines', timelineRoutes);
 app.route('/api/relations', relationRoutes);
 app.route('/api/tags', tagRoutes);
-app.route('/api/map', mapRoutes);
-app.route('/api/registry', registryRoutes);
 app.route('/api/saves', saveRoutes);
 app.route('/api/simulation', simulationRoutes);
 app.route('/api/export', exportRoutes);
+
+// registry.ts owns the four registry entity prefixes (§5.2) — not /api/registry.
+app.route('/api/characters', registryRoutes);
+app.route('/api/locations', registryRoutes);
+app.route('/api/projects', registryRoutes);
+app.route('/api/character-relations', registryRoutes);
+
+// map.ts owns the /api/map reads plus two top-level prefixes (§5.1).
+app.route('/api/map', mapRoutes);
+app.route('/api/groupings', mapRoutes);
+app.route('/api/country-overrides', mapRoutes);
 
 serve({ fetch: app.fetch, port: PORT }, (info) => {
   console.log(`[server] listening on http://localhost:${info.port}`);
