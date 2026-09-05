@@ -193,6 +193,17 @@ export type WheelDelta = Pick<WheelEvent, 'deltaX' | 'deltaY' | 'deltaMode'>;
  * while a mouse wheel only ever produces `deltaY`. Ignoring `deltaY` would leave the
  * corridor unpannable with a mouse; preferring it would make a diagonal trackpad gesture
  * pan the wrong way. `deltaMode` is normalised to pixels, because Firefox reports lines.
+ *
+ * **P7 reverses the justification above, and this rule has to go with it.** P7.7 maps
+ * vertical scroll to camera *depth* — continuously, no snapping — so `deltaY` stops being
+ * a substitute for `deltaX` and becomes a different axis of the scene. Folding it into
+ * the time pan then makes one gesture drive two axes at once, and the mouse argument
+ * inverts: rather than being the only way a mouse can pan time, `deltaY` becomes the one
+ * thing a mouse *cannot* spend on time, leaving a plain wheel with no time pan at all.
+ * P7 owns the replacement (a modifier key, a drag, or a horizontal-only rule with an
+ * explicit mouse affordance) because it owns the depth axis; this comment only records
+ * that the reasoning here expires there. The code is six pure lines and is deliberately
+ * left as it is at P4 — changing it now would guess at P7's input model.
  */
 export function wheelPixels(event: WheelDelta): number {
   const raw = Math.abs(event.deltaX) >= Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
@@ -218,7 +229,19 @@ export function worldPerPixel(
   distance: number,
   widthPx: number,
 ): number {
-  if (!(widthPx > 0) || !(aspect > 0) || !Number.isFinite(distance)) {
+  // The fov test is a DOMAIN check, not a finiteness one, and that distinction is the
+  // whole of it. `perPixel > 0 && Number.isFinite(perPixel)` looks like it covers every
+  // degenerate frustum and does not: `Math.tan(Math.PI / 2)` evaluates to 1.6e16 rather
+  // than Infinity, because pi/2 is not exactly representable, so a 180-degree fov clears
+  // both tests and returns a finite, positive, meaningless 1.7e15 world units per pixel —
+  // one wheel notch past the end of representable time. Only `0 < fov < 180` catches it.
+  // Found by tests/pan.test.ts, which had pinned the gap before this closed it.
+  if (
+    !(widthPx > 0) ||
+    !(aspect > 0) ||
+    !Number.isFinite(distance) ||
+    !(fovDegrees > 0 && fovDegrees < 180)
+  ) {
     return PAN_FALLBACK_WORLD_PER_PIXEL;
   }
   const visibleHeight = 2 * Math.tan((fovDegrees * Math.PI) / 360) * Math.abs(distance);
