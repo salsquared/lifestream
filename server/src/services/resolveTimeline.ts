@@ -31,7 +31,7 @@
  * and that is also chronological order. Nothing is parsed into a `Date`.
  */
 
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import type { Category, MembershipRules } from '@shared/types/index';
 
@@ -252,9 +252,43 @@ function canonicalHeads(successorOf: ReadonlyMap<string, string | null>): Map<st
  * ------------------------------------------------------------------ */
 
 interface SaveCache {
+  /**
+   * `PRAGMA data_version` as read at the moment this entry was opened. A lookup that sees a
+   * different number throws the entry away — see {@link dataVersion}.
+   */
+  dataVersion: number;
   snapshot?: SaveSnapshot;
   resolved: Map<string, ResolvedTimeline>;
   timelinesByEvent?: TimelinesByEvent;
+}
+
+/**
+ * SQLite's cross-connection write counter — the second half of invalidation (P3.5.1).
+ *
+ * {@link invalidateSave} covers writes this process makes, and it can only ever cover those.
+ * `db:seed` is a SEPARATE PROCESS: it commits through its own connection, calls nothing here,
+ * and its files are outside `tsx watch`'s import graph so the dev server does not even
+ * restart. Without this read, a save resolved once stays resolved at that moment forever —
+ * demonstrated as `/resolve` answering 12 while `/api/events` answered 13, the thirteenth
+ * event showing an empty "also in". Transcribing canon with the Corridor open is the workflow
+ * P5 is specified around, so every event written would have been invisible until a restart.
+ *
+ * `PRAGMA data_version` is exactly the counter for that case: SQLite bumps it when ANOTHER
+ * connection commits, and deliberately leaves it alone for this connection's own writes. So
+ * it catches the seed and cannot second-guess the documented in-process contract — a route
+ * that writes and forgets to invalidate is still a bug this does not paper over.
+ *
+ * One integer read per cache lookup, off the database header. A `:memory:` database has no
+ * other connection by construction and simply answers 1 forever.
+ */
+function dataVersion(db: Db): number {
+  const row = db.get<{ data_version?: number } | undefined>(sql`PRAGMA data_version`);
+  // The fallback is unreachable through better-sqlite3, which always answers with the row,
+  // and it is `NaN` rather than a number on purpose: `NaN` never equals the stamp on an
+  // entry, so a driver that answered nothing would degrade the cache to "rebuild every
+  // time" — slow and correct — instead of to "never notice another connection", which is
+  // the bug this function exists to close. Wrong-and-quiet is the one option not on offer.
+  return row?.data_version ?? Number.NaN;
 }
 
 /**
@@ -273,9 +307,12 @@ function saveCache(db: Db, saveId: string): SaveCache {
     bySave = new Map();
     cachesByConnection.set(db, bySave);
   }
+  // Read once per lookup and compared against the stamp the entry was opened with, so a
+  // commit from any other connection drops this save's entry on the very next call.
+  const version = dataVersion(db);
   let cache = bySave.get(saveId);
-  if (cache === undefined) {
-    cache = { resolved: new Map() };
+  if (cache === undefined || cache.dataVersion !== version) {
+    cache = { dataVersion: version, resolved: new Map() };
     bySave.set(saveId, cache);
   }
   return cache;
@@ -290,6 +327,10 @@ function saveCache(db: Db, saveId: string): SaveCache {
  * could have joined or left means evaluating every rule in the save, which is the expensive
  * half of resolving in the first place; at ~50–500 events the rebuild is cheaper than the
  * bookkeeping, and a coarse drop cannot be subtly wrong.
+ *
+ * STILL REQUIRED even though {@link dataVersion} now catches other connections: SQLite does
+ * not bump `data_version` for a connection's own commits, so this is the only thing that sees
+ * a write made through `db` itself.
  */
 export function invalidateSave(db: Db, saveId: string): void {
   cachesByConnection.get(db)?.delete(saveId);
@@ -446,9 +487,10 @@ function matchesRules(
  * those of every descendant in the `timeline_parent` DAG, deduplicated and sorted by `when`.
  *
  * Memoized per `(saveId, timelineId)`; call {@link invalidateSave} after any write to the
- * save. `db` leads the documented `(timelineId, saveId)` argument order because the
- * connection is not part of the key — it is which database is being asked (`createDb(url)`,
- * P1.6.3, exists so a spec can ask a throwaway one).
+ * save made through this connection — a commit from any OTHER connection is caught by
+ * {@link dataVersion} without help. `db` leads the documented `(timelineId, saveId)` argument
+ * order because the connection is not part of the key — it is which database is being asked
+ * (`createDb(url)`, P1.6.3, exists so a spec can ask a throwaway one).
  *
  * @throws {TimelineNotFoundError} the timeline is not in this save.
  * @throws {TimelineCycleError} `timeline_parent` loops within the reachable set.
@@ -503,6 +545,12 @@ export function resolveTimeline(db: Db, timelineId: string, saveId: string): Res
  * structurally (the parentless timeline, §2.3) exactly as the Corridor's thread stratum does.
  *
  * An event in no timeline has no entry; read it as `index.get(id) ?? EMPTY`.
+ *
+ * The loop re-enters {@link resolveTimeline}, so each iteration re-reads `data_version`. A
+ * foreign commit landing MID-BUILD therefore orphans the entry this call is filling: the
+ * index is still returned to this caller, but it is not stored, and the next call rebuilds
+ * against the new data. Answering a concurrent write with a value from either side of it is
+ * fine; caching one is not, and that is the case that cannot happen.
  *
  * @throws {TimelineCycleError} any timeline in the save has a cycle beneath it — the index
  *         covers all of them, so a corrupt DAG anywhere fails this rather than half-building.

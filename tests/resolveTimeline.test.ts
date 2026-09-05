@@ -1,3 +1,6 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { and, eq } from 'drizzle-orm';
@@ -703,6 +706,12 @@ describe('the memo cache', () => {
     // A write with no invalidation is still the cached answer. This is the contract, not a
     // bug: the cache is dropped by the WRITER (P3.5.1), which is why every per-save write
     // has to call `invalidateSave`.
+    //
+    // The `PRAGMA data_version` check does not and must not rescue this. SQLite bumps that
+    // counter for OTHER connections' commits and deliberately leaves it alone for this
+    // connection's own, so the two halves of invalidation do not overlap: a route that
+    // writes and forgets to invalidate is still a bug, and the case below is what catches
+    // it. `:memory:` has no other connection at all, so here the counter never moves.
     expect(ids(resolveTimeline(db, 'tl_cache', CACHE_SAVE))).toEqual(['ev_cache_1']);
 
     invalidateSave(db, CACHE_SAVE);
@@ -722,5 +731,111 @@ describe('the memo cache', () => {
     const resolved = resolve('tl_world');
     expect(Object.isFrozen(resolved)).toBe(true);
     expect(Object.isFrozen(resolved.events)).toBe(true);
+  });
+});
+
+describe('the memo cache across CONNECTIONS', () => {
+  /**
+   * The half `invalidateSave` structurally cannot cover.
+   *
+   * `db:seed` is a separate PROCESS. It commits through its own connection, calls nothing in
+   * this module, and its files are outside `tsx watch`'s import graph, so the dev server does
+   * not restart either. The observed failure: `/resolve` answering 12 while `/api/events`
+   * answered 13, the thirteenth event carrying an empty "also in" — and P5 is specified as
+   * transcribing 68 events with the Corridor open, so every one of them would have been
+   * invisible until somebody restarted the server by hand.
+   *
+   * This case needs a FILE database — the one thing `:memory:` cannot express is a second
+   * connection to the same data — so it builds and tears down its own, and touches
+   * `data/lifestream.db` no more than the rest of the file does.
+   */
+  it('drops a save when ANOTHER connection commits, with nobody calling invalidateSave', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lifestream-resolve-'));
+    const file = join(dir, 'cross.db');
+    const reader = createDb(file);
+    const writer = createDb(file);
+
+    try {
+      migrate(reader.db, { migrationsFolder });
+
+      const CROSS = 'sav_cross';
+      reader.db
+        .insert(save)
+        .values({
+          id: CROSS,
+          name: CROSS,
+          description: 'cross-connection fixture',
+          createdAt: '2026-09-05T00:00:00.000Z',
+          isArchived: false,
+        })
+        .run();
+      reader.db
+        .insert(timeline)
+        .values({
+          id: 'tl_cross',
+          saveId: CROSS,
+          name: 'tl_cross',
+          kind: 'thread',
+          eraStart: null,
+          eraStartPrecision: null,
+          membershipRules: { byCategory: ['tech'] },
+        })
+        .run();
+
+      const insertEvent = (id: string, y: number, handle: DbHandle): void => {
+        handle.db
+          .insert(event)
+          .values({
+            id,
+            saveId: CROSS,
+            title: id,
+            description: '',
+            whenMin: year(y)[0],
+            whenMax: year(y)[1],
+            whenPrecision: 'year',
+            when: `${y}-06-06T00:00:00.000Z`,
+            category: 'tech',
+            techLane: null,
+            locationId: null,
+            projectId: null,
+          })
+          .run();
+      };
+      const dataVersion = (handle: DbHandle): number =>
+        handle.sqlite.pragma('data_version', { simple: true }) as number;
+
+      insertEvent('ev_cross_1', 2040, reader);
+
+      const first = resolveTimeline(reader.db, 'tl_cross', CROSS);
+      expect(ids(first)).toEqual(['ev_cross_1']);
+      // The memo is real, and the reader's OWN write did not disturb it.
+      expect(resolveTimeline(reader.db, 'tl_cross', CROSS)).toBe(first);
+      const before = dataVersion(reader);
+
+      // ── the second connection, standing in for `db:seed` ────────────────────────────
+      insertEvent('ev_cross_2', 2041, writer);
+
+      // SQLite's own counter moved, which is the entire signal being read.
+      const after = dataVersion(reader);
+      expect(after).not.toBe(before);
+
+      // No `invalidateSave` anywhere: the reader notices on its own.
+      const second = resolveTimeline(reader.db, 'tl_cross', CROSS);
+      expect(ids(second)).toEqual(['ev_cross_1', 'ev_cross_2']);
+      expect(second).not.toBe(first);
+
+      // …and the reverse index behind the "also in" pills, which was the visible symptom.
+      expect([...(timelinesByEvent(reader.db, CROSS).get('ev_cross_2') ?? [])]).toEqual([
+        'tl_cross',
+      ]);
+
+      // A quiet interval does not churn the cache: no commit, same counter, same object.
+      expect(dataVersion(reader)).toBe(after);
+      expect(resolveTimeline(reader.db, 'tl_cross', CROSS)).toBe(second);
+    } finally {
+      reader.close();
+      writer.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
