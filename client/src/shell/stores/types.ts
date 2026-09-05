@@ -68,9 +68,14 @@ export type Location = {
   description?: string;
   lat?: number;
   lng?: number;
-  /** `mapRefValue` points at a `country.id` or a `grouping.id` per `mapRefKind`. */
-  mapRefKind?: MapRefKind;
-  mapRefValue?: string;
+  /**
+   * Where this location sits on the map. Two real reference columns, at most one set —
+   * they replaced a polymorphic `mapRefKind`/`mapRefValue` pair, which had no foreign key
+   * and so could dangle when its target was deleted. `MapRefKind` is now DERIVED from
+   * which of the two is set, never stored.
+   */
+  countryId?: string;
+  groupingId?: string;
   /** Rename identity chain (§2.2). */
   supersededByLocationId?: string;
 };
@@ -138,6 +143,11 @@ export type Timeline = {
   /** Required when `kind === 'era'` (§2.5). */
   eraStart?: IsoInstant;
   eraEnd?: IsoInstant;
+  /**
+   * Set when this timeline is a project thread; its span comes from the project's
+   * date_start/date_end. Added with the schema — see architecture §2.5.
+   */
+  projectId?: string;
 };
 
 /** An event-to-event edge, stored once in canonical direction (§2.6). */

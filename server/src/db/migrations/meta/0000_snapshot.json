@@ -1,0 +1,2548 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "79283de6-2442-4667-b594-90e25b11a970",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "bf_spread": {
+      "name": "bf_spread",
+      "columns": {
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "t": {
+          "name": "t",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "bf_spread_run_id_sim_run_id_fk": {
+          "name": "bf_spread_run_id_sim_run_id_fk",
+          "tableFrom": "bf_spread",
+          "tableTo": "sim_run",
+          "columnsFrom": [
+            "run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bf_spread_country_id_country_id_fk": {
+          "name": "bf_spread_country_id_country_id_fk",
+          "tableFrom": "bf_spread",
+          "tableTo": "country",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "bf_spread_run_id_country_id_t_pk": {
+          "columns": [
+            "run_id",
+            "country_id",
+            "t"
+          ],
+          "name": "bf_spread_run_id_country_id_t_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "character": {
+      "name": "character",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lifespan_start": {
+          "name": "lifespan_start",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lifespan_start_precision": {
+          "name": "lifespan_start_precision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lifespan_end": {
+          "name": "lifespan_end",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lifespan_end_precision": {
+          "name": "lifespan_end_precision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "bio": {
+          "name": "bio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "portrait_path": {
+          "name": "portrait_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "character_save_id_id_unique": {
+          "name": "character_save_id_id_unique",
+          "columns": [
+            "save_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "character_save_id_save_id_fk": {
+          "name": "character_save_id_save_id_fk",
+          "tableFrom": "character",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "character_name_non_empty_check": {
+          "name": "character_name_non_empty_check",
+          "value": "\"character\".\"name\" <> ''"
+        },
+        "character_lifespan_start_format_check": {
+          "name": "character_lifespan_start_format_check",
+          "value": "\"character\".\"lifespan_start\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "character_lifespan_end_format_check": {
+          "name": "character_lifespan_end_format_check",
+          "value": "\"character\".\"lifespan_end\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "character_lifespan_order_check": {
+          "name": "character_lifespan_order_check",
+          "value": "\"character\".\"lifespan_end\" >= \"character\".\"lifespan_start\""
+        },
+        "character_lifespan_start_precision_check": {
+          "name": "character_lifespan_start_precision_check",
+          "value": "\"character\".\"lifespan_start_precision\" in ('time', 'day', 'month', 'season', 'year', 'decade')"
+        },
+        "character_lifespan_end_precision_check": {
+          "name": "character_lifespan_end_precision_check",
+          "value": "\"character\".\"lifespan_end_precision\" in ('time', 'day', 'month', 'season', 'year', 'decade')"
+        },
+        "character_lifespan_start_pair_check": {
+          "name": "character_lifespan_start_pair_check",
+          "value": "(\"character\".\"lifespan_start\" is null) = (\"character\".\"lifespan_start_precision\" is null)"
+        },
+        "character_lifespan_end_pair_check": {
+          "name": "character_lifespan_end_pair_check",
+          "value": "(\"character\".\"lifespan_end\" is null) = (\"character\".\"lifespan_end_precision\" is null)"
+        }
+      }
+    },
+    "character_relation": {
+      "name": "character_relation",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "from_character_id": {
+          "name": "from_character_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "to_character_id": {
+          "name": "to_character_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "character_relation_edge_unique": {
+          "name": "character_relation_edge_unique",
+          "columns": [
+            "save_id",
+            "from_character_id",
+            "to_character_id",
+            "type"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "character_relation_save_id_save_id_fk": {
+          "name": "character_relation_save_id_save_id_fk",
+          "tableFrom": "character_relation",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "character_relation_save_id_from_character_id_character_save_id_id_fk": {
+          "name": "character_relation_save_id_from_character_id_character_save_id_id_fk",
+          "tableFrom": "character_relation",
+          "tableTo": "character",
+          "columnsFrom": [
+            "save_id",
+            "from_character_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "character_relation_save_id_to_character_id_character_save_id_id_fk": {
+          "name": "character_relation_save_id_to_character_id_character_save_id_id_fk",
+          "tableFrom": "character_relation",
+          "tableTo": "character",
+          "columnsFrom": [
+            "save_id",
+            "to_character_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "character_relation_type_check": {
+          "name": "character_relation_type_check",
+          "value": "\"character_relation\".\"type\" in ('parent-of', 'sibling-of', 'spouse-of', 'clone-of')"
+        },
+        "character_relation_not_self_check": {
+          "name": "character_relation_not_self_check",
+          "value": "\"character_relation\".\"from_character_id\" <> \"character_relation\".\"to_character_id\""
+        },
+        "character_relation_canonical_order_check": {
+          "name": "character_relation_canonical_order_check",
+          "value": "\"character_relation\".\"type\" not in ('sibling-of', 'spouse-of') or \"character_relation\".\"from_character_id\" < \"character_relation\".\"to_character_id\""
+        }
+      }
+    },
+    "country": {
+      "name": "country",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "iso_numeric": {
+          "name": "iso_numeric",
+          "type": "text(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "alpha3": {
+          "name": "alpha3",
+          "type": "text(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "geometry_source": {
+          "name": "geometry_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "country_geometry_source_check": {
+          "name": "country_geometry_source_check",
+          "value": "\"country\".\"geometry_source\" in ('feature', 'derived')"
+        }
+      }
+    },
+    "country_override": {
+      "name": "country_override",
+      "columns": {
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "country_override_save_id_save_id_fk": {
+          "name": "country_override_save_id_save_id_fk",
+          "tableFrom": "country_override",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "country_override_country_id_country_id_fk": {
+          "name": "country_override_country_id_country_id_fk",
+          "tableFrom": "country_override",
+          "tableTo": "country",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "country_override_save_id_country_id_pk": {
+          "columns": [
+            "save_id",
+            "country_id"
+          ],
+          "name": "country_override_save_id_country_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "country_projection": {
+      "name": "country_projection",
+      "columns": {
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "year": {
+          "name": "year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "pop": {
+          "name": "pop",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "gdp_real": {
+          "name": "gdp_real",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "gdp_pc": {
+          "name": "gdp_pc",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sector_mix_json": {
+          "name": "sector_mix_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "computed_at": {
+          "name": "computed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "country_projection_run_id_sim_run_id_fk": {
+          "name": "country_projection_run_id_sim_run_id_fk",
+          "tableFrom": "country_projection",
+          "tableTo": "sim_run",
+          "columnsFrom": [
+            "run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "country_projection_country_id_country_id_fk": {
+          "name": "country_projection_country_id_country_id_fk",
+          "tableFrom": "country_projection",
+          "tableTo": "country",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "country_projection_run_id_country_id_year_pk": {
+          "columns": [
+            "run_id",
+            "country_id",
+            "year"
+          ],
+          "name": "country_projection_run_id_country_id_year_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "country_projection_computed_at_format_check": {
+          "name": "country_projection_computed_at_format_check",
+          "value": "\"country_projection\".\"computed_at\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "country_projection_sector_mix_json_check": {
+          "name": "country_projection_sector_mix_json_check",
+          "value": "json_valid(\"country_projection\".\"sector_mix_json\") and json_type(\"country_projection\".\"sector_mix_json\") = 'object'"
+        }
+      }
+    },
+    "event": {
+      "name": "event",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "when_min": {
+          "name": "when_min",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "when_max": {
+          "name": "when_max",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "when_precision": {
+          "name": "when_precision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "when": {
+          "name": "when",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "range_before_event_id": {
+          "name": "range_before_event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "range_after_event_id": {
+          "name": "range_after_event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tech_lane": {
+          "name": "tech_lane",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "location_id": {
+          "name": "location_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "event_save_id_id_unique": {
+          "name": "event_save_id_id_unique",
+          "columns": [
+            "save_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "event_save_id_save_id_fk": {
+          "name": "event_save_id_save_id_fk",
+          "tableFrom": "event",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "event_save_id_range_before_event_id_event_save_id_id_fk": {
+          "name": "event_save_id_range_before_event_id_event_save_id_id_fk",
+          "tableFrom": "event",
+          "tableTo": "event",
+          "columnsFrom": [
+            "save_id",
+            "range_before_event_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "event_save_id_range_after_event_id_event_save_id_id_fk": {
+          "name": "event_save_id_range_after_event_id_event_save_id_id_fk",
+          "tableFrom": "event",
+          "tableTo": "event",
+          "columnsFrom": [
+            "save_id",
+            "range_after_event_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "event_save_id_location_id_location_save_id_id_fk": {
+          "name": "event_save_id_location_id_location_save_id_id_fk",
+          "tableFrom": "event",
+          "tableTo": "location",
+          "columnsFrom": [
+            "save_id",
+            "location_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "event_save_id_project_id_project_save_id_id_fk": {
+          "name": "event_save_id_project_id_project_save_id_id_fk",
+          "tableFrom": "event",
+          "tableTo": "project",
+          "columnsFrom": [
+            "save_id",
+            "project_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "event_when_min_format_check": {
+          "name": "event_when_min_format_check",
+          "value": "\"event\".\"when_min\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "event_when_max_format_check": {
+          "name": "event_when_max_format_check",
+          "value": "\"event\".\"when_max\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "event_when_format_check": {
+          "name": "event_when_format_check",
+          "value": "\"event\".\"when\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "event_when_order_check": {
+          "name": "event_when_order_check",
+          "value": "\"event\".\"when_max\" >= \"event\".\"when_min\""
+        },
+        "event_when_in_window_check": {
+          "name": "event_when_in_window_check",
+          "value": "\"event\".\"when\" between \"event\".\"when_min\" and \"event\".\"when_max\""
+        },
+        "event_when_precision_check": {
+          "name": "event_when_precision_check",
+          "value": "\"event\".\"when_precision\" in ('time', 'day', 'month', 'season', 'year', 'decade')"
+        },
+        "event_category_check": {
+          "name": "event_category_check",
+          "value": "\"event\".\"category\" in ('tech', 'political', 'military', 'disaster', 'scientific', 'cultural', 'personal')"
+        },
+        "event_tech_lane_check": {
+          "name": "event_tech_lane_check",
+          "value": "\"event\".\"tech_lane\" in ('energy', 'propulsion', 'computing', 'neural', 'biomedical', 'megastructure')"
+        },
+        "event_tech_lane_requires_tech_check": {
+          "name": "event_tech_lane_requires_tech_check",
+          "value": "\"event\".\"tech_lane\" is null or \"event\".\"category\" = 'tech'"
+        },
+        "event_not_self_range_before_check": {
+          "name": "event_not_self_range_before_check",
+          "value": "\"event\".\"id\" <> \"event\".\"range_before_event_id\""
+        },
+        "event_not_self_range_after_check": {
+          "name": "event_not_self_range_after_check",
+          "value": "\"event\".\"id\" <> \"event\".\"range_after_event_id\""
+        }
+      }
+    },
+    "event_actor": {
+      "name": "event_actor",
+      "columns": {
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "character_id": {
+          "name": "character_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "event_actor_lifespan_role_unique": {
+          "name": "event_actor_lifespan_role_unique",
+          "columns": [
+            "save_id",
+            "character_id",
+            "role"
+          ],
+          "isUnique": true,
+          "where": "\"event_actor\".\"role\" in ('born', 'died')"
+        }
+      },
+      "foreignKeys": {
+        "event_actor_save_id_save_id_fk": {
+          "name": "event_actor_save_id_save_id_fk",
+          "tableFrom": "event_actor",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "event_actor_save_id_event_id_event_save_id_id_fk": {
+          "name": "event_actor_save_id_event_id_event_save_id_id_fk",
+          "tableFrom": "event_actor",
+          "tableTo": "event",
+          "columnsFrom": [
+            "save_id",
+            "event_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "event_actor_save_id_character_id_character_save_id_id_fk": {
+          "name": "event_actor_save_id_character_id_character_save_id_id_fk",
+          "tableFrom": "event_actor",
+          "tableTo": "character",
+          "columnsFrom": [
+            "save_id",
+            "character_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "event_actor_event_id_character_id_role_pk": {
+          "columns": [
+            "event_id",
+            "character_id",
+            "role"
+          ],
+          "name": "event_actor_event_id_character_id_role_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "event_actor_role_normalized_check": {
+          "name": "event_actor_role_normalized_check",
+          "value": "\"event_actor\".\"role\" <> '' and \"event_actor\".\"role\" = lower(trim(\"event_actor\".\"role\"))"
+        }
+      }
+    },
+    "event_tag": {
+      "name": "event_tag",
+      "columns": {
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tag_id": {
+          "name": "tag_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "event_tag_save_id_save_id_fk": {
+          "name": "event_tag_save_id_save_id_fk",
+          "tableFrom": "event_tag",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "event_tag_tag_id_tag_id_fk": {
+          "name": "event_tag_tag_id_tag_id_fk",
+          "tableFrom": "event_tag",
+          "tableTo": "tag",
+          "columnsFrom": [
+            "tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "event_tag_save_id_event_id_event_save_id_id_fk": {
+          "name": "event_tag_save_id_event_id_event_save_id_id_fk",
+          "tableFrom": "event_tag",
+          "tableTo": "event",
+          "columnsFrom": [
+            "save_id",
+            "event_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "event_tag_event_id_tag_id_pk": {
+          "columns": [
+            "event_id",
+            "tag_id"
+          ],
+          "name": "event_tag_event_id_tag_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "grouping": {
+      "name": "grouping",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "grouping_save_id_id_unique": {
+          "name": "grouping_save_id_id_unique",
+          "columns": [
+            "save_id",
+            "id"
+          ],
+          "isUnique": true
+        },
+        "grouping_save_id_name_unique": {
+          "name": "grouping_save_id_name_unique",
+          "columns": [
+            "save_id",
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "grouping_save_id_save_id_fk": {
+          "name": "grouping_save_id_save_id_fk",
+          "tableFrom": "grouping",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "grouping_country": {
+      "name": "grouping_country",
+      "columns": {
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "grouping_id": {
+          "name": "grouping_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_leader": {
+          "name": "is_leader",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        }
+      },
+      "indexes": {
+        "grouping_country_leader_unique": {
+          "name": "grouping_country_leader_unique",
+          "columns": [
+            "save_id",
+            "grouping_id"
+          ],
+          "isUnique": true,
+          "where": "\"grouping_country\".\"is_leader\" = 1"
+        }
+      },
+      "foreignKeys": {
+        "grouping_country_save_id_save_id_fk": {
+          "name": "grouping_country_save_id_save_id_fk",
+          "tableFrom": "grouping_country",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "grouping_country_country_id_country_id_fk": {
+          "name": "grouping_country_country_id_country_id_fk",
+          "tableFrom": "grouping_country",
+          "tableTo": "country",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "grouping_country_save_id_grouping_id_grouping_save_id_id_fk": {
+          "name": "grouping_country_save_id_grouping_id_grouping_save_id_id_fk",
+          "tableFrom": "grouping_country",
+          "tableTo": "grouping",
+          "columnsFrom": [
+            "save_id",
+            "grouping_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "grouping_country_save_id_country_id_pk": {
+          "columns": [
+            "save_id",
+            "country_id"
+          ],
+          "name": "grouping_country_save_id_country_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "grouping_metrics": {
+      "name": "grouping_metrics",
+      "columns": {
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "grouping_id": {
+          "name": "grouping_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "pop": {
+          "name": "pop",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "gdp_real": {
+          "name": "gdp_real",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "gdp_pc": {
+          "name": "gdp_pc",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sector_mix_json": {
+          "name": "sector_mix_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "computed_at": {
+          "name": "computed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "grouping_metrics_save_id_save_id_fk": {
+          "name": "grouping_metrics_save_id_save_id_fk",
+          "tableFrom": "grouping_metrics",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "grouping_metrics_run_id_sim_run_id_fk": {
+          "name": "grouping_metrics_run_id_sim_run_id_fk",
+          "tableFrom": "grouping_metrics",
+          "tableTo": "sim_run",
+          "columnsFrom": [
+            "run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "grouping_metrics_save_id_grouping_id_grouping_save_id_id_fk": {
+          "name": "grouping_metrics_save_id_grouping_id_grouping_save_id_id_fk",
+          "tableFrom": "grouping_metrics",
+          "tableTo": "grouping",
+          "columnsFrom": [
+            "save_id",
+            "grouping_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "grouping_metrics_save_id_run_id_grouping_id_pk": {
+          "columns": [
+            "save_id",
+            "run_id",
+            "grouping_id"
+          ],
+          "name": "grouping_metrics_save_id_run_id_grouping_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "grouping_metrics_sector_mix_json_check": {
+          "name": "grouping_metrics_sector_mix_json_check",
+          "value": "json_valid(\"grouping_metrics\".\"sector_mix_json\") and json_type(\"grouping_metrics\".\"sector_mix_json\") = 'object'"
+        },
+        "grouping_metrics_computed_at_format_check": {
+          "name": "grouping_metrics_computed_at_format_check",
+          "value": "\"grouping_metrics\".\"computed_at\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        }
+      }
+    },
+    "location": {
+      "name": "location",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lat": {
+          "name": "lat",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lng": {
+          "name": "lng",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "grouping_id": {
+          "name": "grouping_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "superseded_by_location_id": {
+          "name": "superseded_by_location_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "location_save_id_id_unique": {
+          "name": "location_save_id_id_unique",
+          "columns": [
+            "save_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "location_save_id_save_id_fk": {
+          "name": "location_save_id_save_id_fk",
+          "tableFrom": "location",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "location_country_id_country_id_fk": {
+          "name": "location_country_id_country_id_fk",
+          "tableFrom": "location",
+          "tableTo": "country",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "location_save_id_grouping_id_grouping_save_id_id_fk": {
+          "name": "location_save_id_grouping_id_grouping_save_id_id_fk",
+          "tableFrom": "location",
+          "tableTo": "grouping",
+          "columnsFrom": [
+            "save_id",
+            "grouping_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "location_save_id_superseded_by_location_id_location_save_id_id_fk": {
+          "name": "location_save_id_superseded_by_location_id_location_save_id_id_fk",
+          "tableFrom": "location",
+          "tableTo": "location",
+          "columnsFrom": [
+            "save_id",
+            "superseded_by_location_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "location_map_ref_check": {
+          "name": "location_map_ref_check",
+          "value": "\"location\".\"country_id\" is null or \"location\".\"grouping_id\" is null"
+        },
+        "location_not_self_superseded_check": {
+          "name": "location_not_self_superseded_check",
+          "value": "\"location\".\"id\" <> \"location\".\"superseded_by_location_id\""
+        }
+      }
+    },
+    "manifest": {
+      "name": "manifest",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "items_json": {
+          "name": "items_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "manifest_save_id_save_id_fk": {
+          "name": "manifest_save_id_save_id_fk",
+          "tableFrom": "manifest",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "manifest_items_json_check": {
+          "name": "manifest_items_json_check",
+          "value": "json_valid(\"manifest\".\"items_json\") and json_type(\"manifest\".\"items_json\") = 'array'"
+        },
+        "manifest_created_at_format_check": {
+          "name": "manifest_created_at_format_check",
+          "value": "\"manifest\".\"created_at\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "manifest_updated_at_format_check": {
+          "name": "manifest_updated_at_format_check",
+          "value": "\"manifest\".\"updated_at\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        }
+      }
+    },
+    "nation_horizontal": {
+      "name": "nation_horizontal",
+      "columns": {
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "horizontal": {
+          "name": "horizontal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "score": {
+          "name": "score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "computed_at": {
+          "name": "computed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "nation_horizontal_save_id_save_id_fk": {
+          "name": "nation_horizontal_save_id_save_id_fk",
+          "tableFrom": "nation_horizontal",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "nation_horizontal_run_id_sim_run_id_fk": {
+          "name": "nation_horizontal_run_id_sim_run_id_fk",
+          "tableFrom": "nation_horizontal",
+          "tableTo": "sim_run",
+          "columnsFrom": [
+            "run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "nation_horizontal_country_id_country_id_fk": {
+          "name": "nation_horizontal_country_id_country_id_fk",
+          "tableFrom": "nation_horizontal",
+          "tableTo": "country",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "nation_horizontal_save_id_run_id_country_id_horizontal_pk": {
+          "columns": [
+            "save_id",
+            "run_id",
+            "country_id",
+            "horizontal"
+          ],
+          "name": "nation_horizontal_save_id_run_id_country_id_horizontal_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "nation_horizontal_computed_at_format_check": {
+          "name": "nation_horizontal_computed_at_format_check",
+          "value": "\"nation_horizontal\".\"computed_at\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        }
+      }
+    },
+    "project": {
+      "name": "project",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "date_start": {
+          "name": "date_start",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "date_start_precision": {
+          "name": "date_start_precision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "date_end": {
+          "name": "date_end",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "date_end_precision": {
+          "name": "date_end_precision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lead_character_id": {
+          "name": "lead_character_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "project_save_id_id_unique": {
+          "name": "project_save_id_id_unique",
+          "columns": [
+            "save_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "project_save_id_save_id_fk": {
+          "name": "project_save_id_save_id_fk",
+          "tableFrom": "project",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "project_save_id_lead_character_id_character_save_id_id_fk": {
+          "name": "project_save_id_lead_character_id_character_save_id_id_fk",
+          "tableFrom": "project",
+          "tableTo": "character",
+          "columnsFrom": [
+            "save_id",
+            "lead_character_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "project_status_check": {
+          "name": "project_status_check",
+          "value": "\"project\".\"status\" in ('planned', 'active', 'succeeded', 'failed', 'cancelled')"
+        },
+        "project_date_start_format_check": {
+          "name": "project_date_start_format_check",
+          "value": "\"project\".\"date_start\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "project_date_end_format_check": {
+          "name": "project_date_end_format_check",
+          "value": "\"project\".\"date_end\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "project_date_order_check": {
+          "name": "project_date_order_check",
+          "value": "\"project\".\"date_end\" >= \"project\".\"date_start\""
+        },
+        "project_date_start_precision_check": {
+          "name": "project_date_start_precision_check",
+          "value": "\"project\".\"date_start_precision\" in ('time', 'day', 'month', 'season', 'year', 'decade')"
+        },
+        "project_date_end_precision_check": {
+          "name": "project_date_end_precision_check",
+          "value": "\"project\".\"date_end_precision\" in ('time', 'day', 'month', 'season', 'year', 'decade')"
+        },
+        "project_date_start_pair_check": {
+          "name": "project_date_start_pair_check",
+          "value": "(\"project\".\"date_start\" is null) = (\"project\".\"date_start_precision\" is null)"
+        },
+        "project_date_end_pair_check": {
+          "name": "project_date_end_pair_check",
+          "value": "(\"project\".\"date_end\" is null) = (\"project\".\"date_end_precision\" is null)"
+        }
+      }
+    },
+    "relation": {
+      "name": "relation",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "from_event_id": {
+          "name": "from_event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "to_event_id": {
+          "name": "to_event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "relation_edge_unique": {
+          "name": "relation_edge_unique",
+          "columns": [
+            "save_id",
+            "from_event_id",
+            "to_event_id",
+            "type"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "relation_save_id_save_id_fk": {
+          "name": "relation_save_id_save_id_fk",
+          "tableFrom": "relation",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "relation_save_id_from_event_id_event_save_id_id_fk": {
+          "name": "relation_save_id_from_event_id_event_save_id_id_fk",
+          "tableFrom": "relation",
+          "tableTo": "event",
+          "columnsFrom": [
+            "save_id",
+            "from_event_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "relation_save_id_to_event_id_event_save_id_id_fk": {
+          "name": "relation_save_id_to_event_id_event_save_id_id_fk",
+          "tableFrom": "relation",
+          "tableTo": "event",
+          "columnsFrom": [
+            "save_id",
+            "to_event_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "relation_type_check": {
+          "name": "relation_type_check",
+          "value": "\"relation\".\"type\" in ('precedes', 'partOf', 'renames')"
+        },
+        "relation_not_self_check": {
+          "name": "relation_not_self_check",
+          "value": "\"relation\".\"from_event_id\" <> \"relation\".\"to_event_id\""
+        }
+      }
+    },
+    "save": {
+      "name": "save",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent_save_id": {
+          "name": "parent_save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_archived": {
+          "name": "is_archived",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "save_parent_save_id_save_id_fk": {
+          "name": "save_parent_save_id_save_id_fk",
+          "tableFrom": "save",
+          "tableTo": "save",
+          "columnsFrom": [
+            "parent_save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "save_id_non_empty_check": {
+          "name": "save_id_non_empty_check",
+          "value": "\"save\".\"id\" <> ''"
+        },
+        "save_name_non_empty_check": {
+          "name": "save_name_non_empty_check",
+          "value": "\"save\".\"name\" <> ''"
+        },
+        "save_created_at_format_check": {
+          "name": "save_created_at_format_check",
+          "value": "\"save\".\"created_at\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "save_not_self_parent_check": {
+          "name": "save_not_self_parent_check",
+          "value": "\"save\".\"id\" <> \"save\".\"parent_save_id\""
+        }
+      }
+    },
+    "sim_run": {
+      "name": "sim_run",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "stage": {
+          "name": "stage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "params_json": {
+          "name": "params_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "input_run_ids_json": {
+          "name": "input_run_ids_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "finished_at": {
+          "name": "finished_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sim_run_save_id_save_id_fk": {
+          "name": "sim_run_save_id_save_id_fk",
+          "tableFrom": "sim_run",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "sim_run_params_json_check": {
+          "name": "sim_run_params_json_check",
+          "value": "json_valid(\"sim_run\".\"params_json\") and json_type(\"sim_run\".\"params_json\") = 'object'"
+        },
+        "sim_run_input_run_ids_json_check": {
+          "name": "sim_run_input_run_ids_json_check",
+          "value": "json_valid(\"sim_run\".\"input_run_ids_json\") and json_type(\"sim_run\".\"input_run_ids_json\") = 'array'"
+        },
+        "sim_run_started_at_format_check": {
+          "name": "sim_run_started_at_format_check",
+          "value": "\"sim_run\".\"started_at\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "sim_run_finished_at_format_check": {
+          "name": "sim_run_finished_at_format_check",
+          "value": "\"sim_run\".\"finished_at\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        }
+      }
+    },
+    "source_series": {
+      "name": "source_series",
+      "columns": {
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "indicator": {
+          "name": "indicator",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "year": {
+          "name": "year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fetched_at": {
+          "name": "fetched_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "vintage": {
+          "name": "vintage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "source_series_country_id_country_id_fk": {
+          "name": "source_series_country_id_country_id_fk",
+          "tableFrom": "source_series",
+          "tableTo": "country",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "source_series_source_country_id_indicator_year_vintage_pk": {
+          "columns": [
+            "source",
+            "country_id",
+            "indicator",
+            "year",
+            "vintage"
+          ],
+          "name": "source_series_source_country_id_indicator_year_vintage_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "source_series_fetched_at_format_check": {
+          "name": "source_series_fetched_at_format_check",
+          "value": "\"source_series\".\"fetched_at\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        }
+      }
+    },
+    "tag": {
+      "name": "tag",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_retired": {
+          "name": "is_retired",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        }
+      },
+      "indexes": {
+        "tag_name_unique": {
+          "name": "tag_name_unique",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "timeline": {
+      "name": "timeline",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "membership_rules": {
+          "name": "membership_rules",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "era_start": {
+          "name": "era_start",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "era_start_precision": {
+          "name": "era_start_precision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "era_end": {
+          "name": "era_end",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "era_end_precision": {
+          "name": "era_end_precision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "timeline_save_id_id_unique": {
+          "name": "timeline_save_id_id_unique",
+          "columns": [
+            "save_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "timeline_save_id_save_id_fk": {
+          "name": "timeline_save_id_save_id_fk",
+          "tableFrom": "timeline",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "timeline_save_id_project_id_project_save_id_id_fk": {
+          "name": "timeline_save_id_project_id_project_save_id_id_fk",
+          "tableFrom": "timeline",
+          "tableTo": "project",
+          "columnsFrom": [
+            "save_id",
+            "project_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "timeline_kind_check": {
+          "name": "timeline_kind_check",
+          "value": "\"timeline\".\"kind\" in ('era', 'thread', 'cluster')"
+        },
+        "timeline_era_bounds_check": {
+          "name": "timeline_era_bounds_check",
+          "value": "\"timeline\".\"kind\" <> 'era' or \"timeline\".\"era_start\" is not null"
+        },
+        "timeline_era_start_format_check": {
+          "name": "timeline_era_start_format_check",
+          "value": "\"timeline\".\"era_start\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "timeline_era_end_format_check": {
+          "name": "timeline_era_end_format_check",
+          "value": "\"timeline\".\"era_end\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
+        },
+        "timeline_era_order_check": {
+          "name": "timeline_era_order_check",
+          "value": "\"timeline\".\"era_end\" >= \"timeline\".\"era_start\""
+        },
+        "timeline_era_start_precision_check": {
+          "name": "timeline_era_start_precision_check",
+          "value": "\"timeline\".\"era_start_precision\" in ('time', 'day', 'month', 'season', 'year', 'decade')"
+        },
+        "timeline_era_end_precision_check": {
+          "name": "timeline_era_end_precision_check",
+          "value": "\"timeline\".\"era_end_precision\" in ('time', 'day', 'month', 'season', 'year', 'decade')"
+        },
+        "timeline_era_start_pair_check": {
+          "name": "timeline_era_start_pair_check",
+          "value": "(\"timeline\".\"era_start\" is null) = (\"timeline\".\"era_start_precision\" is null)"
+        },
+        "timeline_era_end_pair_check": {
+          "name": "timeline_era_end_pair_check",
+          "value": "(\"timeline\".\"era_end\" is null) = (\"timeline\".\"era_end_precision\" is null)"
+        },
+        "timeline_membership_rules_json_check": {
+          "name": "timeline_membership_rules_json_check",
+          "value": "json_valid(\"timeline\".\"membership_rules\") and json_type(\"timeline\".\"membership_rules\") = 'object'"
+        }
+      }
+    },
+    "timeline_member": {
+      "name": "timeline_member",
+      "columns": {
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "timeline_id": {
+          "name": "timeline_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "timeline_member_save_id_save_id_fk": {
+          "name": "timeline_member_save_id_save_id_fk",
+          "tableFrom": "timeline_member",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "timeline_member_save_id_timeline_id_timeline_save_id_id_fk": {
+          "name": "timeline_member_save_id_timeline_id_timeline_save_id_id_fk",
+          "tableFrom": "timeline_member",
+          "tableTo": "timeline",
+          "columnsFrom": [
+            "save_id",
+            "timeline_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "timeline_member_save_id_event_id_event_save_id_id_fk": {
+          "name": "timeline_member_save_id_event_id_event_save_id_id_fk",
+          "tableFrom": "timeline_member",
+          "tableTo": "event",
+          "columnsFrom": [
+            "save_id",
+            "event_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "timeline_member_timeline_id_event_id_pk": {
+          "columns": [
+            "timeline_id",
+            "event_id"
+          ],
+          "name": "timeline_member_timeline_id_event_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "timeline_parent": {
+      "name": "timeline_parent",
+      "columns": {
+        "save_id": {
+          "name": "save_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "timeline_id": {
+          "name": "timeline_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "timeline_parent_save_id_save_id_fk": {
+          "name": "timeline_parent_save_id_save_id_fk",
+          "tableFrom": "timeline_parent",
+          "tableTo": "save",
+          "columnsFrom": [
+            "save_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "timeline_parent_save_id_timeline_id_timeline_save_id_id_fk": {
+          "name": "timeline_parent_save_id_timeline_id_timeline_save_id_id_fk",
+          "tableFrom": "timeline_parent",
+          "tableTo": "timeline",
+          "columnsFrom": [
+            "save_id",
+            "timeline_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "timeline_parent_save_id_parent_id_timeline_save_id_id_fk": {
+          "name": "timeline_parent_save_id_parent_id_timeline_save_id_id_fk",
+          "tableFrom": "timeline_parent",
+          "tableTo": "timeline",
+          "columnsFrom": [
+            "save_id",
+            "parent_id"
+          ],
+          "columnsTo": [
+            "save_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "timeline_parent_timeline_id_parent_id_pk": {
+          "columns": [
+            "timeline_id",
+            "parent_id"
+          ],
+          "name": "timeline_parent_timeline_id_parent_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "timeline_parent_not_self_check": {
+          "name": "timeline_parent_not_self_check",
+          "value": "\"timeline_parent\".\"timeline_id\" <> \"timeline_parent\".\"parent_id\""
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

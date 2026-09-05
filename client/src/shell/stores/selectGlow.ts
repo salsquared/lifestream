@@ -137,8 +137,10 @@ function countryOfEvent(event: HydratedEvent, locations: LocationMap): string | 
   if (event.locationId === undefined) return undefined;
   const location = own(locations, event.locationId);
   if (location === undefined) return undefined;
-  if (location.mapRefKind !== 'country') return undefined;
-  return location.mapRefValue;
+  // A location sits on a country OR a grouping, never both, and the column IS the answer —
+  // no `mapRefKind` discriminator to read any more. A grouping-scoped location deliberately
+  // resolves to no country: §6 routes grouping glow through its member countries instead.
+  return location.countryId;
 }
 
 /**
