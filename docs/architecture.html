@@ -109,7 +109,7 @@
   <li><code>grouping_country</code> — per-save join of countries to groupings, with <b><code>PRIMARY KEY (save_id, country_id)</code></b>. That PK <i>is</i> the invariant: a country belongs to at most one unified nation per save. Verified against the existing data — all 237 codes across the 103 groups in <code>data/map_saves/lifestream_map_v1.json</code> appear in exactly one group, zero duplicates — an invariant a jsonb array cannot express and the database cannot enforce. Clicking a country another grouping already owns is no longer a silent no-op: the editor prompts <i>"Move from &lt;X&gt;?"</i>, and the server enforces the same rule with this PK regardless of what the client does.
     <br><b>An "independent nation" is a country with no row here.</b> There is nothing to seed for it. The 74 "independent" groups in the exported JSON are an artifact of the old app — <code>map/src/App.jsx:146-155</code> synthesizes them at export time from "every country not in a unified nation", with a hardcoded slate color and an <code>independent: true</code> flag no schema has. They are a projection of <code>country</code>, not authored content, and importing them would turn a derived fact into 74 rows that can drift.</li>
   <li><code>grouping_metrics</code> — output of the combine step (<a href="#s3-3">§3.3</a>): per-save, per-run combined population / GDP / sector mix for each <code>grouping</code>, summed from its member countries' <i>projected</i> values. <code>PRIMARY KEY (save_id, run_id, grouping_id)</code>.</li>
-  <li><code>nation_horizontal</code> — output of the Megacorp classifier (<a href="#s3-4">§3.4</a>): per-save, per-run industry <b>horizontal</b> + score per <code>grouping</code>. <code>PRIMARY KEY (save_id, run_id, grouping_id)</code>. The World Map reads it as a color overlay.</li>
+  <li><code>nation_horizontal</code> — output of the Megacorp classifier (<a href="#s3-4">§3.4</a>): per-save, per-run industry <b>horizontal</b> + score <b>per <code>country</code></b>. <b><code>PRIMARY KEY (save_id, run_id, country_id)</code></b>. Keyed on the country, not the grouping, and deliberately so: <code>grouping_id</code> would answer <a href="#s3-6">OQ10</a> inside migration #1 by asserting that a horizontal attaches to a <i>merged nation</i>. The country is the finer grain, so both readings survive — <b>a grouping's horizontals are a rollup over its <code>grouping_country</code> members</b>, while the decomposition in the other direction is unrecoverable (<a href="#s3-7">§3.7</a>, 2026-09-02). The World Map reads it as a color overlay, rolling up to the grouping when it is drawing unified nations.</li>
   <li><code>bf_spread</code> — output of the Black Fever spread simulation (<a href="#s3-2">§3.2</a>): infection state per country per timestep. <b>A deliberate stub.</b> Its columns beyond <code>(run_id, country_id, t)</code> and its save-scope are open until the sim is designed (OQ8, <a href="#s3-6">§3.6</a>); the row exists in the schema so nothing downstream has to invent a name for it later.</li>
   <li><code>country_projection</code> — the per-country projection cache (<a href="#s3-1">§3.1</a>): pop / GDP / sector mix per country per year per run. <b>Global and save-independent</b>, because it is computed over real-world countries, not over your groupings.</li>
   <li><code>source_series</code> — the raw-fetch cache: one row per <code>(source, country_id, indicator, year, vintage)</code> straight from WPP / WDI / WEO. <b>Global.</b> Without it, "same params ⇒ same output" is false the moment the UN or the World Bank republishes a series — the run ledger would record identical params against silently different inputs.</li>
@@ -161,9 +161,15 @@ event              (id, save_id, title, description,
                                                                  # NOTE: `when` is a SQL keyword — it is quoted at the
                                                                  #     Drizzle/SQL layer everywhere it appears.
 timeline           (id, save_id, name, kind, description?, membership_rules?,
-                    color?, era_start?, era_end?)
+                    color?, era_start?, era_end?, project_id?)
                                                                  # kind enum (closed): era | thread | cluster
                                                                  # era_start/era_end REQUIRED when kind='era'
+                                                                 # project_id?: nullable FK to project. What a
+                                                                 #     PROJECT-LINKED THREAD hangs on — the thread's
+                                                                 #     bar takes its extent from the linked project's
+                                                                 #     date_start/date_end rather than from its members
+                                                                 #     (§5.2). Per-save -> per-save, so it is on the
+                                                                 #     fork remap manifest (§2.6)
                                                                  # membership_rules jsonb: {byTag?, byCategory?,
                                                                  #     byTimeRange?, byLocation?} — semantics in §2.6
 timeline_parent    (timeline_id, parent_id)                      # DAG
@@ -184,8 +190,16 @@ country            (id, iso_numeric?, alpha3?, name, geometry_source)
                                                                  #     NEVER an INTEGER — 4 != "004".
                                                                  # iso_numeric: TEXT(3), null for synthetic rows
                                                                  # alpha3: TEXT(3), display/debug only — not a key
-                                                                 # name: default real-world name, sourced from the
-                                                                 #     topojson feature's properties.name
+                                                                 # SYNTHETIC ID SHAPE: "x:<alpha-3 when one exists,
+                                                                 #     else a kebab slug of the name>" — x:GUF, x:XKX,
+                                                                 #     x:SOL, x:ashmore-cartier. One convention, so the
+                                                                 #     seed and the client mint the same string (§3.1)
+                                                                 # name: for a geometry_source='feature' row, the
+                                                                 #     topojson feature's properties.name.
+                                                                 #     For a 'derived' row, NOT properties.name of the
+                                                                 #     parent feature — feature 250 is "France", and
+                                                                 #     x:GUF is not France. deriveFeatures.ts supplies
+                                                                 #     a derived row's name explicitly (§3.1)
                                                                  # geometry_source enum: 'feature'  (1:1 with a topojson feature)
                                                                  #                     | 'derived'  (carved from one at load time)
 country_override   (save_id, country_id, name)                   # PK (save_id, country_id) — per-save rename only
@@ -224,7 +238,7 @@ bf_spread          (run_id, country_id, t, ...)                  # STUB. Remaini
       <li>Return the deduplicated event set sorted by <code>when</code>.</li>
     </ol>
     Memoized per <code>(timelineId, saveId)</code> only — a stable key, so the cache actually hits. Invalidation is coarse: any per-save write drops every cached entry for that save. Re-runs are sub-millisecond at our expected scale (~50–500 events per save). Lives in <code>server/src/services/resolveTimeline.ts</code>.
-    <b>The function is <code>resolveTimeline()</code> everywhere</b> — in this document, in the service module and in <a href="implementation.html">implementation.html</a>, which called it <code>resolve()</code> and is being corrected to match. The bare word <code>resolve</code> survives in exactly one place, the endpoint path <code>GET /api/timelines/:id/resolve</code> (<a href="#s5-2">§5.2</a>), where it is a URL segment and not an identifier.
+    <b>The function is <code>resolveTimeline()</code> everywhere</b> — in this document, in the service module and in <a href="implementation.html">implementation.html</a>, which called it <code>resolve()</code> until the 2026-09-02 reconciliation and now matches. The bare word <code>resolve</code> survives in exactly one place, the endpoint path <code>GET /api/timelines/:id/resolve</code> (<a href="#s5-2">§5.2</a>), where it is a URL segment and not an identifier.
   </li>
   <li><b>Filtering is a separate pass, deliberately not in the memo key.</b> The caller's live <code>useFilters</code> state (category chips, tag filter, time range, search) changes on every keystroke/scrub, so baking it into <code>resolveTimeline</code>'s key would thrash the cache to near-zero hit rate. Instead, <code>applyFilters(events, filters)</code> runs as a cheap O(n) mask <i>over</i> the memoized membership set — client-side, since the membership set is already in hand. Membership is computed rarely and cached; filtering is recomputed freely and never cached.</li>
   <li><b><code>membership_rules</code> — the four predicates, precisely.</b> All four ship in v1; they are the only reason a timeline can be authored once and stay correct as events are added.
@@ -261,6 +275,7 @@ remap        event.range_before_event_id       -> new event id
              event.project_id                  -> new project id
              relation.from_event_id            -> new event id
              relation.to_event_id              -> new event id
+             timeline.project_id               -> new project id
              timeline_parent.timeline_id       -> new timeline id
              timeline_parent.parent_id         -> new timeline id
              timeline_member.timeline_id       -> new timeline id
@@ -405,7 +420,22 @@ global run ledger`")]:::db
         <code>deriveFeatures.ts</code> owns three jobs, not one: the France split, the raw-id fallback, and
         <b>disambiguating the duplicate <code>036</code></b>. The last is the dangerous one &mdash; a naive
         <code>id &rarr; feature</code> map silently keeps whichever feature it reads second and drops the
-        other, with no error. Reaching the authored 237 requires all three.</li>
+        other, with no error. Jobs one and two are what carry 235 to 237; job three adds nothing to that
+        count and instead stops one of the 237 being answered by the wrong polygon.
+        <br><b>The rule, so nobody re-derives it:</b> when two features share a numeric code, <b>the feature
+        whose name matches that code's alpha-3 mapping keeps the numeric id; the other gets a namespaced
+        synthetic.</b> <code>data/iso-numeric-to-alpha3.json</code> maps <code>036 &rarr; AUS</code>, so
+        <b>Australia keeps <code>"036"</code></b> and <b>Ashmore and Cartier Is. becomes
+        <code>x:ashmore-cartier</code></b>, with <code>geometry_source='feature'</code> &mdash; it <i>is</i> a
+        real 1:1 topojson feature, and only its <i>id</i> is unusable, so <code>'derived'</code> would be a
+        lie. It is kept rather than dropped: the geometry renders, so dropping it leaves an unexplained hole
+        off the Australian coast, and it costs one row. It is simply never a <code>grouping_country</code>
+        member &mdash; it is not among the authored 237.
+        <br><b>The seed does not re-implement any of this.</b> <code>deriveFeatures.ts</code> is the only
+        place a topojson id becomes a <code>country.id</code>; the import script and the client renderer both
+        <i>call</i> it. A second index built beside it is how the DB and the map come to disagree about what
+        a feature is &mdash; and this specific disagreement is invisible, because the row count is still
+        right.</li>
 </ul>
 
 <p><b>Data sources.</b> Per-country series, fetched once into <code>source_series</code> (keyed by <code>(source, country_id, indicator, year, vintage)</code>) so a run is offline and repeatable. The <code>vintage</code> column is what makes "same params ⇒ same output" true: WPP and WDI republish, and a run that silently consumed a new vintage would be irreproducible while its <code>sim_run</code> row claims otherwise.</p>
@@ -608,15 +638,22 @@ data/lifestream.db`")]:::db
 </figure>
 
 <h3 id="s4-1">4.1 Directory layout</h3>
-<p>npm workspaces root with three packages (<code>client</code>, <code>server</code>, <code>shared</code>). Top-level <code>npm run dev</code> runs Vite + Hono together under <code>concurrently</code>. <b>Both dev ports are pinned, and both are stated here rather than only inside the client's proxy block</b> — the server has to agree with a number it does not own, and the <code>concurrently</code>-driven <code>npm run dev</code> has to be predictable: <b>Hono listens on <code>3001</code></b>, <b>Vite serves the client on <code>5173</code></b>, and Vite proxies <code>/api/*</code> to <code>http://localhost:3001</code> so the browser only ever talks to one origin and the client can use same-origin relative URLs (<code>fetch('/api/health')</code>) with no CORS dance. Single-user, local-only — no auth.</p>
+<p>npm workspaces root with three packages (<code>client</code>, <code>server</code>, <code>shared</code>). Top-level <code>npm run dev</code> runs Vite + Hono together under <code>concurrently</code>. <b>Both dev ports are pinned, and both are stated here rather than only inside the client's proxy block</b> — the server has to agree with a number it does not own, and the <code>concurrently</code>-driven <code>npm run dev</code> has to be predictable: <b>Hono listens on <code>3001</code>, bound to <code>127.0.0.1</code></b>; <b>Vite serves the client on <code>5173</code></b> with <code>server.strictPort: true</code>, which is what makes "pinned" true — <code>server.port</code> alone is only a preference and Vite walks to the next free port when 5173 is taken, exactly the case the pin exists for. Vite proxies <code>/api/*</code> to <code>http://127.0.0.1:3001</code> — the literal loopback address rather than <code>localhost</code>, so the proxy does not depend on which family <code>localhost</code> resolves to first now that the server binds v4 loopback only — and the browser therefore only ever talks to one origin, letting the client use same-origin relative URLs (<code>fetch('/api/health')</code>) with no CORS dance. <b>Single-user, local-only — no auth, and the loopback bind is what enforces that</b> rather than merely asserting it: bound to all interfaces, an unauthenticated API answers on the LAN address. Dev CORS is consequently <b>opt-in</b> — <code>LIFESTREAM_DEV_CORS=1</code>, not a <code>NODE_ENV</code> test that nothing in this repo ever sets — and its allowed origins include the IPv6 loopback form <code>http://[::1]:5173</code>, because Vite binds <code>[::1]</code> too.</p>
 <pre><code>package.json                     # npm workspaces root — client · server · shared
 tsconfig.base.json               # the one shared compiler config; every workspace extends it
-vitest.config.ts                 # root vitest config — aliases mirrored by hand, see below
+aliases.mjs                      # THE alias table (@shared/*, @server/*) + resolveAliases().
+                                 #   vitest.config.ts and client/vite.config.ts both IMPORT it;
+                                 #   neither re-declares it. tsconfig.base.json's `paths` is the
+                                 #   fourth consumer and cannot import, so tests/smoke.test.ts
+                                 #   asserts all consumers agree — see below
+vitest.config.ts                 # root vitest config — resolve.alias from aliases.mjs
 drizzle.config.ts                # drizzle-kit: schema in, migrations out, ./data/lifestream.db
+                                 #   the url is CWD-relative — see below
 
 client/                          # browser app · Vite + React + TS
   index.html                     # Vite's entry document — hand-written, not scaffolded
-  vite.config.ts                 # dev server on :5173; proxies /api/* → http://localhost:3001
+  vite.config.ts                 # dev server on :5173 with strictPort; proxies /api/* to
+                                 #   http://127.0.0.1:3001; resolve.alias built from ../aliases.mjs
   public/
     topojson/
       countries-50m.json         # vendored world-atlas@2, version-pinned — see §3.1
@@ -634,6 +671,12 @@ client/                          # browser app · Vite + React + TS
         world.ts                 # events / timelines / relations / groupings / groupingOf — §4.2
     views/                       # one directory per view; these component filenames are PINNED,
                                  #   later phases import them by name
+      _shared/                   # cross-VIEW components. Not `components/`: these two are the
+                                 #   3D pair's shared surface, and "same as the Corridor" in a
+                                 #   task description is how two scenes drift apart
+        EventNode.tsx            #   the glowing node, Corridor + Tech Tree. Position is passed
+                                 #   IN — it never imports the time scale (§5.2, §5.3)
+        Scene3D.tsx              #   canvas, camera, bloom, starfield, lights — mounted by both
       map/MapView.tsx            # d3-geo + topojson
       timeline/TimelineView.tsx  # the 3D corridor
       tech-tree/TechTreeView.tsx
@@ -643,7 +686,16 @@ client/                          # browser app · Vite + React + TS
 
 server/                          # Hono backend · Node + TS
   src/
-    index.ts                     # builds the Hono app, mounts the routes, listens on :3001
+    app.ts                       # BUILDS and exports the Hono app; mounts the routes (§4.4).
+                                 #   Does NOT listen and does NOT open the DB — importing it is
+                                 #   side-effect-free, which is the point
+    index.ts                     # the process entry: imports app.ts, side-effect-imports
+                                 #   ./db/index.js (which is what creates data/lifestream.db at
+                                 #   boot) and calls serve() — 127.0.0.1:3001. The ONLY listener.
+                                 #   Split from app.ts because serve() at module scope makes
+                                 #   every app.request() test EADDRINUSE against a live dev
+                                 #   server — and the DB import sits here for the same reason:
+                                 #   a test importing app.ts must not open the real file
     routes/                      # nine modules — events / timelines / relations / tags / map
                                  #   / registry / saves / simulation / export. Each exports
                                  #   `&lt;noun&gt;Routes`. Module → URL prefix is NOT 1:1 — §4.4
@@ -669,20 +721,36 @@ shared/                          # types + small pure utils used by both ends
     index.ts                     # the workspace barrel
     types/                       # incl. types/export.ts (Inline, Block &amp; Document IR)
     rollDate.ts                  # seeded date roller — see §2.6
+    timeScale.ts                 # THE canonical d3.scaleTime — the Corridor defines it, the
+                                 #   Tech Tree imports it; nothing re-derives it (§5.2)
+    colors.ts                    # category / relation-type / lane palettes, shared by all four
+                                 #   views and by the server-side export renderers (§8)
+    formatWhen.ts                # renders an event BY PRECISION — "2036" for a year-precision
+                                 #   row, a clock only for `time` (§2.3). One implementation,
+                                 #   or four views invent four
     geo/
-      deriveFeatures.ts          # topojson load → feature set, incl. the France/French-Guiana
-                                 #   split and the raw-id fallback — see §3.1
+      deriveFeatures.ts          # topojson load → feature set. THREE jobs: the France/
+                                 #   French-Guiana split, the raw-id fallback, and
+                                 #   disambiguating the duplicate `036` — see §3.1
 
-scripts/                         # one-shot CLIs
-  seed.ts                        # Version 1 seed from Bible + map JSON — see §7.4
+scripts/                         # one-shot CLIs, all run from the repo root off the root install
+  seed.ts                        # Version 1 seed from Bible + map JSON — see §7.4. Root `db:seed`
+                                 #   runs THIS, not a script inside server/
+  db-reset.mjs                   # npm run db:reset. Paths anchored on import.meta.url, never on
+                                 #   cwd; deletes the .db plus its -wal and -shm siblings; refuses
+                                 #   unless the resolved root really is this repo; prints a
+                                 #   restart-the-dev-server notice, because unlinking a file the
+                                 #   server still holds open leaves it writing to a dead inode
   dump.ts                        # npm run db:dump → data/save_dumps/&lt;save&gt;.json — see §7.4
   export.ts                      # run an export manifest from the terminal
   simulate.ts                    # batch runner of the world-sim chain (§3)
 
 tests/                           # vitest, installed at the root; `npm test` runs it.
                                  #   Specs live here, not inside the workspaces
-  smoke.test.ts                  # the harness itself: asserts vitest.config.ts's alias table
-                                 #   still matches tsconfig.base.json's — see below
+  smoke.test.ts                  # the harness itself: asserts ALL THREE alias consumers resolve
+                                 #   each alias to the same absolute directory — tsconfig.base.json
+                                 #   `paths`, vitest.config.ts, client/vite.config.ts. Two of the
+                                 #   three is what let the missing Vite alias ship — see below
   resolveTimeline.test.ts        # DAG recursion + cycle detection
   forkSave.test.ts               # the fork remap manifest, end to end
   rollDate.test.ts               # determinism: same event id => same instant
@@ -699,9 +767,10 @@ data/
 <ul>
   <li><b>TypeScript is 6.0.3, and <code>baseUrl</code> is a hard error (TS5101)</b> — not a deprecation warning. <code>tsconfig.base.json</code> therefore carries <b>no <code>baseUrl</code></b>, and its <code>paths</code> are <b>config-relative</b>: <code>"@shared/*": ["./shared/src/*"]</code>, <code>"@server/*": ["./server/src/*"]</code>. That relative root is exactly why every shared file sits under <code>shared/src/</code> above: <code>@shared/rollDate</code> resolves to <code>shared/src/rollDate.ts</code> and to nothing else.</li>
   <li><b>The base sets <code>composite: true</code></b>, which is not a free flag. Every workspace tsconfig has to declare its own <code>rootDir</code> and <code>outDir</code>; <code>declaration: false</code> stops being an override and becomes a hard error (TS6304); and each build writes a <code>*.tsbuildinfo</code>, which is machine-local incremental state and is gitignored.</li>
+  <li><b><code>composite: true</code> also makes <code>paths</code> insufficient on its own: each workspace must declare <code>"references": [{ "path": "../shared" }]</code>.</b> A composite project may only compile files inside its own <code>include</code>, so a <code>@shared/*</code> import that <code>paths</code> resolves to a file <i>outside</i> it is TS6307 ("not listed within the file list of project") or TS6059 ("not under 'rootDir'") — the alias resolves and the build still fails. <code>client/tsconfig.json</code> and <code>server/tsconfig.json</code> both carry the reference. This is <b>independent of</b> the bundler alias below: <code>tsc</code> needs the reference, Vite and Vitest need the <code>resolve.alias</code>, and neither substitutes for the other. Note also that <code>tsc</code> <b>never rewrites <code>paths</code> in emitted output</b> — a compiled <code>dist/</code> file still contains the literal <code>@shared/…</code> specifier, so anything that runs the emitted JS needs its own resolution story. Today nothing does: <code>tsx</code> runs the TypeScript directly.</li>
   <li><b><code>tsx</code> and <code>drizzle-kit</code> live at the root</b>, not in the <code>server</code> workspace — every one-shot script in <code>scripts/</code> and every <code>npm run db:*</code> runs from the repo root off a single install.</li>
-  <li><b><code>drizzle.config.ts</code> is at the repo root</b> and its <code>url</code> is <code>./data/lifestream.db</code> — <i>not</i> <code>../data/lifestream.db</code>, which assumed a config living in <code>server/</code>. The path resolves against the config's own directory, so the wrong one does not fail: it silently creates a second, empty database one directory up.</li>
-  <li><b>Vitest does not read <code>compilerOptions.paths</code>.</b> Alias resolution is not inherited — every alias is mirrored by hand in <code>vitest.config.ts</code>, and the two tables drift <i>silently</i>. <code>tests/smoke.test.ts</code> exists for exactly that: it compares the two and fails the moment they disagree.</li>
+  <li><b><code>drizzle.config.ts</code> is at the repo root</b> and its <code>url</code> is <code>./data/lifestream.db</code> — <i>not</i> <code>../data/lifestream.db</code>, which assumed a config living in <code>server/</code>. The url is resolved <b>against the current working directory</b>, not against the config's own directory — <i>verified by execution</i>, and the opposite of what this document previously asserted. It works because <b><code>npm run db:*</code> always runs from the repo root</b>: those are root scripts, and npm runs a script with the cwd set to the package that declares it. The wrong value does not fail loudly either — from the root, <code>../data/lifestream.db</code> silently creates a second, empty database one directory <i>above</i> the repo. Anything that invokes drizzle-kit from inside a workspace directory would hit the same class of bug, which is the reason there is no <code>db:*</code> script in <code>server/</code>.</li>
+  <li><b>Neither Vitest nor Vite reads <code>compilerOptions.paths</code>.</b> Alias resolution is not inherited, so each needs its own <code>resolve.alias</code>. They do <b>not</b> get one by hand: <b><code>aliases.mjs</code> at the repo root is the single table</b>, and <code>vitest.config.ts</code> and <code>client/vite.config.ts</code> both import <code>resolveAliases()</code> from it rather than re-declaring it. <code>tsconfig.base.json</code>'s <code>paths</code> is the one consumer that cannot import — JSON has no imports — so it remains hand-mirrored, and <code>tests/smoke.test.ts</code> is what stops it drifting: it asserts that <b>all three</b> consumers resolve every alias to the same absolute directory. Two of the three is exactly the coverage that let the client ship with no Vite alias at all while the suite stayed green.</li>
 </ul>
 </div>
 
@@ -722,14 +791,21 @@ type Primary =
   | { type: 'event' | 'character' | 'location' | 'project' | 'country' | 'grouping', id: string }
   | null
 
+// Every field is a ReadonlySet, and that is a correctness requirement, not style.
+// selectGlow is MEMOIZED: every useGlow() caller in every view holds the SAME Glow
+// object until an input slice changes. One `glow.eventIds.add(x)` in one view
+// therefore poisons all four until the next input change — a bug with no stack
+// trace and no obvious owner. ReadonlySet removes `add`/`delete`/`clear` from the
+// type; EMPTY_GLOW additionally makes them THROW at runtime, so the contract is
+// enforced rather than merely declared.
 type Glow = {
-  eventIds:     Set&lt;string&gt;
-  characterIds: Set&lt;string&gt;
-  locationIds:  Set&lt;string&gt;
-  projectIds:   Set&lt;string&gt;
-  countryIds:   Set&lt;string&gt;
-  groupingIds:  Set&lt;string&gt;
-  tagIds:       Set&lt;string&gt;
+  eventIds:     ReadonlySet&lt;string&gt;
+  characterIds: ReadonlySet&lt;string&gt;
+  locationIds:  ReadonlySet&lt;string&gt;
+  projectIds:   ReadonlySet&lt;string&gt;
+  countryIds:   ReadonlySet&lt;string&gt;
+  groupingIds:  ReadonlySet&lt;string&gt;
+  tagIds:       ReadonlySet&lt;string&gt;
 }
 
 useSelection: {
@@ -762,7 +838,11 @@ useFilters: {
 //   save's id and the initial value; the seed writes that exact id (§7.4).
 useSave: {
   activeSaveId: string
-  setActive(id: string): void    // triggers re-fetch in every view AND clears primary — see §7.3
+  setActive(id: string): void    // NO-OP when id === activeSaveId. Otherwise triggers the shell's
+                                 //   re-fetch AND clears primary — see §7.3. The early return is
+                                 //   load-bearing: the URL-sync effect re-applies ?save= on mount,
+                                 //   and without the guard that self-call would clear the ?primary=
+                                 //   that arrived in the very same link.
 }
 
 // useRegistry — cached character/location/project lookups for the active save
@@ -770,6 +850,7 @@ useRegistry: {
   characters: Record&lt;string, Character&gt;
   locations:  Record&lt;string, Location&gt;
   projects:   Record&lt;string, Project&gt;
+  hydrate(saveId: string, data: RegistryData): void   // the shell's writer — see the guard below
   invalidate(): void
 }
 
@@ -780,9 +861,32 @@ useWorld: {
   relations:   Relation[]
   groupings:   Record&lt;string, Grouping&gt;
   groupingOf:  Record&lt;string, string&gt;          // country_id -> grouping_id (the §2.4 partition)
-  status:      'idle' | 'loading' | 'ready' | 'error'
-  invalidate(): void
+  status:      'idle' | 'loading' | 'ready' | 'stale' | 'error'
+  hydrate(saveId: string, data: WorldData): void      // the shell's writer — see the guard below
+  setStatus(s: WorldStatus): void              // 'loading' before the fetch, 'error' on failure
+  invalidate(): void                           // -> 'stale', NOT 'idle' — see below
 }</code></pre>
+
+<div class="callout warn">
+<b>Two things the writers have to get right, both of which are silent when wrong.</b>
+<ul>
+  <li><b>The save-identity guard.</b> <code>hydrate()</code> on <i>both</i> stores takes the
+  <code>saveId</code> the payload was fetched for and <b>ignores the payload when it no longer matches
+  <code>useSave.getState().activeSaveId</code></b>. Without it, switching saves while a fetch is in flight
+  lands the <i>old</i> save's events in the store under the new save's id — the two requests race, the
+  slower one wins, and every view then draws rows that do not exist in the active save. It cannot be
+  detected downstream: the payload is well-formed, and every id in it looks real.</li>
+  <li><b><code>invalidate()</code> must be distinguishable from never-loaded.</b> The documented refetch
+  trigger is an effect on <code>activeSaveId</code> (the shell owns the fetch), and
+  <code>invalidate()</code> does not change <code>activeSaveId</code> — so returning the store to
+  <code>'idle'</code> after an in-app write leaves nothing to re-run the fetch and the views sit on stale
+  rows until the user switches saves and back. Hence the fifth status, <b><code>'stale'</code></b>: a
+  loaded-but-superseded state the shell effect can depend on and act upon, distinct from
+  <code>'idle'</code>, which means nothing has ever been loaded. (A monotonic <code>generation</code>
+  counter the effect depends on is the equivalent shape; what is <i>not</i> acceptable is a state the
+  shell cannot observe.)</li>
+</ul>
+</div>
 
 <div class="callout">
 <b>Why <code>glow</code> is a selector and not a value in the store.</b> The old shape had <code>setPrimary</code> compute <code>glow</code> and write it. That is correct exactly once — on a click, with the data already loaded. It is wrong in the case that matters most: <b>opening a shared URL</b>. <code>/v/timeline?primary=character:char_lazaro</code> restores <code>primary</code> during the first render, before <code>useWorld</code> has any events, so the computed glow is empty — and because nothing re-invokes <code>setPrimary</code> when the fetch lands, it stays empty forever. As a memoized selector over <code>(primary, world, registry)</code> the empty first evaluation is simply superseded when the data arrives. The <a href="#s6">§6</a> model is unchanged; only where the value lives moved.
@@ -810,13 +914,16 @@ useWorld: {
   <tr><td><code>timelines.ts</code></td><td><code>timelineRoutes</code></td><td><code>/api/timelines</code> — incl. <code>GET /:id/resolve</code></td><td><a href="#s5-2">§5.2</a>, <a href="#s2-6">§2.6</a></td></tr>
   <tr><td><code>relations.ts</code></td><td><code>relationRoutes</code></td><td><code>/api/relations</code></td><td><a href="#s5-2">§5.2</a></td></tr>
   <tr><td><code>tags.ts</code></td><td><code>tagRoutes</code></td><td><code>/api/tags</code></td><td><a href="#s5-2">§5.2</a>, <a href="#s2-1">§2.1</a></td></tr>
-  <tr><td><code>registry.ts</code></td><td><code>registryRoutes</code></td><td><b>four prefixes, and no <code>/api/registry</code>:</b> <code>/api/characters</code> · <code>/api/locations</code> · <code>/api/projects</code> · <code>/api/character-relations</code></td><td><a href="#s5-2">§5.2</a>, <a href="#s2-2">§2.2</a></td></tr>
-  <tr><td><code>map.ts</code></td><td><code>mapRoutes</code></td><td>the two reads <code>/api/map/countries</code> · <code>/api/map/groupings</code>, <b>plus the top-level writes</b> <code>/api/groupings/*</code> · <code>/api/country-overrides/*</code></td><td><a href="#s5-1">§5.1</a></td></tr>
+  <tr><td><code>registry.ts</code></td><td><code>characterRoutes</code> · <code>locationRoutes</code> · <code>projectRoutes</code> · <code>characterRelationRoutes</code> — <b>four routers, one per prefix</b></td><td><b>four prefixes, and no <code>/api/registry</code>:</b> <code>/api/characters</code> · <code>/api/locations</code> · <code>/api/projects</code> · <code>/api/character-relations</code></td><td><a href="#s5-2">§5.2</a>, <a href="#s2-2">§2.2</a></td></tr>
+  <tr><td><code>map.ts</code></td><td><code>mapRoutes</code> · <code>groupingRoutes</code> · <code>countryOverrideRoutes</code> — <b>three routers, one per prefix</b></td><td>the two reads <code>/api/map/countries</code> · <code>/api/map/groupings</code>, <b>plus the top-level writes</b> <code>/api/groupings/*</code> · <code>/api/country-overrides/*</code></td><td><a href="#s5-1">§5.1</a></td></tr>
   <tr><td><code>saves.ts</code></td><td><code>saveRoutes</code></td><td><code>/api/saves</code> — incl. <code>/:id/fork</code>, <code>/:id/dump</code>, <code>/import</code></td><td><a href="#s7-2">§7.2</a></td></tr>
   <tr><td><code>simulation.ts</code></td><td><code>simulationRoutes</code></td><td><code>/api/simulation</code> — one sub-path per stage</td><td><a href="#s3">§3</a></td></tr>
   <tr><td><code>export.ts</code></td><td><code>exportRoutes</code></td><td><code>/api/export</code> — incl. <code>/asset</code> and <code>/manifests</code></td><td><a href="#s8-7">§8.7</a></td></tr>
 </table>
 <p>The uniform <code>&lt;noun&gt;Routes</code> export naming is forced rather than chosen: <code>export</code> is a reserved word, so <code>export.ts</code> could not offer a bare-noun binding, and one module following a different convention from the other eight is worse than all nine following the same one.</p>
+<div class="callout warn">
+<b>One <code>Hono</code> instance per prefix — a module owning <i>n</i> prefixes exports <i>n</i> routers, and each is mounted exactly once.</b> The two multi-prefix rows above are the whole reason this needs saying. Hono's <code>app.route(path, sub)</code> <b>copies</b> the sub-app's routing table under <code>path</code>; it does not scope a shared instance to it. So mounting a single <code>registryRoutes</code> object at all four registry prefixes does not give four namespaces — it gives four <i>aliases</i> of the same handler set, and <code>GET /api/locations/:id</code> answers with whatever <code>GET /:id</code> the module defined for characters. The failure is silent: every URL in the table above still responds, with the wrong body. Hence <code>registry.ts</code> exports four routers and <code>map.ts</code> three, and <code>server/src/app.ts</code> mounts each at exactly one prefix. <b>The prefix column is unaffected</b> — this is a change of mechanism, not of contract; the URLs are still the ones <a href="#s5-1">§5.1</a> / <a href="#s5-2">§5.2</a> / <a href="#s7-2">§7.2</a> / <a href="#s8-7">§8.7</a> specify.
+</div>
 
 <div class="callout">
 <b>The wire format is camelCase; the columns are snake_case. The boundary is the Drizzle schema, and it is crossed exactly once.</b> Every table and column named in <a href="#s2-5">§2.5</a> is SQL — <code>when_min</code>, <code>location_id</code>, <code>save_id</code>, <code>superseded_by_location_id</code>. Every JSON body the API accepts or returns, every field of the stores in <a href="#s4-2">§4.2</a>, and every type in <code>client/</code> and <code>shared/src/types/</code> is <b>camelCase</b> — <code>whenMin</code>, <code>locationId</code>, <code>saveId</code>, <code>supersededByLocationId</code>. Drizzle's table definitions carry the mapping (a camelCase property naming a snake_case column), which is the standard convention and means the translation lives in <code>server/src/db/schema.ts</code> alone — no handler, no client type and no test converts anything. It is stated here because it is invisible in <a href="#s2-5">§2.5</a>: otherwise whoever writes the first read endpoint decides it by accident, and the client types written against that guess get rewritten when the second endpoint disagrees. Reading this document: a quoted <i>column</i> is the SQL name, a quoted store field or JSON key (<code>actorIds[]</code>, <code>groupingOf</code>, <code>rootTimelineId</code>, <code>scopeParams</code>) is the wire name.
@@ -1081,7 +1188,7 @@ synthetic brain + muscle`"]
 </figure>
 
 <h4 id="s5-3-spans">Rendering a multi-year programme</h4>
-<p>Events are points (<a href="#s2-3">§2.3</a>), so a decades-long programme has no single node to draw. The Tech Tree renders it as a <b>project-linked lane span</b>: a translucent band in the project's <code>tech_lane</code>, running from <code>project.date_start</code> to <code>project.date_end</code> on the canonical X axis, labelled with the project name — and the <b>milestone events</b> carrying that <code>project_id</code> draw as ordinary nodes sitting <i>on</i> the band. "HV V1–3 '54–'70" is therefore one <code>project</code> row plus three events (V1 ships, V2 ships, V3 ships), not a single event with a fabricated date somewhere in the middle. <code>precedes</code> edges attach to the milestone nodes, never to the band; an edge into "the programme" is an edge into its first milestone. Selecting the band sets <code>setPrimary({type:'project', id})</code>, which is exactly the primary <a href="#s4-2">§4.2</a> defines.</p>
+<p>Events are points (<a href="#s2-3">§2.3</a>), so a decades-long programme has no single node to draw. The Tech Tree renders it as a <b>project-linked lane span</b>: a translucent band running from <code>project.date_start</code> to <code>project.date_end</code> on the canonical X axis, labelled with the project name. <b>The lane comes from the events, not from the project</b> — <code>project</code> has no <code>tech_lane</code> column (<a href="#s2-5">§2.5</a>) and is not a tech-specific table; the band sits in the <code>tech_lane</code> of the <code>category='tech'</code> events that carry its <code>project_id</code>, and where those disagree it draws one band per distinct lane rather than picking a winner. A project whose milestones are not tech events draws no band here at all — it is a Corridor thread (<a href="#s5-2">§5.2</a>), not a Tech Tree object — and the <b>milestone events</b> carrying that <code>project_id</code> draw as ordinary nodes sitting <i>on</i> the band. "HV V1–3 '54–'70" is therefore one <code>project</code> row plus three events (V1 ships, V2 ships, V3 ships), not a single event with a fabricated date somewhere in the middle. <code>precedes</code> edges attach to the milestone nodes, never to the band; an edge into "the programme" is an edge into its first milestone. Selecting the band sets <code>setPrimary({type:'project', id})</code>, which is exactly the primary <a href="#s4-2">§4.2</a> defines.</p>
 
 <table>
   <tr><th>Reads</th><td><code>event</code> WHERE <code>category='tech'</code>, <code>relation</code> WHERE type IN (<code>precedes</code>, <code>partOf</code>), plus <code>project</code> for the lane spans</td></tr>
@@ -1221,14 +1328,15 @@ X's crew`"]
   <li><code>POST /api/saves</code> — create a <b>blank</b> save. <i>Fork is not an option on this route</i> — there was previously a second, undocumented way to fork here, and two code paths for one operation means one of them eventually skips the remap manifest.</li>
   <li><code>POST /api/saves/:id/fork</code> — <b>the only fork path.</b> Copies the authored per-save rows under a new save id, per <a href="#s2-6">§2.6</a>.</li>
   <li><code>PATCH /api/saves/:id</code> — rename / edit description / set <code>is_archived</code></li>
-  <li><code>DELETE /api/saves/:id</code> — soft delete (sets <code>is_archived</code>); hard delete via a separate explicit endpoint, and refused while any other save has this one as its <code>parent_save_id</code></li>
+  <li><code>DELETE /api/saves/:id</code> — <b>soft</b> delete: sets <code>is_archived</code>. Never removes rows.</li>
+  <li><code>DELETE /api/saves/:id/hard</code> — the hard delete, on its own explicit URL so one destructive operation is never reachable by the request that merely archives. <b>Refused (409) while any other save has this one as its <code>parent_save_id</code></b>, naming the children: deleting a parent orphans every fork's lineage and there is no undo, since <code>data/lifestream.db</code> is gitignored and the only backup is the dump below (<a href="#s7-4">§7.4</a>). Built in the saves phase of <a href="implementation.html">implementation.html</a>, alongside the other mutations on this list.</li>
   <li><code>GET /api/saves/:id/dump</code> — emit a JSON dump of every row under this save, for backup / sharing. <b>GET, not POST</b>: it mutates nothing, and being a GET makes it linkable, cacheable and trivially scriptable — which matters because it is the backup path (<a href="#s7-4">§7.4</a>). Distinct from <code>/api/export</code> in <a href="#s8">§8</a>, which renders documents.</li>
   <li><code>POST /api/saves/import</code> — load a JSON dump under a new save id</li>
 </ul>
 
 <h3 id="s7-3">7.3 UX in the shell</h3>
 <p>Save picker lives in the top bar next to the view switcher. Shows current save name + a dropdown for switching / forking / renaming. Switching saves replays every view's data load — fast because everything is keyed on a single column.</p>
-<p><b><code>setActive</code> clears <code>primary</code>.</b> Every per-save row id is regenerated by the fork (<a href="#s2-6">§2.6</a>), so a primary carried across a save switch points at an id that either doesn't exist in the new save or — worse — belongs to an unrelated row. Clearing <code>primary</code> also clears the derived <code>glow</code> for free, since glow is a selector over it (<a href="#s4-2">§4.2</a>); there is no second piece of state to remember to reset. The URL sync writes the cleared selection back, so a save switch produces a clean shareable link rather than one carrying a dangling id. <code>useFilters</code> is <i>not</i> cleared — categories and time ranges are save-independent and losing them on every switch would be annoying rather than safe.</p>
+<p><b><code>setActive</code> clears <code>primary</code>.</b> Every per-save row id is regenerated by the fork (<a href="#s2-6">§2.6</a>), so a primary carried across a save switch points at an id that either doesn't exist in the new save or — worse — belongs to an unrelated row. Clearing <code>primary</code> also clears the derived <code>glow</code> for free, since glow is a selector over it (<a href="#s4-2">§4.2</a>); there is no second piece of state to remember to reset. The URL sync writes the cleared selection back, so a save switch produces a clean shareable link rather than one carrying a dangling id. <code>useFilters</code> is <i>not</i> cleared — categories and time ranges are save-independent and losing them on every switch would be annoying rather than safe. <b>And <code>setActive</code> is a no-op when the id is already active</b> (<a href="#s4-2">§4.2</a>): the URL-sync effect re-applies <code>?save=</code> on mount, so without the early return that self-call clears the <code>?primary=</code> that arrived in the same link — the one case a shared URL has to survive.</p>
 
 <h3 id="s7-4">7.4 Seeding, re-seeding, migrations &amp; backup</h3>
 <p>"Version 1" — the first save — isn't blank. It's seeded from the existing sources:</p>
@@ -1246,7 +1354,7 @@ X's crew`"]
 <ul>
   <li><code>npm run db:seed</code> is <b>idempotent</b>: it upserts by natural key (a Bible bullet's stable slug, a grouping's name, a country code) so re-running it updates what the sources changed and leaves everything else — including hand edits to rows the sources don't own — alone.</li>
   <li>If the target save has children (any save with <code>parent_save_id</code> = it), a destructive re-seed is <b>refused</b>. The way to get a clean slate is <code>db:seed --new-save</code>, which creates a fresh save and leaves the existing tree intact.</li>
-  <li><code>npm run db:reset</code> (drop the whole DB) refuses unless a dump under <code>data/save_dumps/</code> is newer than the last write to <code>lifestream.db</code>.</li>
+  <li><code>npm run db:reset</code> (drop the whole DB) refuses unless a dump under <code>data/save_dumps/</code> is newer than the last write to <code>lifestream.db</code>. Three further properties of <code>scripts/db-reset.mjs</code>, each of which was a way to delete the wrong thing: it resolves its paths from <b><code>import.meta.url</code></b> and never from <code>process.cwd()</code> — run from another directory, a cwd-anchored version deletes files <i>there</i>; it <b>refuses outright when the resolved root is not this repo</b>, checked against a <code>package.json</code> whose <code>name</code> is <code>lifestream</code>; and it deletes <b><code>lifestream.db-wal</code> and <code>lifestream.db-shm</code></b> alongside the database, because in WAL mode the committed data lives in the <code>-wal</code> file and removing only the <code>.db</code> leaves a half-reset. Both sidecars are gitignored with the <code>.db</code>. It also prints a <b>restart-the-dev-server</b> notice: unlinking the file while the server holds it open does not close the handle, and the server goes on writing to an unlinked inode nobody can read.</li>
 </ul>
 
 <h4 id="s7-4-migrations">Migration policy</h4>
