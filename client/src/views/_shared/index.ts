@@ -10,13 +10,30 @@
 export { EventNode } from './EventNode';
 export type { EventNodeEvent, EventNodeProps, EventNodeState } from './EventNode';
 
+// `eventNodeVisual` is the pure half of `EventNode`, and everything it decides is
+// re-exported here — including the label geometry, which a VIEW's layout needs in order to
+// de-collide labels (`views/timeline/layout.ts`, P4.2.3). That direction is the allowed
+// one: the view reaches in, this directory never reaches out.
 export {
   approachScale,
   eventNodeVisual,
+  labelHalfWidth,
+  labelVisible,
+  DATE_FONT_SIZE,
+  DIMMED_EMISSIVE,
+  DIMMED_OPACITY,
   EVENT_NODE_HALO_SCALE,
   EVENT_NODE_RADIUS,
   HOVER_SCALE,
   HOVER_TWEEN_SECONDS,
+  LABEL_ADVANCE_RATIO,
+  LABEL_DATE_OFFSET_Y,
+  LABEL_MIN_HALF_WIDTH,
+  LABEL_OFFSET_Y,
+  NODE_FOOTPRINT_ABOVE,
+  NODE_FOOTPRINT_BELOW,
+  NODE_FOOTPRINT_HEIGHT,
+  TITLE_FONT_SIZE,
 } from './eventNodeVisual';
 export type { EventNodeVisual } from './eventNodeVisual';
 

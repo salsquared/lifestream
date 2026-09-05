@@ -39,10 +39,15 @@ import { formatWhen } from '@shared/formatWhen';
 import {
   approachScale,
   eventNodeVisual,
+  labelVisible,
+  DATE_FONT_SIZE,
   EVENT_NODE_HALO_SCALE,
   EVENT_NODE_RADIUS,
   HOVER_SCALE,
   HOVER_TWEEN_SECONDS,
+  LABEL_DATE_OFFSET_Y,
+  LABEL_OFFSET_Y,
+  TITLE_FONT_SIZE,
   type EventNodeState,
 } from './eventNodeVisual';
 import { useReducedMotion } from './reducedMotion';
@@ -66,7 +71,26 @@ export type EventNodeEvent = Pick<
   'id' | 'title' | 'category' | 'when' | 'whenMin' | 'whenMax' | 'whenPrecision'
 >;
 
-/** Props are pinned by P4.3.1. Nothing may be added here without changing that task. */
+/**
+ * The node's REVIEWED prop surface (P4.3.1).
+ *
+ * Not a frozen one. This comment used to read "props are pinned by P4.3.1, nothing may be
+ * added here without changing that task", which stated a prohibition the task never
+ * meant — `dimmed` was added to close the glow/filter gap (§5.2) and `labelled` below was
+ * added by the P4 review. What P4.3.1 actually pins is that these props are a contract
+ * shared by two views and the export renderer, so every addition is a documented decision
+ * with a stated reason, never a convenience passed down because it was to hand.
+ *
+ * **The addition that is already expected.** P7.5 ramps opacity and emissive intensity as
+ * a function of `|camera.z − stratum.z|`. That is a PER-FRAME channel into every node, and
+ * everything below is read during React render, so expressing it as an ordinary prop would
+ * re-render all 81 nodes sixty times a second to move two floats. The machinery it needs is
+ * already in this file and merely unreachable from outside: `scaleRef` + `useFrame` +
+ * {@link approachScale} already drive a transform per frame without a single render. Expect
+ * P7.5 to add an `envelope` channel on that path — a subscribable value quantized to a step
+ * below which nobody is told, exactly as `views/timeline/cameraChannel.ts` already gates the
+ * HUD's re-renders on a day's worth of world units — rather than a plain number prop.
+ */
 export interface EventNodeProps {
   event: EventNodeEvent;
   /**
@@ -82,6 +106,18 @@ export interface EventNodeProps {
    * Subtractive — it scales whatever `state` produced, and never moves the node.
    */
   dimmed?: boolean;
+  /**
+   * May this node draw its label?
+   *
+   * Set by the LAYOUT (`views/timeline/layout.ts`, P4.2.3), which is the only thing that
+   * knows about a node's neighbours — this component is view-agnostic by construction and
+   * cannot see past itself. Defaults to `true`, so a caller that does not de-collide —
+   * P13's tech-tree lanes, a spec, a one-off `<EventNode>` — is unaffected.
+   *
+   * It never suppresses a label the reader asked for: {@link labelVisible} restores it on
+   * hover and for any `state` other than `normal`.
+   */
+  labelled?: boolean;
   /** Uniform size multiplier, e.g. a stratum's depth falloff. Defaults to `1`. */
   scale?: number;
   onSelect?: (event: EventNodeEvent) => void;
@@ -100,26 +136,12 @@ export interface EventNodeProps {
 const NODE_GEOMETRY = new SphereGeometry(1, 24, 16);
 
 /**
- * Constant label height, in world units, deliberately independent of `state`.
- *
- * Clears a `focused` node (the largest a node ever gets) so the text never sits inside
- * the sphere — and because it does not vary, changing `state` cannot move the label.
- */
-const LABEL_OFFSET_Y = EVENT_NODE_RADIUS * 1.3 + 0.55;
-
-/** Second line, below the title. */
-const LABEL_DATE_OFFSET_Y = -0.5;
-
-/**
  * Vendored, never resolved from a CDN. `<Text>` with no `font` fetches a face from
  * jsdelivr at render time, which leaves every label BLANK offline with no error — in an
  * application that is loopback-bound and local-only by design. Same reasoning as the
  * vendored border geometry. See client/public/fonts/Sora-SemiBold.version.txt.
  */
 const NODE_FONT = '/fonts/Sora-SemiBold.ttf';
-
-const TITLE_FONT_SIZE = 0.5;
-const DATE_FONT_SIZE = 0.38;
 
 /**
  * Neutral label ink and its outline, mirroring `--fg` / `--bg` in `client/src/styles.css`.
@@ -139,6 +161,7 @@ export function EventNode({
   position,
   state,
   dimmed = false,
+  labelled = true,
   scale = 1,
   onSelect,
   onHover,
@@ -264,35 +287,42 @@ export function EventNode({
           </mesh>
         )}
 
-        <Billboard position={[0, LABEL_OFFSET_Y, 0]}>
-          <Text
-            fontSize={TITLE_FONT_SIZE}
-            font={NODE_FONT}
-            color={LABEL_INK}
-            fillOpacity={visual.labelOpacity}
-            outlineWidth={0.02}
-            outlineColor={LABEL_OUTLINE}
-            anchorX="center"
-            anchorY="middle"
-            raycast={NO_RAYCAST}
-          >
-            {event.title}
-          </Text>
-          <Text
-            position={[0, LABEL_DATE_OFFSET_Y, 0]}
-            fontSize={DATE_FONT_SIZE}
-            font={NODE_FONT}
-            color={visual.color}
-            fillOpacity={visual.labelOpacity}
-            outlineWidth={0.02}
-            outlineColor={LABEL_OUTLINE}
-            anchorX="center"
-            anchorY="middle"
-            raycast={NO_RAYCAST}
-          >
-            {formatWhen(event)}
-          </Text>
-        </Billboard>
+        {/* Suppressed only when the layout says this node's label collides with one it
+            already granted AND the reader has shown no interest in it — see
+            `labelVisible`. Unmounting rather than hiding is deliberate: a `<Text>` with
+            `fillOpacity={0}` still costs a troika SDF build and a draw call, and at P5's
+            density most labels are suppressed most of the time. */}
+        {labelVisible(state, labelled, hovered) && (
+          <Billboard position={[0, LABEL_OFFSET_Y, 0]}>
+            <Text
+              fontSize={TITLE_FONT_SIZE}
+              font={NODE_FONT}
+              color={LABEL_INK}
+              fillOpacity={visual.labelOpacity}
+              outlineWidth={0.02}
+              outlineColor={LABEL_OUTLINE}
+              anchorX="center"
+              anchorY="middle"
+              raycast={NO_RAYCAST}
+            >
+              {event.title}
+            </Text>
+            <Text
+              position={[0, LABEL_DATE_OFFSET_Y, 0]}
+              fontSize={DATE_FONT_SIZE}
+              font={NODE_FONT}
+              color={visual.color}
+              fillOpacity={visual.labelOpacity}
+              outlineWidth={0.02}
+              outlineColor={LABEL_OUTLINE}
+              anchorX="center"
+              anchorY="middle"
+              raycast={NO_RAYCAST}
+            >
+              {formatWhen(event)}
+            </Text>
+          </Billboard>
+        )}
       </group>
     </group>
   );

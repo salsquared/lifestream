@@ -1,18 +1,18 @@
 import { useMemo } from 'react';
 
-import { createTimeScale } from '@shared/timeScale';
+import { CORRIDOR_START, TIME_SCALE } from '@shared/timeScale';
 
 import { useWorld } from '../../shell/stores/world';
 import { EventNode, Scene3D } from '../_shared';
 import { createCameraChannel } from './cameraChannel';
+import { corridorCorpus } from './corpus';
 import { CorridorControls } from './CorridorControls';
 import { CorridorHud } from './CorridorHud';
-import { CORRIDOR_FIXTURE } from './fixture';
 import { worldUnitsPerDay } from './hud';
 import { createCorridorLayout } from './layout';
 import { clampPan, panBounds } from './pan';
 
-import type { HydratedEvent } from '@shared/types/index';
+import type { IsoInstant } from '@shared/types/index';
 
 import './corridor.css';
 
@@ -25,12 +25,13 @@ import './corridor.css';
  *
  *   - **It does not fetch.** The shell owns the per-save load (§4.2, P4.1) so four views
  *     never race for the same event list; this one subscribes to `useWorld` and issues no
- *     query. When the store is empty it falls back to `CORRIDOR_FIXTURE` and says so on
- *     the HUD.
- *   - **It does not build its own scale.** `createTimeScale` is THE canonical scale
- *     (§5.2, normative): the same object the Tech Tree's X axis, the viewport clamp and
- *     every later fly-to target use. A second scale here would desynchronise the views
- *     the first time either changed.
+ *     query. What it draws for each phase of that load is `corpus.ts`'s decision, not
+ *     this file's — the fixture is gated on the load's STATUS and never on a row count.
+ *   - **It does not build a scale.** {@link TIME_SCALE} is THE canonical scale (§5.2,
+ *     normative), a process constant on a fixed origin: the same object the Tech Tree's X
+ *     axis, the viewport clamp and every later fly-to target use. A scale built here —
+ *     from this view's corpus, as this file did until the P4 review — would put the two
+ *     views on origins ~145 world units apart with no error in either.
  *   - **It does not let `EventNode` position itself** (P4.3.2). Position is computed by
  *     the caller, always — the Tech Tree places the same component by lane instead.
  *   - **It does not draw strata.** Every node's z is `CORRIDOR_DEPTH`, which is 0
@@ -38,82 +39,69 @@ import './corridor.css';
  *     draw time only.
  */
 
-/** Ordering the resolve endpoint already uses; applied to the store's rows for stability. */
-function byWhenThenId(a: HydratedEvent, b: HydratedEvent): number {
-  if (a.when !== b.when) return a.when < b.when ? -1 : 1;
-  if (a.id !== b.id) return a.id < b.id ? -1 : 1;
-  return 0;
-}
+/**
+ * One scale, therefore one layout, one clamp and one HUD redraw threshold — all three at
+ * module level, because none of them depends on the corpus, on the save or on the mount.
+ * Memoizing them per render would be theatre now that the scale is a constant, and would
+ * suggest they can change.
+ */
+const CORRIDOR_LAYOUT = createCorridorLayout(TIME_SCALE);
+const CORRIDOR_BOUNDS = panBounds(TIME_SCALE);
+const CORRIDOR_UNITS_PER_DAY = worldUnitsPerDay(TIME_SCALE);
 
 export function TimelineView() {
   const worldEvents = useWorld((state) => state.events);
   const status = useWorld((state) => state.status);
 
-  // The two travel together: whether the fixture is in use is exactly whether the store
-  // had rows, and deriving them separately is how the badge ends up lying.
-  const { events, usingFixture } = useMemo(() => {
-    const rows = Object.values(worldEvents);
-    if (rows.length === 0) {
-      return { events: CORRIDOR_FIXTURE as readonly HydratedEvent[], usingFixture: true };
-    }
-    return {
-      events: [...rows].sort(byWhenThenId) as readonly HydratedEvent[],
-      usingFixture: false,
-    };
-  }, [worldEvents]);
-
-  // The scale's origin. `min(event.when)` over whatever corpus is on screen — the same
-  // choice `createTimeScale` documents. The fallback is unreachable (the fixture is a
-  // non-empty tuple) and exists so the origin is a `string` rather than a maybe-string
-  // threaded through every memo below.
-  const earliest = useMemo(
-    () =>
-      events.reduce<string>(
-        (min, event) => (event.when < min ? event.when : min),
-        events[0]?.when ?? CORRIDOR_FIXTURE[0].when,
-      ),
-    [events],
+  // Rows, source and HUD notice come out together, from one function, over the load's
+  // status. Deriving the notice separately from the rows is how the badge ends up lying
+  // about what is on screen — which is exactly what it did.
+  const { events, notice } = useMemo(
+    () => corridorCorpus(status, Object.values(worldEvents)),
+    [status, worldEvents],
   );
 
-  const scale = useMemo(() => createTimeScale(earliest), [earliest]);
-  const layout = useMemo(() => createCorridorLayout(scale), [scale]);
-  const bounds = useMemo(() => panBounds(scale), [scale]);
-
-  // Positions are memoized, not computed inline: `position` is a fresh array on every
+  // Positions are memoized, not computed inline: `place` returns fresh arrays on every
   // call, and a new array prop every render would re-render every node on every frame the
-  // container happens to update.
-  const placed = useMemo(
-    () => events.map((event) => ({ event, position: layout.position(event) })),
-    [events, layout],
-  );
+  // container happens to update. `labelled` rides along — the layout is the only thing
+  // that knows about a node's neighbours (P4.2.3).
+  const placed = useMemo(() => CORRIDOR_LAYOUT.place(events), [events]);
 
-  // Opens at the earliest event rather than at the padded bound, so the corridor starts
-  // on its first node instead of on the empty slack before it.
-  const initialX = useMemo(() => clampPan(scale.toX(earliest), bounds), [scale, earliest, bounds]);
+  // Opens on the corpus's earliest node rather than on the padded bound, so the corridor
+  // starts on something instead of on the empty slack before it.
+  //
+  // Corpus-derived, and deliberately still so: this is a camera POSE, not a scale. A pose
+  // is allowed to depend on what is being drawn — it is read once, at mount, and nothing
+  // is stored against it — where an origin is not, because every persisted x is expressed
+  // in it. With no nodes to open on (`pending`, `empty`) that is the corridor's own start.
+  const initialX = useMemo(() => {
+    const earliest = events.reduce<IsoInstant>(
+      (min, event) => (event.when < min ? event.when : min),
+      events[0]?.when ?? CORRIDOR_START,
+    );
+    return clampPan(TIME_SCALE.toX(earliest), CORRIDOR_BOUNDS);
+  }, [events]);
 
-  // Re-created with the scale, because both the opening pose and the HUD's redraw
-  // threshold are expressed in that scale's world units.
-  const channel = useMemo(
-    () => createCameraChannel(initialX, worldUnitsPerDay(scale)),
-    [initialX, scale],
-  );
-
-  const notice = usingFixture
-    ? status === 'error'
-      ? 'World load failed — drawing the seeded fixture.'
-      : 'Fixture data — no save hydrated yet.'
-    : undefined;
+  // Re-created with the opening pose, because the channel holds the camera's live x and a
+  // new corpus opens somewhere else.
+  const channel = useMemo(() => createCameraChannel(initialX, CORRIDOR_UNITS_PER_DAY), [initialX]);
 
   return (
     <div className="corridor-view">
       <Scene3D>
-        <CorridorControls bounds={bounds} initialX={initialX} channel={channel} />
-        {placed.map(({ event, position }) => (
-          <EventNode key={event.id} event={event} position={position} state="normal" />
+        <CorridorControls bounds={CORRIDOR_BOUNDS} initialX={initialX} channel={channel} />
+        {placed.map(({ event, position, labelled }) => (
+          <EventNode
+            key={event.id}
+            event={event}
+            position={position}
+            labelled={labelled}
+            state="normal"
+          />
         ))}
       </Scene3D>
 
-      <CorridorHud scale={scale} channel={channel} notice={notice} />
+      <CorridorHud scale={TIME_SCALE} channel={channel} notice={notice} />
     </div>
   );
 }
