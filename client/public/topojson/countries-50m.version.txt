@@ -1,5 +1,6 @@
 world-atlas@2.0.2
 file: countries-50m.json  (copied verbatim from node_modules/world-atlas/countries-50m.json)
+sha256: 04342cdc1e3016bcd7db1630de95684d67b79fe3c8c460321e87aef469502394
 source: https://github.com/topojson/world-atlas — pre-built TopoJSON from Natural Earth 1:50m
 vendored: P0.6
 
@@ -11,5 +12,12 @@ Committed on purpose, not gitignored. Two reasons:
 50m, not 110m: 110m carries ~177 features and the authored groupings reference 237
 country codes, so 110m cannot represent the data.
 
-Re-vendoring: bump world-atlas in client/package.json, re-copy the file, update the
-version above, and re-run the country seed — feature ids/names can move between vintages.
+Re-vendoring: bump world-atlas in client/package.json, re-copy the file, update BOTH the
+version and the sha256 above, and re-run the country seed — feature ids/names can move
+between vintages. The sha256 is what makes that procedure checkable rather than merely
+described; verify a copy with:
+
+  shasum -a 256 client/public/topojson/countries-50m.json
+
+A mismatch means the file drifted from the recorded vintage, and the seeded country ids
+can no longer be assumed to line up with what the client renders.

@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+import { useSave } from './save';
+
 import type { Character, Location, Project } from './types';
 
 /**
@@ -26,8 +28,18 @@ export type RegistryData = {
  * state and the setters only — it fetches nothing.
  */
 export type RegistryState = RegistryData & {
-  /** Called by the shell once a per-save load resolves. */
-  hydrate: (data: RegistryData) => void;
+  /**
+   * Called by the shell once a per-save load resolves.
+   *
+   * `saveId` is the save the payload was fetched FOR, and the write is dropped
+   * when it is no longer the active one. Switching saves mid-flight is one
+   * click, and without this guard the slower response wins — the registry would
+   * hold save A's rows while `useSave` says B, so every `location` /
+   * `project` id the glow selector follows would resolve against the wrong save
+   * (§7.3). The shell must capture `activeSaveId` before the fetch and pass that
+   * captured value, never re-read it in the `.then`.
+   */
+  hydrate: (saveId: string, data: RegistryData) => void;
   /**
    * Drop the cache. Coarse by design (§2.6): any per-save write invalidates
    * the whole thing rather than surgically patching one row. Does not refetch
@@ -43,6 +55,9 @@ function emptyRegistry(): RegistryData {
 
 export const useRegistry = create<RegistryState>((set) => ({
   ...emptyRegistry(),
-  hydrate: (data) => set({ ...data }),
+  hydrate: (saveId, data) => {
+    if (saveId !== useSave.getState().activeSaveId) return;
+    set({ ...data });
+  },
   invalidate: () => set({ ...emptyRegistry() }),
 }));

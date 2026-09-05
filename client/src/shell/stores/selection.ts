@@ -6,9 +6,9 @@ import type { Primary } from './types';
  * `useSelection` — what the user clicked on. Architecture §4.2.
  *
  * Glow is NOT stored here and must never be. `setPrimary()` sets `primary` and
- * nothing else; the halo is a memoized derived selector over
- * `(primary, world.events, world.groupings, registry.locations)` — see
- * `../selectGlow.ts` and architecture §2.6.
+ * nothing else; the halo is a memoized derived selector over two grouped store
+ * slices — `selectGlow(primary, {events, groupingOf}, {locations, projects})`,
+ * see `./selectGlow.ts` and architecture §2.6, §4.2.
  *
  * WHY (this is load-bearing, do not "optimize" it back): computing glow inside
  * the setter is correct exactly once — on a click, with the world data already

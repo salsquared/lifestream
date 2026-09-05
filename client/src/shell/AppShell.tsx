@@ -6,8 +6,10 @@ import { HealthBadge } from './HealthBadge';
  * view, which React Router renders into the <Outlet/>.
  *
  * At P0 the shell owns no state: the save picker and command palette are present but
- * disabled, and nothing here reads the zustand stores yet. From P2 on this is also where
- * URL sync and the per-save registry/world fetch live (architecture §4.1/§4.2).
+ * disabled, and nothing here reads the zustand stores yet. The shell-owned per-save
+ * registry/world fetch (architecture §4.2) is what the views start reading in P2; the
+ * URL sync that serializes save + primary + filters into search params (§4.3) is not
+ * P2 — it lands with the Corridor's filter work in P9.5.
  */
 
 const TABS = [
@@ -39,8 +41,9 @@ export function AppShell() {
 
         <div className="shell__actions">
           <HealthBadge />
-          {/* Both are deliberately inert at P0: the save picker is wired in P6 once saves
-              exist, the command palette in the shared-components phase that follows. */}
+          {/* Both are deliberately inert at P0, and they arrive far apart: the save picker
+              is wired in P6 (Saves UI & the fork) once there is more than one save, the
+              Cmd-K command palette not until P16.3 (Polish). */}
           <button type="button" className="shell__button" disabled>
             Save: —
           </button>

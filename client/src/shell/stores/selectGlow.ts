@@ -33,7 +33,18 @@ export type GlowRegistry = Pick<RegistryData, 'locations' | 'projects'>;
 /** `country_id -> grouping_id`; see the signature note on `selectGlow`. */
 type GroupingOf = Record<string, string>;
 
-function emptyGlow(): Glow {
+/**
+ * The mutable face of `Glow`, used only while a halo is being built.
+ *
+ * `Glow` itself is all `ReadonlySet` (see the note on the type): the memo below
+ * shares one object across every `useGlow()` caller, so a view that mutated a
+ * returned set would poison the halo everywhere. `computeGlow` still needs to
+ * accumulate, so it builds this and widens to `Glow` on the way out — the
+ * mutability is scoped to the one function that legitimately owns the object.
+ */
+type MutableGlow = Record<keyof Glow, Set<string>>;
+
+function emptyGlow(): MutableGlow {
   return {
     eventIds: new Set<string>(),
     characterIds: new Set<string>(),
@@ -46,10 +57,66 @@ function emptyGlow(): Glow {
 }
 
 /**
- * The glow when nothing is selected. A frozen singleton so that views can rely
- * on reference equality and skip re-rendering while the selection is empty.
+ * A `Set` that refuses to be written to.
+ *
+ * Belt and braces over `ReadonlySet`: the type stops a mutation at compile
+ * time, and this stops one that arrives anyway — from untyped JS, a `as Set`
+ * cast, or a `Glow` that crossed a boundary where the type was erased. It stays
+ * a real `Set` subclass on purpose, so `has()`, iteration, spreading and
+ * `new Set(glow.eventIds)` all keep working; only the three mutators throw.
+ *
+ * Safe to construct: `new Set()` with no argument never invokes `add`.
  */
-export const EMPTY_GLOW: Glow = Object.freeze(emptyGlow());
+class SealedStringSet extends Set<string> {
+  private static refuse(op: string): never {
+    throw new TypeError(
+      `glow sets are read-only: ${op}() on a Glow set. Glow is a derived selector — ` +
+        'copy it (`new Set(glow.eventIds)`) instead of mutating the shared result.',
+    );
+  }
+
+  override add(): never {
+    return SealedStringSet.refuse('add');
+  }
+
+  override delete(): never {
+    return SealedStringSet.refuse('delete');
+  }
+
+  override clear(): never {
+    return SealedStringSet.refuse('clear');
+  }
+}
+
+/**
+ * The glow when nothing is selected. A frozen singleton so that views can rely
+ * on reference equality and skip re-rendering while the selection is empty —
+ * which is exactly why its sets must not be writable: every caller shares it.
+ */
+export const EMPTY_GLOW: Glow = Object.freeze({
+  eventIds: new SealedStringSet(),
+  characterIds: new SealedStringSet(),
+  locationIds: new SealedStringSet(),
+  projectIds: new SealedStringSet(),
+  countryIds: new SealedStringSet(),
+  groupingIds: new SealedStringSet(),
+  tagIds: new SealedStringSet(),
+});
+
+/**
+ * `Record<string, T>` lookup that an inherited key cannot fool.
+ *
+ * These maps are plain object literals, so they inherit from `Object.prototype`
+ * and `events['constructor']` yields a *function*, not `undefined` — the
+ * `noUncheckedIndexedAccess` narrowing every call site below relies on simply
+ * does not fire. That is reachable input, not a curiosity: `primary.id` is
+ * parsed straight out of `?primary=` (§4.3), so a crafted
+ * `?primary=event:constructor` used to reach `for (const id of event.actorIds)`
+ * on `Object` and throw out of the selector.
+ */
+function own<T>(map: Record<string, T>, key: string): T | undefined {
+  return Object.hasOwn(map, key) ? map[key] : undefined;
+}
 
 /**
  * The country an event sits in, or `undefined` if it sits nowhere resolvable.
@@ -68,7 +135,7 @@ export const EMPTY_GLOW: Glow = Object.freeze(emptyGlow());
  */
 function countryOfEvent(event: HydratedEvent, locations: LocationMap): string | undefined {
   if (event.locationId === undefined) return undefined;
-  const location = locations[event.locationId];
+  const location = own(locations, event.locationId);
   if (location === undefined) return undefined;
   if (location.mapRefKind !== 'country') return undefined;
   return location.mapRefValue;
@@ -90,14 +157,14 @@ function computeGlow(
   locations: LocationMap,
   projects: ProjectMap,
 ): Glow {
-  const glow = emptyGlow();
+  const glow: MutableGlow = emptyGlow();
 
   switch (primary.type) {
     // Click event in Corridor / tech node in Tree -> its actors, location,
     // project and tags.
     case 'event': {
       glow.eventIds.add(primary.id);
-      const event = events[primary.id];
+      const event = own(events, primary.id);
       // The primary can name an id the world has not loaded (a shared URL
       // mid-fetch) or one that no longer exists (a stale link into a forked
       // save, §7.3). Both are normal; the glow is just the primary itself.
@@ -135,7 +202,7 @@ function computeGlow(
       // §6 wants "lead + actors", and the lead lives on `registry.projects`
       // (§2.2), which is why this selector takes a registry slice rather than
       // a bare location map.
-      const project = projects[primary.id];
+      const project = own(projects, primary.id);
       if (project?.leadCharacterId !== undefined) {
         glow.characterIds.add(project.leadCharacterId);
       }
@@ -146,7 +213,7 @@ function computeGlow(
     // grouping that owns the country if any.
     case 'country': {
       glow.countryIds.add(primary.id);
-      const owner = groupingOf[primary.id];
+      const owner = own(groupingOf, primary.id);
       // No entry means an independent nation (§2.4) — absence is meaningful.
       if (owner !== undefined) glow.groupingIds.add(owner);
       for (const event of Object.values(events)) {
@@ -181,11 +248,12 @@ function computeGlow(
       break;
     }
 
-    // §6 has no row for a 'location' primary, though the Primary union has
-    // one. This is the single FK hop its closing sentence implies ("and so on
-    // — driven by the foreign keys already in §2.5") and nothing more: the
-    // events sited here. It does not fan out to their actors or projects,
-    // because §6 does not say it should.
+    // §6 gained its 'location' row on 2026-09-02, and this is it: "eventIds
+    // (the events sited there), locationIds (itself)" — one FK hop and no
+    // further. Deliberately no fan-out to those events' actors or projects;
+    // the table's decision note calls it the smallest answer consistent with
+    // the rest of the table, and the Location Life view (§9) is where the whole
+    // rename chain gets shown, by asking for it rather than by default.
     case 'location': {
       glow.locationIds.add(primary.id);
       for (const event of Object.values(events)) {

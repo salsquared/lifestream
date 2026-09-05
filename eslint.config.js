@@ -8,12 +8,17 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     rules: {
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
     },
   },
   {
-    // Node-run maintenance scripts (plain JS, no TS project behind them).
-    files: ['scripts/**/*.{js,mjs}', '*.config.{js,mjs,ts}'],
+    // Node-run maintenance scripts and root config modules (plain JS, no TS project
+    // behind them). `aliases.mjs` is named explicitly: it is not a `*.config.js`, but
+    // it is the shared alias table Vite, Vitest and the smoke spec all import.
+    files: ['scripts/**/*.{js,mjs}', '*.config.{js,mjs,ts}', 'aliases.mjs'],
     languageOptions: {
       globals: {
         process: 'readonly',

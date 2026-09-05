@@ -8,9 +8,12 @@
     "composite": false,
     "noEmit": true,
     "declaration": false,
+    // `aliases.mjs` is plain JS (the tsconfig cannot import it, but Vite, Vitest and
+    // this spec all can), so the alias spec needs JS in the program. Left unchecked:
+    // the module is validated by the assertions in smoke.test.ts, not by `tsc`.
     "types": ["node"]
   },
-  // `vitest.config.ts` is pulled in so the spec that reads its alias table typechecks
-  // against the real thing rather than a redeclared copy.
-  "include": ["**/*.ts", "../vitest.config.ts"]
+  // The three alias consumers are pulled in so the spec that compares them typechecks
+  // against the real configs rather than redeclared copies of their tables.
+  "include": ["**/*.ts", "../aliases.mjs", "../vitest.config.ts", "../client/vite.config.ts"]
 }

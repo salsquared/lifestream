@@ -1,6 +1,7 @@
 # LIFEstream — Claude instructions
 
 ## Planning docs
+
 - Write all planning/design docs as standalone HTML files (not Markdown) under `docs/`.
 - **Link the shared stylesheet — never inline CSS.** Every doc carries
   `<link rel="stylesheet" href="./assets/style.css">` (or `../assets/style.css` from a

@@ -1,15 +1,25 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../tsconfig.base.json",
+  // `@shared/*` needs BOTH halves of its wiring and they are not alternatives:
+  //   - `paths` in tsconfig.base.json tells tsc where the source lives, and this
+  //     `references` entry is what makes that legal — `composite: true` is inherited,
+  //     so a paths-resolved file outside `include` is TS6307 without it;
+  //   - `resolve.alias` in vite.config.ts is what makes it resolve in the browser.
+  // Dropping either one breaks a `@shared/*` import in a different, non-overlapping way.
+  "references": [{ "path": "../shared" }],
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "types": ["vite/client"],
     "noEmit": true,
+    // For `../aliases.mjs`, which vite.config.ts imports. It is plain JSDoc-typed JS
+    // (three consumers in three languages read it, so it cannot be a .ts file);
+    // `checkJs` stays off — the file is lane-C-owned and typechecked from its own side.
     // Root `npm run typecheck` is `tsc -b`, and the base config is composite, so a
     // .tsbuildinfo is always written. Park it under the (gitignored) node_modules
     // instead of leaving it in the repo tree.
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo"
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "../aliases.mjs"]
 }

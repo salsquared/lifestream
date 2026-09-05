@@ -1,18 +1,32 @@
 import { create } from 'zustand';
 
+import { useSave } from './save';
+
 import type { Grouping, HydratedEvent, Relation, Timeline } from './types';
 
-/** Lifecycle of the shell's per-save load. */
-export type WorldStatus = 'idle' | 'loading' | 'ready' | 'error';
+/**
+ * Lifecycle of the shell's per-save load.
+ *
+ * `'stale'` is distinct from `'idle'` on purpose: both leave the store empty,
+ * but `'idle'` means *never loaded* and `'stale'` means *loaded, then
+ * invalidated by a write*. Without the distinction `invalidate()` is invisible
+ * to the shell — the documented refetch trigger is an effect on `activeSaveId`
+ * (§4.2), which `invalidate()` deliberately does not change, so nothing would
+ * ever notice. The refetch effect keys on `status === 'stale'` alongside it.
+ */
+export type WorldStatus = 'idle' | 'loading' | 'ready' | 'stale' | 'error';
 
 /**
  * The per-save content the views actually draw.
  *
  * This is also what makes the glow selector possible client-side (§2.6): the
- * hydrated events carry their own join ids, and `groupings` + `groupingOf`
- * carry the country membership, so the `grouping -> member countries -> every
- * event located in one of them` two-hop walk (§6) needs no extra endpoint. At
- * ~50-500 events per save that is small enough to hold in memory.
+ * hydrated events carry their own join ids, and `groupingOf` carries the
+ * country membership, so the `grouping -> member countries -> every event
+ * located in one of them` two-hop walk (§6) needs no extra endpoint. At ~50-500
+ * events per save that is small enough to hold in memory. (`groupings` holds a
+ * name and a color and nothing derivable — membership moved to the
+ * `grouping_country` join table on 2026-09-01 — which is why `selectGlow` reads
+ * `groupingOf` and not `groupings`.)
  */
 export type WorldData = {
   /** Keyed by event id. Each event embeds actorIds / tagIds / locationId / projectId. */
@@ -44,13 +58,23 @@ export type WorldState = WorldData & {
   status: WorldStatus;
   /** Shell-driven lifecycle: 'loading' before the request, 'error' on failure. */
   setStatus: (status: WorldStatus) => void;
-  /** Called by the shell when a per-save load resolves; sets status to 'ready'. */
-  hydrate: (data: WorldData) => void;
   /**
-   * Drop the world back to empty / 'idle'. Coarse by design (§2.6): any
-   * per-save write invalidates the whole thing. Does not refetch — the shell's
-   * effect does that, and the derived glow catches up on its own when the new
-   * data lands.
+   * Called by the shell when a per-save load resolves; sets status to 'ready'.
+   *
+   * `saveId` is the save the payload was fetched FOR, and the write is dropped
+   * when it is no longer the active one. Switching saves mid-flight is not an
+   * edge case — it is one click — and without this guard the slower response
+   * wins: the world would show save A's events while `useSave` says B, and
+   * every id in `primary` would resolve against the wrong save (§7.3). The
+   * shell must therefore capture `activeSaveId` before the fetch and pass that
+   * captured value, never re-read it in the `.then`.
+   */
+  hydrate: (saveId: string, data: WorldData) => void;
+  /**
+   * Drop the world back to empty and mark it 'stale'. Coarse by design (§2.6):
+   * any per-save write invalidates the whole thing. Does not refetch — the
+   * shell's effect does that, and the derived glow catches up on its own when
+   * the new data lands.
    */
   invalidate: () => void;
 };
@@ -71,6 +95,9 @@ export const useWorld = create<WorldState>((set) => ({
   status: 'idle',
 
   setStatus: (status) => set({ status }),
-  hydrate: (data) => set({ ...data, status: 'ready' }),
-  invalidate: () => set({ ...emptyWorld(), status: 'idle' }),
+  hydrate: (saveId, data) => {
+    if (saveId !== useSave.getState().activeSaveId) return;
+    set({ ...data, status: 'ready' });
+  },
+  invalidate: () => set({ ...emptyWorld(), status: 'stale' }),
 }));

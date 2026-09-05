@@ -1,14 +1,15 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    // tsconfig.base.json still sets `baseUrl`, which TypeScript 6 deprecates (TS5101).
-    // Drop this once the root config expresses its `paths` without a baseUrl.
-    "ignoreDeprecations": "6.0",
-    "composite": true,
+    // `composite` is inherited from the base config; build mode needs these alongside it.
     "rootDir": "./src",
     "outDir": "./dist",
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "types": ["node"]
   },
+  // `composite: true` is inherited, so a `@shared/*` import resolved through the base
+  // config's `paths` lands on a file outside this project's `include` — TS6307/TS6059
+  // unless the project it belongs to is referenced here.
+  "references": [{ "path": "../shared" }],
   "include": ["src/**/*.ts"]
 }

@@ -18,9 +18,7 @@ if (project.allGroups) {
   process.exit(0);
 }
 
-const groupedIds = new Set(
-  project.unifiedNations.flatMap(n => n.countries.filter(Boolean))
-);
+const groupedIds = new Set(project.unifiedNations.flatMap((n) => n.countries.filter(Boolean)));
 
 const independentGroups = Object.entries(project.countryNames)
   .filter(([id]) => !groupedIds.has(id))
@@ -36,5 +34,7 @@ project.allGroups = [...project.unifiedNations, ...independentGroups];
 
 writeFileSync(savePath, JSON.stringify(project, null, 2));
 
-console.log(`Migrated ${saveFile}: ${project.unifiedNations.length} groups + ${independentGroups.length} independent countries added to allGroups.`);
-independentGroups.forEach(g => console.log(`  + ${g.name} (${g.id})`));
+console.log(
+  `Migrated ${saveFile}: ${project.unifiedNations.length} groups + ${independentGroups.length} independent countries added to allGroups.`,
+);
+independentGroups.forEach((g) => console.log(`  + ${g.name} (${g.id})`));

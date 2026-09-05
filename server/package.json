@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "seed": "echo 'db:seed is not implemented until P1 - see docs/implementation.html P1.7' && exit 1"
+    "seed": "echo 'The seed lives at the repo root: scripts/seed.ts, run by npm run db:seed. Not implemented until P1 - see docs/implementation.html P1.7' && exit 1"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",

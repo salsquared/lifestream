@@ -21,14 +21,25 @@ export const CANON_SAVE_ID = 'sav_canon';
  */
 export type SaveState = {
   activeSaveId: string;
-  /** Switches the active save and clears `primary` — see the note below. */
+  /**
+   * Switches the active save and clears `primary` — see the note below.
+   * A no-op when `id` is already active, so re-applying `?save=` costs nothing.
+   */
   setActive: (id: string) => void;
 };
 
-export const useSave = create<SaveState>((set) => ({
+export const useSave = create<SaveState>((set, get) => ({
   activeSaveId: CANON_SAVE_ID,
 
   setActive: (id) => {
+    // Re-selecting the save that is already active is a NO-OP, not a cheap
+    // re-run of the clear below. The URL sync (§4.3) re-applies `?save=` from a
+    // mount effect, so on every load of a shared
+    // `?save=sav_canon&primary=event:evt_x` link `setActive` is called with the
+    // save that is already active — and an unconditional `clear()` would wipe
+    // the `?primary=` the same link just restored.
+    if (id === get().activeSaveId) return;
+
     // A fork regenerates every per-save row id (§2.6), so a `primary` carried
     // across a save switch points at an id that either does not exist in the
     // new save or — worse — belongs to an unrelated row. Clearing it also

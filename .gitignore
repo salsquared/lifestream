@@ -23,9 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local database — rebuilt from migrations + seed. Never committed.
+# Local database — rebuilt from migrations + seed. Never committed. The sidecars go
+# with it: `-journal` in rollback mode, `-wal` + `-shm` in WAL mode. A sidecar committed
+# next to no database is a corruption source, and scripts/db-reset.mjs removes all four.
 data/*.db
 data/*.db-journal
+data/*.db-wal
+data/*.db-shm
 # NOT data/save_dumps/ — those are the committed backups (P11).
 
 # TypeScript build-mode incremental state (composite: true in tsconfig.base.json)
