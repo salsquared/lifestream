@@ -36,9 +36,10 @@ import type { Context } from 'hono';
 import type { Country, CountryOverride, Grouping, GroupingCountry } from '@shared/types/index';
 
 import { appDb, db, sqlite } from '../db/index.js';
-import { country, countryOverride, grouping, groupingCountry, save } from '../db/schema.js';
+import { country, countryOverride, grouping, groupingCountry } from '../db/schema.js';
 
 import type { DbHandle } from '../db/index.js';
+import { resolveSave } from './common.js';
 
 /**
  * `GET /api/map/countries` — the global `country` rows with this save's renames applied
@@ -64,30 +65,6 @@ export type MapCountriesResponse = { countries: Country[] };
 export type MapGroupingsResponse = { groupings: Grouping[]; members: GroupingCountry[] };
 
 /** Every read below is per-save, so a request without a usable `?save=` never runs one. */
-type SaveScope = { ok: true; saveId: string } | { ok: false; status: 400 | 404; error: string };
-
-/**
- * Resolve `?save=` into a save that actually exists.
- *
- * BOTH FAILURES ARE LOUD ON PURPOSE. A missing parameter is a client bug, and defaulting
- * it to the canon save would hide it; a parameter naming a save that is not there is the
- * `CANON_SAVE_ID` drift P1.11.1 warns about, whose natural symptom is "an empty app, not
- * an error" — every read would legitimately return zero rows. A 404 naming the id is what
- * turns that into a one-line diagnosis.
- */
-function resolveSave(raw: string | undefined): SaveScope {
-  if (raw === undefined || raw === '') {
-    return { ok: false, status: 400, error: "missing required query parameter 'save'" };
-  }
-
-  const row = db.select({ id: save.id }).from(save).where(eq(save.id, raw)).get();
-  if (row === undefined) {
-    return { ok: false, status: 404, error: `no save with id '${raw}'` };
-  }
-
-  return { ok: true, saveId: raw };
-}
-
 export const mapRoutes = new Hono();
 
 /**

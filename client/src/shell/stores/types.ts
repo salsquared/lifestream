@@ -12,161 +12,43 @@
  * SQL columns of §2.5.
  */
 
+// Entity and enum types come from `@shared/types` — ONE declaration, shared with the
+// server and asserted against the real database rows by `server/src/db/conformance.ts`.
+//
+// They were duplicated here until 2026-09-05, and the duplicate had already drifted:
+// this file's `MembershipRules` still carried a closed date range after the shared one
+// gained an open upper bound, so the client could not express an open-ended era at all.
+// Re-export, never re-declare.
+export type {
+  Category,
+  Character,
+  Grouping,
+  HydratedEvent,
+  IsoInstant,
+  Location,
+  MapRefKind,
+  MembershipRules,
+  Project,
+  ProjectStatus,
+  Relation,
+  RelationType,
+  TechLane,
+  Timeline,
+  TimelineKind,
+  WhenPrecision,
+} from '@shared/types/index';
+
 /* ------------------------------------------------------------------ *
  * Closed enums (architecture §2.5)
  * ------------------------------------------------------------------ */
-
-/** `event.category` */
-export type Category =
-  'tech' | 'political' | 'military' | 'disaster' | 'scientific' | 'cultural' | 'personal';
-
-/** `event.tech_lane` */
-export type TechLane =
-  'energy' | 'propulsion' | 'computing' | 'neural' | 'biomedical' | 'megastructure';
-
-/** `event.when_precision` */
-export type WhenPrecision = 'time' | 'day' | 'month' | 'season' | 'year' | 'decade';
-
-/** `timeline.kind` */
-export type TimelineKind = 'era' | 'thread' | 'cluster';
-
-/** `relation.type` — canonical direction, see §2.6 (reverse relations). */
-export type RelationType = 'precedes' | 'partOf' | 'renames';
-
-/** `project.status` */
-export type ProjectStatus = 'planned' | 'active' | 'succeeded' | 'failed' | 'cancelled';
-
-/** `location.map_ref_kind` — what `mapRefValue` points at. */
-export type MapRefKind = 'country' | 'grouping';
-
-/**
- * All datetimes are TEXT ISO-8601 UTC with a `Z` suffix (§2.1). Aliased so the
- * intent survives the move to `shared/`.
- */
-export type IsoInstant = string;
 
 /* ------------------------------------------------------------------ *
  * Registry entities (per-save) — architecture §2.5
  * ------------------------------------------------------------------ */
 
-export type Character = {
-  id: string;
-  saveId: string;
-  name: string;
-  /** Derived cache of the linked born/died event when one exists (§2.2). */
-  lifespanStart?: IsoInstant;
-  lifespanEnd?: IsoInstant;
-  role: string;
-  bio?: string;
-  portraitPath?: string;
-};
-
-export type Location = {
-  id: string;
-  saveId: string;
-  name: string;
-  description?: string;
-  lat?: number;
-  lng?: number;
-  /**
-   * Where this location sits on the map. Two real reference columns, at most one set —
-   * they replaced a polymorphic `mapRefKind`/`mapRefValue` pair, which had no foreign key
-   * and so could dangle when its target was deleted. `MapRefKind` is now DERIVED from
-   * which of the two is set, never stored.
-   */
-  countryId?: string;
-  groupingId?: string;
-  /** Rename identity chain (§2.2). */
-  supersededByLocationId?: string;
-};
-
-export type Project = {
-  id: string;
-  saveId: string;
-  name: string;
-  description: string;
-  dateStart?: IsoInstant;
-  dateEnd?: IsoInstant;
-  status: ProjectStatus;
-  leadCharacterId?: string;
-};
-
 /* ------------------------------------------------------------------ *
  * World entities (per-save) — architecture §2.5
  * ------------------------------------------------------------------ */
-
-/**
- * An `event` row with its join ids embedded. The glow derivation is purely
- * client-side (§2.6), which is only possible because every event payload
- * carries its own `actorIds` / `tagIds` / `locationId` / `projectId` — the
- * views never issue a join query to find out what an event touches.
- */
-export type HydratedEvent = {
-  id: string;
-  saveId: string;
-  title: string;
-  description: string;
-  whenMin: IsoInstant;
-  whenMax: IsoInstant;
-  whenPrecision: WhenPrecision;
-  /** Seeded roll inside [whenMin, whenMax]; persisted, not recomputed (§2.3). */
-  when: IsoInstant;
-  /** OPTIONAL narrowing of the window — never its source (§2.3). */
-  rangeBeforeEventId?: string;
-  rangeAfterEventId?: string;
-  category: Category;
-  techLane?: TechLane;
-  locationId?: string;
-  projectId?: string;
-  /** `event_actor.character_id` */
-  actorIds: string[];
-  /** `event_tag.tag_id` */
-  tagIds: string[];
-};
-
-/** `timeline.membership_rules` jsonb — predicate semantics in §2.6. */
-export type MembershipRules = {
-  byTag?: string[];
-  byCategory?: Category[];
-  byTimeRange?: [IsoInstant, IsoInstant];
-  byLocation?: string[];
-};
-
-export type Timeline = {
-  id: string;
-  saveId: string;
-  name: string;
-  kind: TimelineKind;
-  description?: string;
-  membershipRules?: MembershipRules;
-  color?: string;
-  /** Required when `kind === 'era'` (§2.5). */
-  eraStart?: IsoInstant;
-  eraEnd?: IsoInstant;
-  /**
-   * Set when this timeline is a project thread; its span comes from the project's
-   * date_start/date_end. Added with the schema — see architecture §2.5.
-   */
-  projectId?: string;
-};
-
-/** An event-to-event edge, stored once in canonical direction (§2.6). */
-export type Relation = {
-  id: string;
-  saveId: string;
-  fromEventId: string;
-  toEventId: string;
-  type: RelationType;
-  note?: string;
-};
-
-/** Membership lives in `grouping_country`, surfaced client-side as `groupingOf`. */
-export type Grouping = {
-  id: string;
-  saveId: string;
-  name: string;
-  color: string;
-};
 
 /* ------------------------------------------------------------------ *
  * Selection + glow — architecture §4.2 (normative)
