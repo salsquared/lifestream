@@ -44,7 +44,10 @@ export function CorridorHud({ scale, channel, notice }: CorridorHudProps) {
   const cameraX = useSyncExternalStore(channel.subscribe, channel.get, channel.get);
 
   const at = cameraDateIso(scale, cameraX);
-  const label = formatWhen({ when: at, whenMin: at, whenMax: at, whenPrecision: 'day' });
+  // No `when`: `FormattableEvent` omits the roll entirely (P4.7), and the HUD has no
+  // roll to give — `at` is a camera position inverted through the scale, which is
+  // day-precision by construction.
+  const label = formatWhen({ whenMin: at, whenMax: at, whenPrecision: 'day' });
   const warning = cutoffOpacity(at, CORRIDOR_END);
 
   return (

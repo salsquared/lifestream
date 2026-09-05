@@ -12,9 +12,13 @@
  * `when_precision` column exists.
  *
  * So: **this function reads `when_precision` and `when_min`. It never reads `when`.**
- * `when` is in the parameter type only because callers hand over the whole event and the
- * P4 interface contract pins the shape; the value is deliberately unused, and the spec
- * asserts that changing it cannot change the output.
+ * It cannot read it: `when` is not in the parameter type either, and that omission is
+ * the point. A `Pick` carrying the one column the function is forbidden to read hands
+ * the next author exactly the field this module exists to ignore; leaving it out makes
+ * the rule a compile error instead of a paragraph. The omission is a *widening* — every
+ * caller that passes a whole event row still satisfies the type; only a hand-built
+ * object literal that spells `when` out has to drop it. The spec still asserts that
+ * moving the roll anywhere, inside the window or outside it, cannot change the output.
  *
  * One implementation, because there are four consumers — node labels (P4.3.4), the
  * detail panel, the HUD (P4.6) and every export builder (§8) — and four copies of a
@@ -148,13 +152,18 @@ function monthName(month: number): string {
 // ---------------------------------------------------------------------------
 
 /**
- * The event fields this function is allowed to see.
+ * The event fields this function is allowed to see — and `when` is deliberately **not**
+ * one of them.
  *
- * `when` is part of the contract's shape and is **never read** — see the module header.
+ * The omission is the contract, not an oversight. `when` is a roll inside the window
+ * (§2.3); rendering it for a year-precision event states a month and a day the Bible
+ * never gave. A `Pick` that included it would document the prohibition while handing
+ * over the field, so this one does not include it and the mistake stops compiling.
+ *
  * Written as a `Pick` of {@link EventRow} rather than a fresh interface so a schema
- * change to any of the four columns lands here rather than drifting.
+ * change to any of the three columns lands here rather than drifting.
  */
-export type FormattableEvent = Pick<EventRow, 'when' | 'whenMin' | 'whenMax' | 'whenPrecision'>;
+export type FormattableEvent = Pick<EventRow, 'whenMin' | 'whenMax' | 'whenPrecision'>;
 
 /**
  * Render an event's date as the source stated it.

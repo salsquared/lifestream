@@ -69,6 +69,13 @@ interface SeededEvent extends FormattableEvent {
   title: string;
   /** What the Bible's own text says — the string the render must not exceed. */
   sourceDate: string;
+  /**
+   * The roll. Deliberately **not** part of {@link FormattableEvent} — the module's
+   * parameter type omits it so the one column `formatWhen` may not read cannot be read
+   * (see its docstring). The fixtures carry it anyway, because the mutation test below
+   * has to move it and prove the output does not follow.
+   */
+  when: string;
 }
 
 const SEEDED: readonly SeededEvent[] = CANON_EVENTS.map((authored) => {
@@ -256,7 +263,11 @@ describe('formatWhen never states what the source did not', () => {
         e.whenMin,
         e.whenMax,
       ]) {
-        expect(formatWhen({ ...e, when: forged })).toBe(baseline);
+        // Built as a `SeededEvent`, not as a bare argument: `FormattableEvent` has no
+        // `when` at all, so a literal spelling one out is an excess property. That the
+        // forgery needs a wider type to even be expressible is the point.
+        const forgery: SeededEvent = { ...e, when: forged };
+        expect(formatWhen(forgery)).toBe(baseline);
       }
     }
   });
