@@ -67,6 +67,8 @@ export type {
 export { BIBLE_UNION_LEADERS, readBibleLeaderMarkers, resolveBibleLeaders } from './leaders.js';
 export type { BibleLeaderMarker, BibleUnionLeader } from './leaders.js';
 export type { CanonDateTools } from './dateTools.js';
+export { CanonCitationError, normaliseCanonText, verifyCitations } from './citations.js';
+export type { Citation, LocatedCitation } from './citations.js';
 export { CANON_TAGS, seedTags } from './tags.js';
 export type { CanonTag, TagSeedResult } from './tags.js';
 export {
@@ -74,20 +76,42 @@ export {
   CANON_CHARACTER_RELATIONS,
   CANON_LOCATIONS,
   CANON_PROJECTS,
+  CANON_REGISTRY_CITATIONS,
+  LifespanAuthorityError,
   seedRegistry,
 } from './registry.js';
 export type { RegistrySeedResult } from './registry.js';
 export {
   CANON_EVENTS,
+  CANON_EVENT_CITATIONS,
+  CANON_NON_EVENTS,
   CanonDriftError,
+  bulletSentences,
+  eventOwnedLifespanBounds,
   readPreBigOneBullets,
+  readWorldTimelineBullets,
   refreshLifespanCache,
   resolveCanonEvents,
   seedEvents,
+  TRANSCRIBED_SECTIONS,
 } from './events.js';
-export type { CanonEvent, EventDateReport, EventSeedResult, PreBigOneBullet } from './events.js';
-export { CANON_TIMELINES, seedTimelines } from './timelines.js';
-export type { CanonTimeline, TimelineSeedResult } from './timelines.js';
+export type {
+  CanonBullet,
+  CanonEvent,
+  CanonEventResolution,
+  CanonNonEvent,
+  EventDateReport,
+  EventSeedResult,
+  LifespanBound,
+  SectionLedger,
+} from './events.js';
+export {
+  CANON_TIMELINE_CITATIONS,
+  CANON_TIMELINES,
+  eraMembershipRules,
+  seedTimelines,
+} from './timelines.js';
+export type { CanonTimeline, EraBounds, TimelineSeedResult } from './timelines.js';
 
 /** What one map save's import wrote, and what the database holds afterwards. */
 export interface SaveSeedReport {
@@ -146,7 +170,7 @@ export interface SeedReport {
   leaderMarkers: SeedInputs['leaderMarkers'];
   saves: SaveSeedReport[];
   /**
-   * The authored world — tags, registry, the twelve events, the two timelines (P3.1-P3.4).
+   * The authored world — tags, registry, the Pre-Big One events, the two timelines (P3.1-P3.4).
    * `undefined` when no {@link CanonDateTools} was supplied: the date functions are not
    * importable from here (see `dateTools.ts`), so a caller that does not hand them in gets
    * the map world alone rather than a half-dated corpus.
@@ -240,7 +264,7 @@ function countCanonRows(db: Db, saveId: string): CanonCounts {
 
 /**
  * Seed the authored world under the canon save — P3.1 tags, P3.2 registry, P3.3 the
- * twelve Pre-Big One events, P3.4 the root timeline and the first era.
+ * Pre-Big One events, P3.4 the root timeline and the first era.
  *
  * ORDER IS THE POINT. Tags come first because tagging is a step of the event seed and not
  * a later pass (§7.4), the registry before the events because an event's location, project
@@ -334,7 +358,7 @@ export function runSeed(handle: DbHandle, inputs: SeedInputs, tools?: CanonDateT
     const canon = tools === undefined ? undefined : seedCanon(db, inputs, tools);
     if (tools === undefined) {
       warnings.push(
-        `no date tools were supplied, so the authored world (tags, registry, the twelve ` +
+        `no date tools were supplied, so the authored world (tags, registry, the ` +
           `Pre-Big One events, the timelines) was NOT seeded. \`npm run db:seed\` always ` +
           `supplies them; a fixture that only needs the map world does not.`,
       );
@@ -435,7 +459,7 @@ const rowLine = (
   `${wrote.unchanged} already current`;
 
 /**
- * The authored world, as log lines — including the DATE PROOF: every one of the twelve
+ * The authored world, as log lines — including the DATE PROOF: every one of the
  * events with the text it was dated from, the precision that text implies, the window that
  * precision derives, and the roll inside it. That table is the only way to see at a glance
  * that no instant was hard-coded, and that two bullets both dated "2039" landed on two
@@ -477,15 +501,35 @@ export function formatCanonReport(canon: CanonSeedReport): string[] {
     `  lifespan caches refreshed from born/died events: ${canon.events.lifespansRefreshed}`,
   );
 
+  // The consumption ledger (P3 review F2). NOT a count comparison: one bullet can become
+  // two events and one bullet can be claimed as a thread instead, so what has to hold is
+  // that nothing is UNSPENT. `resolveCanonEvents` already refused the run otherwise; this
+  // is the same fact in the log, per section, for P5.7.3 to read.
   lines.push('');
-  lines.push('  the twelve Pre-Big One dates — every one derived, none hard-coded (P3.3.2)');
+  lines.push('  bullet ledger — every bullet consumed, as an event or as a stated non-event');
+  for (const section of canon.events.ledger) {
+    lines.push(
+      `    ${section.section}: ${section.bullets} bullets -> ${section.events} event(s) ` +
+        `from ${section.bulletsWithEvent}, ${section.bulletsWithoutEvent} claimed as ` +
+        `thread/project/skip, 0 unclaimed`,
+    );
+  }
+
+  lines.push('');
   lines.push(
-    `    ${'L'.padEnd(5)}${'source date'.padEnd(26)}${'prec'.padEnd(8)}` +
+    `  the ${canon.events.dates.length} Pre-Big One dates — every one derived, none ` +
+      `hard-coded (P3.3.2)`,
+  );
+  // The id is in the table because a LINE can now appear twice: a compound bullet becomes
+  // two events, and the roll is seeded on the id, so the id is what explains why one line
+  // produced two different instants.
+  lines.push(
+    `    ${'L'.padEnd(5)}${'event id'.padEnd(32)}${'source date'.padEnd(26)}${'prec'.padEnd(8)}` +
       `${'when_min'.padEnd(26)}${'when_max'.padEnd(26)}when`,
   );
   for (const date of canon.events.dates) {
     lines.push(
-      `    ${String(date.line).padEnd(5)}${date.sourceDate.padEnd(26)}` +
+      `    ${String(date.line).padEnd(5)}${date.id.padEnd(32)}${date.sourceDate.padEnd(26)}` +
         `${date.precision.padEnd(8)}${date.whenMin.padEnd(26)}${date.whenMax.padEnd(26)}${date.when}`,
     );
   }

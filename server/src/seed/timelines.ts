@@ -13,10 +13,10 @@
  * `membership_rules` and no `timeline_member` rows, and resolving it walks the DAG.
  *
  * ── THE ERA (P3.4.2, §2.3) ────────────────────────────────────────────────────────────
- * The name is verbatim from the Bible heading at L887. The BOUNDS are authored: canon
- * groups these twelve bullets under one heading and never states where the era starts or
- * stops, so the row's own description says the numbers are a modelling decision — the rule
- * the era-bounds decision sets for all four eras.
+ * The name is verbatim from the Bible's World Timeline heading. The BOUNDS are authored:
+ * canon groups these twelve bullets under one heading and never states where the era
+ * starts or stops, so the row's own description says the numbers are a modelling decision —
+ * the rule the era-bounds decision sets for all four eras.
  *
  * ── AN OPEN-ENDED ERA STILL CARRIES A RULE (P3 review F1) ─────────────────────────────
  * `era_end` is nullable even for an era, and the Reconstruction Era will use that: canon
@@ -37,8 +37,10 @@
  */
 import { and, eq } from 'drizzle-orm';
 
+import { locate } from './citations.js';
 import { timeline, timelineParent } from '../db/schema.js';
 
+import type { Citation, LocatedCitation } from './citations.js';
 import type { CanonDateTools } from './dateTools.js';
 import type { Db } from '../db/index.js';
 import type { MembershipRules, TimelineKind, WhenPrecision } from '@shared/types/index';
@@ -73,6 +75,8 @@ export interface CanonTimeline {
    * a missing `eraEnd` becomes a `null` upper bound rather than no rule at all (F1).
    */
   membershipFromEraBounds?: boolean;
+  /** The Bible lines this row was read off — checked by `verifyCitations` (F5). */
+  cites?: readonly Citation[];
 }
 
 /** The root, then the era. Order matters: the parent edge needs both rows to exist. */
@@ -90,7 +94,7 @@ export const CANON_TIMELINES: readonly CanonTimeline[] = [
   },
   {
     id: 'tl_pre_big_one',
-    // Verbatim from the Bible's World Timeline heading, L887.
+    // Verbatim from the Bible's World Timeline heading — see `cites` below.
     name: 'Pre-Big One',
     kind: 'era',
     description:
@@ -103,8 +107,19 @@ export const CANON_TIMELINES: readonly CanonTimeline[] = [
     eraEnd: { precision: 'year', value: '2040' },
     parentId: 'tl_world',
     membershipFromEraBounds: true,
+    cites: [
+      { of: 'name', line: 887, quote: 'Pre-Big One' },
+      { of: 'the authored eraStart (first bullet of the section)', line: 888, quote: '2021:' },
+      { of: 'the authored eraEnd (last bullet of the section)', line: 899, quote: '2040:' },
+      { of: 'the section the era ends at', line: 900, quote: 'North Korean War' },
+    ],
   },
 ];
+
+/** Every Bible line this module cites, ready for `verifyCitations` (F5). */
+export const CANON_TIMELINE_CITATIONS: readonly LocatedCitation[] = CANON_TIMELINES.flatMap(
+  (authored) => locate(`timelines.ts ${authored.id}`, authored.cites),
+);
 
 /** What one timeline seed did. */
 export interface TimelineSeedResult {

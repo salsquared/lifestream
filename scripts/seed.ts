@@ -9,7 +9,7 @@
  *
  * P1 seeds countries (P1.9) and every world in `data/map_saves/` (P1.11). P3 adds the
  * authored world under the canon save: the tag vocabulary (P3.1), the registry (P3.2), the
- * twelve Pre-Big One events (P3.3) and the root timeline plus its first era (P3.4).
+ * Pre-Big One events (P3.3) and the root timeline plus its first era (P3.4).
  *
  * ── WHY THREE FUNCTIONS ARE IMPORTED HERE AND NOT THERE ───────────────────────────────
  * This script runs under the ROOT `tsx`, and there is no root `tsconfig.json` — so the

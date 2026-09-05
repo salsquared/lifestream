@@ -20,10 +20,13 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { readPreBigOneBullets } from './events.js';
+import { verifyCitations } from './citations.js';
+import { CANON_EVENT_CITATIONS, readPreBigOneBullets } from './events.js';
 import { resolveBibleLeaders } from './leaders.js';
+import { CANON_REGISTRY_CITATIONS } from './registry.js';
+import { CANON_TIMELINE_CITATIONS } from './timelines.js';
 
-import type { PreBigOneBullet } from './events.js';
+import type { CanonBullet } from './events.js';
 import type { BibleUnionLeader } from './leaders.js';
 import type { deriveFeatures } from '@shared/geo/deriveFeatures';
 import type { DeriveWarning, DerivedCountry } from '@shared/geo/deriveFeatures';
@@ -144,7 +147,7 @@ export interface SeedInputs {
   saves: MapSaveInput[];
   /**
    * The save the authored P3 world is written under — characters, locations, projects,
-   * the twelve Pre-Big One events and the two timelines are all canon's, not every
+   * the Pre-Big One events and the two timelines are all canon's, not every
    * save's. Carried here rather than re-typed in the writer, because
    * `client/src/shell/stores/save.ts` hard-codes the same string and one of the two has
    * to be the source.
@@ -156,7 +159,7 @@ export interface SeedInputs {
    * them, so no bullet is ever retyped — the same relationship `leaderMarkers` has to
    * `BIBLE_UNION_LEADERS`.
    */
-  preBigOneBullets: PreBigOneBullet[];
+  preBigOneBullets: CanonBullet[];
 }
 
 /** The shape of a map export. Everything else in the file is ignored by the importer. */
@@ -505,6 +508,16 @@ export function readSeedInputs(repoRoot: string, derive: DeriveFeatures): SeedIn
   const inverse = invertIsoMapping(numericToAlpha3);
   const leaderMarkers = resolveBibleLeaders(bibleText);
   const preBigOneBullets = readPreBigOneBullets(bibleText);
+
+  // P3 review F5 — every `L<n>` the seed modules claim, checked against the file before a
+  // statement is issued. It belongs here rather than in the writers because it is a
+  // property of the INPUTS: nothing about it needs a database, and a wrong citation should
+  // fail the run at the same moment an unresolvable country code does.
+  verifyCitations(bibleText, [
+    ...CANON_REGISTRY_CITATIONS,
+    ...CANON_EVENT_CITATIONS,
+    ...CANON_TIMELINE_CITATIONS,
+  ]);
 
   const mapSavesDir = at('data', 'map_saves');
   const files = readdirSync(mapSavesDir)
