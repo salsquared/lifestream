@@ -53,6 +53,76 @@
   <tr><td><a href="#phase-P13">P13</a>–<a href="#phase-P16">P16</a></td><td>Tech Tree, Family Trees, Export, Polish</td><td>Additive views over settled data.</td></tr>
 </table>
 
+<h2 id="review-policy">Review policy &mdash; which phases get what</h2>
+
+<p class="lede">Review is not free and not uniform. A phase is worth a reviewer in proportion to
+how expensive its defects are to unwind &mdash; not to how much code it contains.</p>
+
+<div class="callout">
+<b>The distinction that decides it: inherited vs terminal.</b> An <b>inherited</b> phase produces
+something later phases build on &mdash; a schema, a seed that writes authored content, a contract other
+code copies. Its defects compound, and each later phase makes them more expensive. A <b>terminal</b>
+phase renders something. Its defects are visible on screen and cost the same to fix whenever you
+find them. Spend review on the first kind.
+</div>
+
+<p>The evidence for this is in <a href="#dec-hardening">the 2026-09-04 hardening entry</a>: reviewing
+the schema <i>before</i> migration&nbsp;#1 found a key that could not store canon, six missing precision
+columns, two incompatible datetime spellings and fourteen columns admitting cross-save corruption.
+The same review a week later would have found the same defects as table rebuilds against
+hand-authored data.</p>
+
+<table>
+  <thead><tr><th>Phase</th><th>Review</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><b>P3</b> registry + event seed</td><td><b>single rank-0</b></td>
+        <td>Writes authored content, and <a href="#phase-P5">P5</a> transcribes 68 more events onto whatever shape it establishes.</td></tr>
+    <tr><td><b>P6</b> saves &amp; fork</td><td><b>single rank-0</b>, adversarial</td>
+        <td>Copies authored data between branches. The remap manifest has already produced three separate bugs under review; a missed column is silent corruption.</td></tr>
+    <tr><td><b>P11</b> backup &amp; restore</td><td><b>single rank-0</b></td>
+        <td>The silent-failure class: a broken dump is indistinguishable from a working one until the day you need it, and the database is gitignored.</td></tr>
+    <tr><td><b>P12</b> editors</td><td><b>single rank-0</b></td>
+        <td>First in-app writes to authored content. Until here, everything authored arrives through the seed and is reproducible.</td></tr>
+    <tr><td><b>P4</b> Corridor, first render</td><td>rank-1</td>
+        <td>Terminal itself, but it establishes the 3D patterns P5, P7 and P13 inherit. Worth one cheaper pass.</td></tr>
+    <tr><td><b>P15</b> export</td><td>rank-1</td>
+        <td>The document IR is a contract several builders write against; the renderers themselves are terminal.</td></tr>
+    <tr><td><b>P5</b> bulk transcription</td><td><i>mechanical only</i></td>
+        <td>Data entry, not code &mdash; the seed it uses was reviewed at P3. Verify by counts and spot-checks against the Bible, not by a reviewer.</td></tr>
+    <tr><td>P7 &middot; P8 &middot; P9 &middot; P10 &middot; P13 &middot; P14 &middot; P16</td><td><i>none</i></td>
+        <td>Terminal. Defects are visible on screen and cost the same whenever they are found.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="review-policy-final">The final sweep</h3>
+<p>Before the project is called done, one <b>full rank-0 suite</b> &mdash; adversarial correctness,
+completeness against this plan, and security &mdash; across the whole codebase. This is the one place a
+parallel fan-out is justified rather than a single reviewer: it is a release gate, the axes are
+genuinely unrelated, and by then the terminal phases have accumulated without individual review,
+which is exactly the debt this sweep exists to settle.</p>
+
+<div class="callout warn">
+<b>Deferred, and owed.</b> <a href="#phase-P1">P1</a> and <a href="#phase-P2">P2</a> shipped without a
+reviewer. Their headline properties were proven by execution instead &mdash; idempotent seeding, a
+rebuild reproducing identical content, 237/237 codes resolving, parity against the imported world,
+and a mutation pass confirming all four specs fail when their implementation is broken. That is not
+the same as a review, and both are on the list for the final sweep.
+</div>
+
+<div class="callout">
+<b>Two rules that make the cheap checks worth more than they look.</b>
+<ul>
+<li><b>Mutation-test before trusting a green suite.</b> Break the implementation deliberately and
+confirm the tests go red. This project keeps few tests on purpose, so one that cannot fail is worse
+than none. <i>And verify the mutation actually applied</i> &mdash; a mutation that silently fails to
+patch looks exactly like a blind test suite, and the second is the alarming one.</li>
+<li><b>Prefer a mechanical check to a reviewer</b> where the question is "does the artifact this task
+names exist and do what it says". Grepping paths, scripts, exported symbols and routes against the
+task text catches the same class of gap for a fraction of the cost.</li>
+</ul>
+</div>
+
+
 <h2>Resolved decisions</h2>
 <p class="seq">Entries dated <b>2026-09-04</b> come from an adversarial review of the schema against canon and against SQLite itself, run before migration #1 was emitted (<a href="#dec-hardening">the hardening entry</a>); those dated <b>2026-09-02</b> come from executing <a href="#phase-P0">P0</a> against a real toolchain and the real topojson file; those dated <b>2026-09-01</b> come from the planning pass. Where one supersedes an earlier decision, the retraction is stated in the entry itself rather than deleting the history.</p>
 <ol class="resolved">
@@ -696,6 +766,33 @@
           </ul>
         </div></details>
       </div></li>
+      <li class="task" id="P3.7"><div class="task-row">
+        <input type="checkbox" data-task-id="P3.7"><span class="task-id"><a class="anchor" href="#P3.7">P3.7</a></span>
+        <span class="task-title">Leader write path &mdash; close the P2 regression <span class="pill new">NEW</span></span>
+        <details class="task-detail"><summary>why this is here and not in <a href="#P12.3">P12.3</a></summary><div>
+        <p><b>P2 shipped a UI that can destroy authored canon with no way to restore it.</b>
+        Moving a country between unions clears its <code>is_leader</code> flag &mdash; correctly, since
+        leadership is a fact about a membership row and the destination may already have a leader
+        (<a href="#dec-leader">dec-leader</a>). But <code>is_leader</code> has <b>no write path anywhere</b>: it is
+        set by the seed and by nothing else. The ten leaders come from the Bible alone
+        (L267&ndash;L294); the authored map export has no leader field, so a leader lost through the
+        map cannot be recovered from any file in the repo &mdash; only by re-running the seed, which
+        an author will not think to do.</p>
+        <p>This is the same defect class as <a href="#P12.3">P12.3</a> (&ldquo;first-class tables that are seeded but
+        have no write path&rdquo;) and it belongs there thematically. It is filed here instead because
+        the exposure is <b>live now</b>: the map view is usable, and deferring the fix to P12 leaves
+        nine phases in which ordinary editing silently discards canon. The mitigation shipped with
+        P2 &mdash; both move prompts warn when the country being moved leads its union &mdash; is a warning,
+        not a fix.</p>
+        <ul class="subtasks">
+          <li id="P3.7.1"><input type="checkbox" data-task-id="P3.7.1"><span class="sub-id"><a class="anchor" href="#P3.7.1">P3.7.1</a></span><span class="sub-title"><code>PATCH /api/groupings/:id/countries/:countryId</code> with <code>{ isLeader }</code>. Setting a leader must clear the previous one in the same transaction &mdash; <code>grouping_country_leader_unique</code> is a partial unique index and a two-statement version fails on the constraint half the time depending on order.</span></li>
+          <li id="P3.7.2"><input type="checkbox" data-task-id="P3.7.2"><span class="sub-id"><a class="anchor" href="#P3.7.2">P3.7.2</a></span><span class="sub-title">Sidebar affordance: mark a member as the union&rsquo;s leader, and clear it. The member list already renders the flag; this makes it editable.</span></li>
+          <li id="P3.7.3"><input type="checkbox" data-task-id="P3.7.3"><span class="sub-id"><a class="anchor" href="#P3.7.3">P3.7.3</a></span><span class="sub-title">Carry the flag across a <b>move</b> when the destination has no leader, rather than always clearing it. Clearing is only correct when the destination already has one &mdash; otherwise the move is silently destructive for no reason.</span></li>
+          <li id="P3.7.4"><input type="checkbox" data-task-id="P3.7.4"><span class="sub-id"><a class="anchor" href="#P3.7.4">P3.7.4</a></span><span class="sub-title">Assert in <a href="#P1.11.5">P1.11.5</a>&rsquo;s spec that a seeded leader survives a move-and-restore round trip, so the regression cannot come back unnoticed.</span></li>
+        </ul>
+        </div></details>
+      </div></li>
+
 
     </ul>
   </div>
@@ -1148,7 +1245,7 @@
 
       <li class="task" id="P12.3"><div class="task-row">
         <input type="checkbox" data-task-id="P12.3">
-        <details><summary><span class="task-id"><a class="anchor" href="#P12.3">P12.3</a></span><span class="task-title">Registry editors — location &amp; project CRUD <span class="new">NEW</span></span></summary>
+        <details><summary><span class="task-id"><a class="anchor" href="#P12.3">P12.3</a></span><span class="task-title">Registry editors — location &amp; project CRUD <span class="new">NEW <i>(Sibling defect, filed early as <a href="#P3.7">P3.7</a>: <code>is_leader</code> is seeded with no write path either, and the map can already destroy it.)</i></span></span></summary>
         <div class="task-detail">
           <p><code>location</code> and <code>project</code> are first-class tables that are seeded and read everywhere and writable nowhere. As the plan stood, the first event set anywhere the Bible did not already name a place — which is most of what authoring a new world means — required raw SQL.</p>
           <ul class="subtasks">
