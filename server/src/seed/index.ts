@@ -67,8 +67,20 @@ export type {
 export { BIBLE_UNION_LEADERS, readBibleLeaderMarkers, resolveBibleLeaders } from './leaders.js';
 export type { BibleLeaderMarker, BibleUnionLeader } from './leaders.js';
 export type { CanonDateTools } from './dateTools.js';
-export { CanonCitationError, normaliseCanonText, verifyCitations } from './citations.js';
-export type { Citation, LocatedCitation } from './citations.js';
+export {
+  CanonCitationError,
+  formatCitationReport,
+  normaliseCanonText,
+  verifyCitations,
+  WEAK_QUOTE_MATCHES,
+} from './citations.js';
+export type {
+  Citation,
+  CitationDrift,
+  CitationReport,
+  LocatedCitation,
+  WeakCitation,
+} from './citations.js';
 export { CANON_TAGS, seedTags } from './tags.js';
 export type { CanonTag, TagSeedResult } from './tags.js';
 export {

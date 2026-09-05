@@ -21,6 +21,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { verifyCitations } from './citations.js';
+import type { CitationReport } from './citations.js';
 import { CANON_EVENT_CITATIONS, readPreBigOneBullets } from './events.js';
 import { resolveBibleLeaders } from './leaders.js';
 import { CANON_REGISTRY_CITATIONS } from './registry.js';
@@ -160,6 +161,15 @@ export interface SeedInputs {
    * `BIBLE_UNION_LEADERS`.
    */
   preBigOneBullets: CanonBullet[];
+  /**
+   * What the citation check found — see {@link verifyCitations} (P4B.1).
+   *
+   * Present even on a clean run, because "nothing drifted" is itself worth printing: it is
+   * the difference between a check that passed and a check that was never wired up. A
+   * failure throws before this is ever built, so anything here describes a run that is
+   * going ahead.
+   */
+  citations: CitationReport;
 }
 
 /** The shape of a map export. Everything else in the file is ignored by the importer. */
@@ -513,7 +523,13 @@ export function readSeedInputs(repoRoot: string, derive: DeriveFeatures): SeedIn
   // statement is issued. It belongs here rather than in the writers because it is a
   // property of the INPUTS: nothing about it needs a database, and a wrong citation should
   // fail the run at the same moment an unresolvable country code does.
-  verifyCitations(bibleText, [
+  //
+  // It returns a report rather than only throwing (P4B.1). A citation whose QUOTE is gone
+  // still fails the run — the row's supporting canon changed. A citation whose quote is
+  // present on a different line does not: that is a document that grew, and refusing it
+  // made a 28-line insertion fail all 142 citations at once. The drift is carried out to
+  // the caller so the seed can print it and the author can refresh the hints.
+  const citations = verifyCitations(bibleText, [
     ...CANON_REGISTRY_CITATIONS,
     ...CANON_EVENT_CITATIONS,
     ...CANON_TIMELINE_CITATIONS,
@@ -570,5 +586,6 @@ export function readSeedInputs(repoRoot: string, derive: DeriveFeatures): SeedIn
     saves,
     canonSaveId: CANON_SAVE.id,
     preBigOneBullets,
+    citations,
   };
 }
