@@ -5,10 +5,17 @@
  * The shell owns the per-save load (architecture §4.2, P4.1): `useSaveLoad` fetches
  * `GET /api/timelines/tl_world/resolve` once per save and hydrates `useWorld`, and this
  * view subscribes to that store and issues no query of its own. This fixture is what it
- * draws when the store is empty — no API server running, or the load still in flight —
- * so the layout can be looked at without a backend. `TimelineView` shows a "fixture data"
- * badge whenever it is in use, because a corridor silently drawing stale canon while the
- * real load failed is exactly the kind of thing that goes unnoticed.
+ * draws before any load has been attempted, or after one has failed — no API server
+ * running, say — so the layout can be looked at without a backend. `TimelineView` shows a
+ * badge naming it whenever it is in use, because a corridor silently drawing stale canon
+ * while the real load failed is exactly the kind of thing that goes unnoticed.
+ *
+ * **The choice is made by `corpus.ts`, on the load's STATUS, and never on a row count.**
+ * That distinction is the whole of the P4 review's second finding: `rows.length === 0`
+ * conflates *not loaded yet* with *loaded, and genuinely empty*, so a real save with no
+ * events rendered these thirteen fictional canon events under a badge saying no save was
+ * hydrated — while the store reported `ready`. An empty save gets an empty corridor. Do
+ * not reintroduce a row-count test here or in the view.
  *
  * It is a snapshot, not a source of truth. The database is authoritative; regenerate this
  * file from it rather than hand-editing a date here. It covers all seven categories and
@@ -21,9 +28,13 @@ import type { HydratedEvent } from '@shared/types/index';
 /**
  * Sorted by `when`, then by id — the same order the resolve endpoint returns.
  *
- * Typed as a NON-EMPTY tuple, not a plain array: the view derives the scale's origin from
- * the earliest `when` it holds, and a fixture that could be empty would make that origin
- * `undefined` and force a degenerate branch through every memo downstream of it.
+ * Typed as a NON-EMPTY tuple, not a plain array. The original reason — that the view
+ * derived the scale's origin from the earliest `when` it held — is gone: the origin is
+ * `CORRIDOR_START`, a process constant, so an empty fixture would no longer make it
+ * `undefined`. The tuple stays because the property it encodes is still the one worth
+ * holding: a fallback corpus with nothing in it is a fallback that draws an empty screen
+ * and reports success, which is the same class of silent lie the status gate above exists
+ * to close. `tsc` refuses to let this file become empty.
  */
 export const CORRIDOR_FIXTURE: readonly [HydratedEvent, ...HydratedEvent[]] = [
   {
