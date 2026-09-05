@@ -20,6 +20,7 @@
     "typecheck": "tsc -b client server shared && tsc --noEmit -p tests/tsconfig.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:check": "node scripts/db-check-migrations.mjs && node scripts/db-check-seed.mjs",
     "db:studio": "drizzle-kit studio",
     "db:reset": "node scripts/db-reset.mjs",
     "db:seed": "tsx scripts/seed.ts"

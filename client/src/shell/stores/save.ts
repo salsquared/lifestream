@@ -10,6 +10,13 @@ import { useSelection } from './selection';
  * one `?save=` parameter on every API call is the whole of save handling until
  * then. Every row written before P6 already carries a real `save_id`, so
  * nothing needs backfilling when the picker arrives.
+ *
+ * The `?save=` half lives in `api/client.ts`: `getForSave()` appends it and
+ * `getGlobal()` never does, so a per-save read cannot quietly go unscoped. It
+ * takes the id as an ARGUMENT rather than reading this store, because §4.2
+ * requires the caller to capture the active save before the fetch and hand that
+ * captured value to `hydrate()` — see the guard in `world.ts`. P6 replaces the
+ * constant below with real state and changes nothing in `api/` (P6.3.2).
  */
 export const CANON_SAVE_ID = 'sav_canon';
 
