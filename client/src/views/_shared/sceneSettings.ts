@@ -123,9 +123,16 @@ export const DEFAULT_CAMERA_POSE: CameraPose = {
 /**
  * Tuned for emissive nodes on a near-black ground.
  *
- * `luminanceThreshold` is the load-bearing one: at `0.25` a `normal` node's emissive
- * halo blooms and a `faded` one does not, which is what makes filtering legible
+ * `luminanceThreshold` is the load-bearing one: at `0.25` a `normal` node's emissive halo
+ * blooms and a filtered-out one does not, which is what makes filtering legible
  * (§5.2 — filters fade, they never remove).
+ *
+ * "Filtered out" is `EventNode`'s `dimmed` prop, NOT a state — there is no `'faded'` node
+ * state and there must not be one, because glow and filtering are orthogonal (§5.2) and a
+ * single enum cannot say both. `eventNodeVisual` scales a dimmed node's emissive by
+ * `DIMMED_EMISSIVE`, and this threshold is the other half of that pair: raising it or
+ * lowering `DIMMED_EMISSIVE` changes what a filtered node looks like, so the two are tuned
+ * together or not at all.
  */
 export const DEFAULT_BLOOM: BloomSettings = {
   intensity: 1.1,
@@ -154,6 +161,49 @@ export const DEFAULT_LIGHTING: LightingSettings = {
   rimColor: '#9fd0ff',
 };
 
+// ---------------------------------------------------------------------------
+// The defaults are frozen, and the merge below copies their tuples
+//
+// `resolveSceneSettings` merges with an object spread, and an object spread is SHALLOW:
+// the tuple inside a spread default is the SAME array the default holds. Every caller in
+// the process therefore shared one `position`, one `target` and one `rimPosition`, so a
+// single `settings.camera.position[2] = 60` anywhere — P13's Tech Tree, say — would have
+// moved the Corridor's default camera for the rest of the session, with nothing raised
+// anywhere. That is precisely the cross-view drift this module exists to prevent,
+// arriving through the one door the module was not watching. Found by
+// `tests/sceneSettings.test.ts`.
+//
+// Both halves are needed and they guard different people. The COPY in the merge means no
+// consumer of a resolved settings object can reach a default at all. The FREEZE means a
+// caller that reaches past the merge and writes to a default directly
+// (`DEFAULT_LIGHTING.rimPosition[0] = 5`) gets a TypeError rather than silent success —
+// module code is strict mode, so a write to a frozen array throws. `timeScale.ts` freezes
+// its `range()` and `domain()` tuples for the same reason.
+//
+// Frozen in place rather than via `Object.freeze(...)` at the declaration, so the exported
+// types stay `CameraPose` and `LightingSettings` rather than becoming `Readonly<...>` and
+// forcing every consumer to widen.
+// ---------------------------------------------------------------------------
+Object.freeze(DEFAULT_CAMERA_POSE.position);
+Object.freeze(DEFAULT_CAMERA_POSE.target);
+Object.freeze(DEFAULT_CAMERA_POSE);
+Object.freeze(DEFAULT_BLOOM);
+Object.freeze(DEFAULT_STARFIELD);
+Object.freeze(DEFAULT_LIGHTING.rimPosition);
+Object.freeze(DEFAULT_LIGHTING);
+
+/**
+ * Copy a 3-tuple.
+ *
+ * Written out rather than `[...tuple]` because spreading a tuple into an array literal
+ * widens it to `number[]`, which does not satisfy `[number, number, number]`.
+ */
+const copy3 = (v: readonly [number, number, number]): [number, number, number] => [
+  v[0],
+  v[1],
+  v[2],
+];
+
 /**
  * Merge the caller's overrides onto the defaults, then apply the motion policy.
  *
@@ -176,11 +226,18 @@ export function resolveSceneSettings(
 ): SceneSettings {
   const stars = input.stars === false ? null : { ...DEFAULT_STARFIELD, ...(input.stars ?? {}) };
 
+  const camera = { ...DEFAULT_CAMERA_POSE, ...(input.camera ?? {}) };
+  const lighting = { ...DEFAULT_LIGHTING, ...(input.lighting ?? {}) };
+
   return {
-    camera: { ...DEFAULT_CAMERA_POSE, ...(input.camera ?? {}) },
+    // The tuples are copied, never passed through — see the note above the freezes. This
+    // also copies a tuple the CALLER supplied, which is the same courtesy in reverse: a
+    // caller that keeps a reference to the array it passed in cannot reach into a
+    // resolved scene afterwards.
+    camera: { ...camera, position: copy3(camera.position), target: copy3(camera.target) },
     bloom: input.bloom === false ? null : { ...DEFAULT_BLOOM, ...(input.bloom ?? {}) },
     stars: stars === null ? null : reducedMotion ? { ...stars, speed: 0, follow: 1 } : stars,
-    lighting: { ...DEFAULT_LIGHTING, ...(input.lighting ?? {}) },
+    lighting: { ...lighting, rimPosition: copy3(lighting.rimPosition) },
     reducedMotion,
   };
 }
