@@ -390,12 +390,27 @@ function matchesRules(
   if (byTimeRange !== undefined) {
     constrained = true;
     const [from, to] = byTimeRange;
-    if (from === undefined || to === undefined) return false;
+    // `from` is required in BOTH shapes, and a one-element array is malformed JSON rather
+    // than an open range — the open shape is written `[from, null]`, explicitly. Malformed
+    // stays unsatisfiable, never unconstrained (see `predicate` above).
+    if (typeof from !== 'string' || to === undefined) return false;
     // THE WINDOW INTERSECTS THE RANGE — not "the rolled `when` falls inside it". Membership
     // must not change when somebody re-rolls a fuzzy date: an event known only as "in the
     // 2040s" belongs to the Black Fever era whether or not its roll landed in 2044 (§2.6).
     // Both ends inclusive, both compares lexicographic on the canonical format.
-    if (candidate.whenMin > to || candidate.whenMax < from) return false;
+    if (candidate.whenMax < from) return false;
+    // `to === null` is an OPEN UPPER BOUND — an era canon gave no end to (the Reconstruction
+    // Era, "beginning around 2047"). Before this, such an era could carry no rule at all and
+    // its events resolved into nothing.
+    //
+    // It drops THIS HALF of the intersection and nothing else. Two consequences, both
+    // deliberate: `[from, null]` is a superset of `[from, to]` for every `to`, so opening the
+    // bound can only add members; and the lower compare above is still against `when_max`, so
+    // an event whose window STRADDLES `from` — "sometime in the 2040s" against an era opening
+    // in 2047 — is a member of the open era exactly as it would be of a closed one. Testing
+    // `when_min >= from` instead would make widening the bound SHRINK the timeline, and would
+    // read the window as containment on one end and intersection on the other.
+    if (to !== null && candidate.whenMin > to) return false;
   }
 
   const byLocation = predicate(rules.byLocation);

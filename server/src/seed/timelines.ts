@@ -18,9 +18,22 @@
  * stops, so the row's own description says the numbers are a modelling decision — the rule
  * the era-bounds decision sets for all four eras.
  *
- * `era_end` is nullable even for an era, and stays that way on purpose for the
- * Reconstruction Era later. This one has an end because its section does: the next heading
- * begins the North Korean War.
+ * ── AN OPEN-ENDED ERA STILL CARRIES A RULE (P3 review F1) ─────────────────────────────
+ * `era_end` is nullable even for an era, and the Reconstruction Era will use that: canon
+ * puts it "beginning around 2047" and gives it no end. The rule this module emits must
+ * therefore survive a missing upper bound. It does: a rule is written whenever `eraStart`
+ * is set, and the upper bound is `null` — `byTimeRange: [IsoInstant, IsoInstant | null]`,
+ * where null means UNBOUNDED ABOVE and the matcher tests `whenMin >= from` alone.
+ *
+ * The alternative — skipping the rule, which is what this module used to do — gives an era
+ * `membershipRules: null`, i.e. a roster with no roster; `tl_world` carries no rule of its
+ * own, so the Reconstruction Era's thirty-nine events would have resolved into nothing. A
+ * far-future sentinel instant was the other option and is worse: it stores a date canon
+ * never gave, which is the fabricated-instant problem the precision column exists to
+ * prevent.
+ *
+ * This era has a real end because its section does: the next heading begins the North
+ * Korean War.
  */
 import { and, eq } from 'drizzle-orm';
 
@@ -56,7 +69,8 @@ export interface CanonTimeline {
    * `byTimeRange` here is authored as the era's own bounds. An event matches when its
    * `[whenMin, whenMax]` window INTERSECTS the range — not when its rolled `when` falls
    * inside it — so membership does not change when somebody re-rolls a date (§2.6). The
-   * two instants are filled in from `eraStart` / `eraEnd` rather than typed a second time.
+   * instants are filled in from `eraStart` / `eraEnd` rather than typed a second time, and
+   * a missing `eraEnd` becomes a `null` upper bound rather than no rule at all (F1).
    */
   membershipFromEraBounds?: boolean;
 }
@@ -105,6 +119,45 @@ class TimelineRootError extends Error {
   override name = 'TimelineRootError';
 }
 
+/** The stored bounds of one authored timeline, and the membership rule they imply. */
+export interface EraBounds {
+  eraStart: string | null;
+  eraEnd: string | null;
+  membershipRules: MembershipRules | null;
+}
+
+/**
+ * Derive one row's era bounds and its `byTimeRange` rule (P3 review F1).
+ *
+ * A rule needs a LOWER bound and nothing else. `eraEnd === null` is an era that is still
+ * running — the Reconstruction Era, "beginning around 2047" with no end — and the rule
+ * says so with a `null` upper bound rather than being dropped. Dropping it is what the
+ * seed used to do, and it leaves the era with `membership_rules: null`: a roster with no
+ * roster, whose events resolve into nothing.
+ *
+ * Exported as a pure function so the open-ended case can be checked without a database or
+ * a second era in the authored table.
+ */
+export function eraMembershipRules(authored: CanonTimeline, tools: CanonDateTools): EraBounds {
+  const eraStart =
+    authored.eraStart === undefined
+      ? null
+      : tools.precisionToInterval(authored.eraStart.precision, authored.eraStart.value)[0];
+  const eraEnd =
+    authored.eraEnd === undefined
+      ? null
+      : tools.precisionToInterval(authored.eraEnd.precision, authored.eraEnd.value)[1];
+
+  return {
+    eraStart,
+    eraEnd,
+    membershipRules:
+      authored.membershipFromEraBounds === true && eraStart !== null
+        ? { byTimeRange: [eraStart, eraEnd] }
+        : null,
+  };
+}
+
 /**
  * Seed the root timeline and the Pre-Big One era for one save.
  *
@@ -127,19 +180,7 @@ export function seedTimelines(db: Db, saveId: string, tools: CanonDateTools): Ti
   let unchanged = 0;
 
   for (const authored of CANON_TIMELINES) {
-    const eraStart =
-      authored.eraStart === undefined
-        ? null
-        : tools.precisionToInterval(authored.eraStart.precision, authored.eraStart.value)[0];
-    const eraEnd =
-      authored.eraEnd === undefined
-        ? null
-        : tools.precisionToInterval(authored.eraEnd.precision, authored.eraEnd.value)[1];
-
-    const membershipRules: MembershipRules | null =
-      authored.membershipFromEraBounds === true && eraStart !== null && eraEnd !== null
-        ? { byTimeRange: [eraStart, eraEnd] }
-        : null;
+    const { eraStart, eraEnd, membershipRules } = eraMembershipRules(authored, tools);
 
     const values = {
       name: authored.name,

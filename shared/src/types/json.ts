@@ -24,8 +24,23 @@ export type MembershipRules = {
   /** Global `tag.id`s — survive a fork untouched, which is why `tag` has no `saveId`. */
   byTag?: string[];
   byCategory?: Category[];
-  /** Both ends inclusive. */
-  byTimeRange?: [IsoInstant, IsoInstant];
+  /**
+   * `[from, to]`, both ends INCLUSIVE, matched against the event's authored
+   * `[whenMin, whenMax]` window rather than its rolled `when`.
+   *
+   * `to === null` means UNBOUNDED ABOVE — the only way to write "from here on". An era
+   * whose end canon never gave (`era_end = null`: the Reconstruction Era, "beginning
+   * around 2047", no end) could otherwise carry no rule at all, so it would resolve to a
+   * roster with no roster and its events would land in nothing. The alternative — a
+   * far-future sentinel instant — stores a date canon never gave, which is exactly the
+   * fabricated-instant problem `when_precision` exists to prevent.
+   *
+   * `null` widens; it never narrows. `[from, null]` is a SUPERSET of `[from, to]` for
+   * every `to`, because dropping the upper bound drops one half of the intersection test
+   * and leaves the other untouched. `from` itself is not nullable: a rule with no lower
+   * bound is `byTimeRange` doing no work, which is better said by omitting the kind.
+   */
+  byTimeRange?: [IsoInstant, IsoInstant | null];
   /** Per-save `location.id`s, resolved to the canonical head of the rename chain. */
   byLocation?: string[];
 };

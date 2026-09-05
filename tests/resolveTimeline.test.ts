@@ -26,7 +26,7 @@ import {
 } from '@server/services/resolveTimeline';
 
 import type { DbHandle } from '@server/db/index';
-import type { ResolvedTimeline } from '@server/services/resolveTimeline';
+import type { ResolvedTimeline, StoredEvent } from '@server/services/resolveTimeline';
 
 /**
  * P3.5.5 — `resolveTimeline()` against a `:memory:` database (the test-fixture decision).
@@ -65,6 +65,7 @@ const SPEC_SAVE = 'sav_spec';
 const CYCLE_SAVE = 'sav_cycle';
 const LOOP_SAVE = 'sav_loccycle';
 const CACHE_SAVE = 'sav_cache';
+const OPEN_SAVE = 'sav_open';
 
 /* ------------------------------------------------------------------ *
  * Fixture helpers. Every instant is written in the canonical
@@ -169,6 +170,19 @@ const ids = (resolved: ResolvedTimeline): string[] => resolved.events.map((row) 
 const resolve = (timelineId: string, saveId = SPEC_SAVE): ResolvedTimeline =>
   resolveTimeline(db, timelineId, saveId);
 
+/**
+ * One member of a resolved timeline, or a throw naming what was missing.
+ *
+ * Asserting on a `find()` result means either `?.` — which turns "the event was dropped"
+ * into `undefined < '2045…'`, a comparison `tsc` rightly refuses — or a guard at every use.
+ * This is the guard, once, and its failure names the event rather than the operator.
+ */
+const memberOf = (timelineId: string, saveId: string, eventId: string): StoredEvent => {
+  const found = resolveTimeline(db, timelineId, saveId).events.find((row) => row.id === eventId);
+  if (found === undefined) throw new Error(`'${eventId}' is not a member of '${timelineId}'`);
+  return found;
+};
+
 /* ------------------------------------------------------------------ *
  * THE WORLD.
  *
@@ -263,6 +277,52 @@ addTimeline({ id: 'tl_rollup', parents: [], rules: { byTag: ['tag_fusion'] } });
 db.insert(timelineParent)
   .values({ saveId: SPEC_SAVE, timelineId: 'tl_category', parentId: 'tl_rollup' })
   .run();
+
+/* ------------------------------------------------------------------ *
+ * A SECOND WORLD, for the open upper bound (F1).
+ *
+ * Its own save, deliberately: the point of these cases is that a CLOSED range still answers
+ * exactly what it answered before, and that is only worth reading if the closed rule under
+ * test sits beside the open one over the same events. Every assertion in the world above is
+ * left byte-for-byte alone, which is the other half of the same claim.
+ *
+ * The two ranges share a `from`. They differ only in whether the upper bound is a date or
+ * `null`, so every difference below is attributable to that and nothing else.
+ * ------------------------------------------------------------------ */
+
+const OPEN_FROM = '2045-01-01T00:00:00.000Z';
+const OPEN_TO = '2050-01-01T00:00:00.000Z';
+
+addSave(OPEN_SAVE);
+
+const openEvent = (id: string, window: [string, string], when: string, precision?: EventSpec['precision']): void =>
+  addEvent({ id, saveId: OPEN_SAVE, window, when, category: 'cultural', precision }); // prettier-ignore
+
+// Entirely before the range: out of both, and the reason the lower compare is doing work.
+openEvent('ev_op_before', year(2044), '2044-06-06T00:00:00.000Z');
+// A window CLOSING on the range's opening instant. Both ends inclusive means this is a
+// member; a `<=` where `<` belongs at the bottom drops it, of the open range too.
+openEvent('ev_op_low_edge', ['2044-12-31T00:00:00.000Z', OPEN_FROM], '2044-12-31T12:00:00.000Z', 'time'); // prettier-ignore
+// "The 2040s": a window STRADDLING `from`, rolled to 2042 — outside the range on either
+// reading of `when`. It is the case that separates the window rule from a `when_min >= from`
+// containment test, which would drop it from the open range while keeping it in the closed
+// one, i.e. make opening the upper bound SHRINK the timeline.
+openEvent('ev_op_straddle', ['2040-01-01T00:01:00.000Z', '2049-12-31T23:59:00.000Z'], '2042-02-02T00:00:00.000Z', 'decade'); // prettier-ignore
+// Comfortably inside both.
+openEvent('ev_op_inside', year(2046), '2046-05-05T00:00:00.000Z');
+// A window OPENING on the closed range's closing instant — the existing top-end inclusive
+// case, restated here so the closed rule is pinned at both ends in this world too.
+openEvent('ev_op_high_edge', [OPEN_TO, '2050-01-01T00:01:00.000Z'], '2050-01-01T00:00:30.000Z', 'time'); // prettier-ignore
+// AFTER the closed range's end. These two are the entire difference between the rules, and
+// under the old type they were unreachable: an era with no end carried no rule at all.
+openEvent('ev_op_after', year(2058), '2058-11-11T00:00:00.000Z');
+openEvent('ev_op_far', year(2088), '2088-08-08T00:00:00.000Z');
+
+addTimeline({ id: 'tl_op_closed', saveId: OPEN_SAVE, rules: { byTimeRange: [OPEN_FROM, OPEN_TO] } }); // prettier-ignore
+addTimeline({ id: 'tl_op_open', saveId: OPEN_SAVE, rules: { byTimeRange: [OPEN_FROM, null] } });
+// The two MALFORMED shapes. `null` is authored only as the upper bound.
+addTimeline({ id: 'tl_op_no_upper', saveId: OPEN_SAVE, rules: { byTimeRange: [OPEN_FROM] } });
+addTimeline({ id: 'tl_op_no_lower', saveId: OPEN_SAVE, rules: { byTimeRange: [null, OPEN_TO] } });
 
 /* ------------------------------------------------------------------ *
  * The cases.
@@ -393,6 +453,82 @@ describe('membership_rules — each kind in isolation', () => {
     expect(ids(resolve('tl_location_mid'))).toEqual(ids(resolve('tl_location')));
     // "only while it was called COPI" is still expressible: byLocation AND byTimeRange.
     expect(ids(resolve('tl_location_mid'))).not.toContain('ev_etna');
+  });
+});
+
+describe('byTimeRange with an OPEN upper bound', () => {
+  const open = (timelineId: string): string[] => ids(resolveTimeline(db, timelineId, OPEN_SAVE));
+
+  it('leaves a closed range answering exactly what it answered before', () => {
+    // `[2045 … 2050]` over the same seven events. Nothing about admitting `null` may move
+    // this list — it is the control the two cases below are read against.
+    expect(open('tl_op_closed')).toEqual([
+      'ev_op_straddle',
+      'ev_op_low_edge',
+      'ev_op_inside',
+      'ev_op_high_edge',
+    ]);
+  });
+
+  it('matches everything from `from` onward when the upper bound is null', () => {
+    expect(open('tl_op_open')).toEqual([
+      'ev_op_straddle',
+      'ev_op_low_edge',
+      'ev_op_inside',
+      'ev_op_high_edge',
+      'ev_op_after',
+      'ev_op_far',
+    ]);
+    // The era P5 needs — "beginning around 2047", no end — resolves to something rather
+    // than to nothing, which is the whole of F1.
+    expect(open('tl_op_open').length).toBeGreaterThan(0);
+  });
+
+  it('WIDENS the closed range and never narrows it', () => {
+    const closed = open('tl_op_closed');
+    const unbounded = open('tl_op_open');
+    // A strict superset. Opening the upper bound may only ADD members: `[from, null]` drops
+    // one half of the intersection test and leaves the other untouched. A `when_min >= from`
+    // reading breaks this — ev_op_straddle and ev_op_low_edge would be in the closed
+    // timeline and out of the open one.
+    for (const id of closed) expect(unbounded).toContain(id);
+    expect(unbounded.length).toBeGreaterThan(closed.length);
+    // …and the difference is exactly the events past the closed range's end.
+    expect(unbounded.filter((id) => !closed.includes(id))).toEqual(['ev_op_after', 'ev_op_far']);
+  });
+
+  it('still intersects the WINDOW rather than the rolled `when`', () => {
+    // ev_op_straddle is rolled to 2042 — three years before `from` — and is a member on its
+    // window, exactly as it is of the closed range. Membership does not move when the date
+    // is re-rolled, for an open range either.
+    const member = memberOf('tl_op_open', OPEN_SAVE, 'ev_op_straddle');
+    expect(member.when).toBe('2042-02-02T00:00:00.000Z');
+    expect(member.when < OPEN_FROM).toBe(true);
+    expect(member.whenMax > OPEN_FROM).toBe(true);
+  });
+
+  it('keeps the lower end inclusive', () => {
+    // ev_op_low_edge's window CLOSES on `from`. In, for the open range and the closed one.
+    const member = memberOf('tl_op_open', OPEN_SAVE, 'ev_op_low_edge');
+    expect(member.whenMax).toBe(OPEN_FROM);
+    expect(open('tl_op_closed')).toContain('ev_op_low_edge');
+    // The upper end of the CLOSED range is inclusive too, unchanged.
+    expect(memberOf('tl_op_closed', OPEN_SAVE, 'ev_op_high_edge').whenMin).toBe(OPEN_TO);
+  });
+
+  it('excludes an event whose window ends before `from`, bound open or not', () => {
+    expect(open('tl_op_open')).not.toContain('ev_op_before');
+    expect(open('tl_op_closed')).not.toContain('ev_op_before');
+  });
+
+  it('treats a missing bound as MALFORMED — unsatisfiable, never unconstrained', () => {
+    // `[from]` is a one-element array, not an open range: the open shape is written
+    // `[from, null]`, explicitly. And `null` is not admitted as the LOWER bound at all — a
+    // rule with no lower bound is `byTimeRange` doing no work, better said by omitting the
+    // kind. Before this fix `[null, to]` matched everything up to `to`, by accident:
+    // `whenMax < null` is false in JavaScript, so the compare silently evaporated.
+    expect(open('tl_op_no_upper')).toEqual([]);
+    expect(open('tl_op_no_lower')).toEqual([]);
   });
 });
 
