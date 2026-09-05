@@ -78,11 +78,18 @@ export const BIBLE_UNION_LEADERS: readonly BibleUnionLeader[] = [
   {
     union: 'Unified Korea',
     leaderName: 'North & South Korea',
-    alpha3: null,
-    unresolvable:
-      'names two countries (PRK + KOR), and the union it leads does not exist in the ' +
-      'authored map — both Koreas are members of "East Asian Alliance", which canon does ' +
-      'not name and gives no leader. Needs an authoring decision, not a code change.',
+    // AUTHORED DECISION (2026-09-04). Canon's marker names two countries for a union that
+    // does not exist in the authored map: `Unified Korea` was superseded by the five-member
+    // `East Asian Alliance` (JPN, KOR, PRK, PHL, TWN), which the Bible never names.
+    //
+    // The author's ruling is that the alliance HAS a leader, and it is South Korea. The
+    // choice is canon-internal rather than arbitrary: the tier system that governs this
+    // whole stage ranks nations by GDP (Bible L234-236), and of the two Koreas only the
+    // South is a major economy — so it is the member that would plausibly lead under
+    // canon's own logic.
+    //
+    // Reversible in one line: change this code to 'JPN' or 'TWN' and re-run the seed.
+    alpha3: 'KOR',
   },
   { union: 'New Indonesia', leaderName: 'Indonesia', alpha3: 'IDN' },
 ];

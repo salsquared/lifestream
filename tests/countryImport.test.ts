@@ -24,7 +24,7 @@ import type { DeriveFeatures } from '@server/seed/index';
  * Every failure this seed can have is silent. A dropped feature still draws a map; a code
  * that resolves to the wrong polygon still renders; `is_leader` written nowhere still
  * returns a full grouping list. So the numbers are asserted exactly — 242 countries, 237
- * codes splitting 235 / `x:GUF` / `x:SOL`, 29 groupings, 163 memberships, 9 leaders — and a
+ * codes splitting 235 / `x:GUF` / `x:SOL`, 29 groupings, 163 memberships, 10 leaders — and a
  * regression has to move one of them rather than pass quietly.
  */
 
@@ -344,23 +344,24 @@ describe('union leaders — the one fact only the Bible carries (P1.11.2)', () =
     ]);
   });
 
-  it('writes 9 of them, each in a distinct grouping', () => {
-    // NINE, not ten, and the tenth is not a bug in this importer: canon's `Unified Korea`
-    // does not exist in the authored map — both Koreas are members of `East Asian
-    // Alliance`, which the Bible never names — and `North & South Korea` is two countries,
-    // which `grouping_country_leader_unique` could not accept anyway. See seed/leaders.ts.
+  it('writes all 10, each in a distinct grouping', () => {
+    // Ten, after an authoring decision (2026-09-04). Canon's `Unified Korea` does not exist
+    // in the authored map — both Koreas are members of `East Asian Alliance`, which the
+    // Bible never names — and `North & South Korea` names two countries where
+    // `grouping_country_leader_unique` permits one. The author ruled that the alliance is
+    // led by South Korea, on canon's own GDP-tier logic. See seed/leaders.ts.
     expect(
       scalar(
         'select count(*) from grouping_country where save_id = ? and is_leader = 1',
         CANON_SAVE_ID,
       ),
-    ).toBe(9);
+    ).toBe(10);
     expect(
       scalar(
         'select count(distinct grouping_id) from grouping_country where save_id = ? and is_leader = 1',
         CANON_SAVE_ID,
       ),
-    ).toBe(9);
+    ).toBe(10);
 
     const named = column<string>(
       `select c.name from grouping_country gc join country c on c.id = gc.country_id
@@ -375,26 +376,32 @@ describe('union leaders — the one fact only the Bible carries (P1.11.2)', () =
       'Indonesia',
       'Pakistan',
       'Panama',
+      'South Korea',
       'Turkey',
       'Vietnam',
     ]);
   });
 
-  it('reports the one marker it could not place, rather than rounding 9 up to 10', () => {
+  it('places every marker, leaving none unplaced', () => {
+    // The check that matters is not the literal 10 — it is that NOTHING is silently
+    // dropped. If the Bible gains an eleventh marker, or the authored map renames another
+    // union out from under one, this fails rather than quietly seeding fewer.
     const canon = report.saves.find((save) => save.result.saveId === CANON_SAVE_ID);
-    expect(canon?.leaders).toHaveLength(9);
-    expect(canon?.unplacedLeaders.map((leader) => leader.union)).toEqual(['Unified Korea']);
-    expect(report.warnings.some((warning) => warning.includes('Unified Korea'))).toBe(true);
+    expect(canon?.leaders).toHaveLength(10);
+    expect(canon?.unplacedLeaders).toEqual([]);
   });
 
   it('places each leader in the nation that actually contains it, not by union name', () => {
     const canon = report.saves.find((save) => save.result.saveId === CANON_SAVE_ID);
     const renamed = canon?.leaders.filter((leader) => leader.groupingName !== leader.union) ?? [];
-    // Two of canon's union names were changed by the authored map; matching on the name
-    // would have dropped both leaders.
+    // THREE of canon's union names were changed by the authored map, so matching a leader
+    // to its union by name would have dropped all three. The Korea case is the reason the
+    // lookup goes through membership instead: the union was not merely renamed, it was
+    // replaced by a differently-shaped one, and only the member country survives both.
     expect(renamed.map((leader) => `${leader.union} -> ${leader.groupingName}`)).toEqual([
       'Estados Unidos de America Central -> Estados Unidos de Central America',
       'New Pakistan -> Pakistan',
+      'Unified Korea -> East Asian Alliance',
     ]);
   });
 });
