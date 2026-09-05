@@ -1,0 +1,332 @@
+import { useState } from 'react';
+
+import type { Grouping } from '@shared/types/index';
+
+import { PROJECTIONS, PROJECTION_IDS } from './renderer';
+
+import type { ProjectionId } from './renderer';
+
+/**
+ * The World Map sidebar (P2.4) — projection picker, the save's unified nations, and the
+ * forms that create and edit them.
+ *
+ * PRESENTATIONAL: props in, callbacks out. It holds exactly one piece of state of its own
+ * — which row's inline rename/recolor form is open — because that is a property of this
+ * panel and of nothing else. Everything the map also depends on (which grouping is being
+ * edited, what is staged, what the primary is) belongs to the container, since the
+ * renderer is drawing from the same values.
+ *
+ * TWO KINDS OF "EDITING" MEET HERE AND THEY ARE NOT THE SAME THING:
+ *   · `editingGroupingId` — the P2.4.3 toggle. While it is set, clicks ON THE MAP change
+ *     that nation's membership. It is the container's, because the renderer needs it too.
+ *   · `renamingId` — this panel's inline name/color form. Local, and closing it changes
+ *     nothing anywhere else.
+ * They are deliberately independent: renaming a nation while pointing at it on the map is
+ * an ordinary thing to want.
+ */
+
+/**
+ * A country staged for a bulk unify, with the name to print on its chip.
+ *
+ * The picker's OPTIONS are not declared here: `PROJECTIONS` carries each projection's
+ * label beside the factory that builds it (P2.1.3), so the list a reader picks from and
+ * the list `projectionFor` can actually build are one list. A local label table would
+ * compile perfectly while offering a projection the renderer does not have.
+ */
+export type StagedCountry = { id: string; name: string };
+
+export type SidebarProps = {
+  projection: ProjectionId;
+  onProjectionChange: (projection: ProjectionId) => void;
+
+  groupings: readonly Grouping[];
+  memberCounts: ReadonlyMap<string, number>;
+  /** `grouping_id -> the display name of its leader country`, where one is marked (§2.4). */
+  leaderNames: ReadonlyMap<string, string>;
+  countryCount: number;
+  independentCount: number;
+
+  /** Set when the primary is a grouping — the sidebar's half of P2.7.2. */
+  primaryGroupingId?: string;
+  /** Groupings in `useGlow().groupingIds`, lit from another view's selection (§6). */
+  glowGroupingIds: ReadonlySet<string>;
+  editingGroupingId: string | null;
+
+  staged: readonly StagedCountry[];
+
+  onSelectGrouping: (groupingId: string) => void;
+  onToggleEditing: (groupingId: string) => void;
+  onCreateGrouping: (draft: { name: string; color: string }) => void;
+  onUpdateGrouping: (groupingId: string, patch: { name: string; color: string }) => void;
+  onDeleteGrouping: (groupingId: string) => void;
+  onUnstage: (countryId: string) => void;
+  onClearStaged: () => void;
+
+  /** The save's rows are still arriving — distinct from `busy`, which is a WRITE. */
+  loading: boolean;
+  busy: boolean;
+  error?: string;
+  onDismissError: () => void;
+};
+
+/**
+ * A fresh color for the create form.
+ *
+ * Random rather than a fixed default because the field's job is to be DIFFERENT from the
+ * nations already on the map, and a constant default makes every nation created without
+ * touching the picker the same color — which is how the old app's maps ended up with
+ * indistinguishable blocks. Six hex digits exactly: the server accepts `#rrggbb` and
+ * nothing else.
+ */
+function randomColor(): string {
+  return `#${Math.floor(Math.random() * 0x1000000)
+    .toString(16)
+    .padStart(6, '0')}`;
+}
+
+export function Sidebar(props: SidebarProps) {
+  const [name, setName] = useState('');
+  const [color, setColor] = useState(randomColor);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState('');
+  const [draftColor, setDraftColor] = useState('#000000');
+
+  const trimmed = name.trim();
+  const stagedCount = props.staged.length;
+
+  function submitCreate(): void {
+    if (trimmed === '') return;
+    props.onCreateGrouping({ name: trimmed, color });
+    setName('');
+    // Re-rolled rather than kept, so the next nation does not inherit this one's color by
+    // default — the same reason the field starts random.
+    setColor(randomColor());
+  }
+
+  function openRename(group: Grouping): void {
+    setRenamingId(group.id);
+    setDraftName(group.name);
+    setDraftColor(group.color);
+  }
+
+  function submitRename(): void {
+    const target = renamingId;
+    const next = draftName.trim();
+    if (target === null || next === '') return;
+    props.onUpdateGrouping(target, { name: next, color: draftColor });
+    setRenamingId(null);
+  }
+
+  return (
+    <aside className="map-sidebar">
+      <section className="map-sidebar__section">
+        <label className="map-field">
+          <span className="map-field__label">Projection</span>
+          <select
+            className="map-input"
+            value={props.projection}
+            onChange={(event) => {
+              // The value is one of this select's own options, so the cast restates what
+              // the DOM erased rather than asserting anything new.
+              props.onProjectionChange(event.target.value as ProjectionId);
+            }}
+          >
+            {PROJECTION_IDS.map((id) => (
+              <option key={id} value={id}>
+                {PROJECTIONS[id].label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
+
+      {props.error !== undefined && (
+        <div className="map-alert" role="alert">
+          <span className="map-alert__text">{props.error}</span>
+          <button type="button" className="map-button" onClick={props.onDismissError}>
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      <section className="map-sidebar__section">
+        <div className="map-sidebar__heading">
+          <span>Unified nations</span>
+          <span className="map-muted">
+            {props.loading ? 'loading…' : props.busy ? 'saving…' : `${props.groupings.length}`}
+          </span>
+        </div>
+        <p className="map-muted map-stats">
+          {props.countryCount} countries · {props.independentCount} independent
+        </p>
+
+        <ul className="map-list">
+          {props.groupings.map((group) => {
+            const isEditing = props.editingGroupingId === group.id;
+            const isRenaming = renamingId === group.id;
+            const classes = ['map-list__item'];
+            if (isEditing) classes.push('map-list__item--editing');
+            if (props.primaryGroupingId === group.id) classes.push('map-list__item--primary');
+            if (props.glowGroupingIds.has(group.id)) classes.push('map-list__item--glow');
+            const leader = props.leaderNames.get(group.id);
+
+            return (
+              <li key={group.id} className={classes.join(' ')}>
+                <div className="map-list__row">
+                  <span className="map-swatch" style={{ background: group.color }} aria-hidden />
+                  <button
+                    type="button"
+                    className="map-list__name"
+                    onClick={() => {
+                      props.onSelectGrouping(group.id);
+                    }}
+                    title="Select this nation (glows its member countries)"
+                  >
+                    {group.name}
+                  </button>
+                  <span className="map-muted">{props.memberCounts.get(group.id) ?? 0}</span>
+                </div>
+
+                {leader !== undefined && <p className="map-muted map-leader">leader · {leader}</p>}
+
+                <div className="map-list__actions">
+                  <button
+                    type="button"
+                    className={isEditing ? 'map-button map-button--on' : 'map-button'}
+                    onClick={() => {
+                      props.onToggleEditing(group.id);
+                    }}
+                    title="While on, clicking a country on the map adds or removes it"
+                  >
+                    {isEditing ? 'Editing — done' : 'Edit membership'}
+                  </button>
+                  <button
+                    type="button"
+                    className="map-button"
+                    onClick={() => {
+                      if (isRenaming) setRenamingId(null);
+                      else openRename(group);
+                    }}
+                  >
+                    {isRenaming ? 'Cancel' : 'Rename'}
+                  </button>
+                  <button
+                    type="button"
+                    className="map-button map-button--danger"
+                    onClick={() => {
+                      props.onDeleteGrouping(group.id);
+                    }}
+                    title="Deletes the nation; its countries become independent again"
+                  >
+                    Delete
+                  </button>
+                </div>
+
+                {isRenaming && (
+                  <form
+                    className="map-form"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      submitRename();
+                    }}
+                  >
+                    <input
+                      className="map-input"
+                      value={draftName}
+                      onChange={(event) => {
+                        setDraftName(event.target.value);
+                      }}
+                      aria-label="New name"
+                    />
+                    <input
+                      className="map-color"
+                      type="color"
+                      value={draftColor}
+                      onChange={(event) => {
+                        setDraftColor(event.target.value);
+                      }}
+                      aria-label="New color"
+                    />
+                    <button type="submit" className="map-button" disabled={draftName.trim() === ''}>
+                      Save
+                    </button>
+                  </form>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        {props.groupings.length === 0 && (
+          <p className="map-muted">
+            No unified nations in this save yet. Every country is independent.
+          </p>
+        )}
+      </section>
+
+      <section className="map-sidebar__section">
+        <div className="map-sidebar__heading">
+          <span>New nation</span>
+        </div>
+        <form
+          className="map-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitCreate();
+          }}
+        >
+          <input
+            className="map-input"
+            value={name}
+            placeholder="e.g. United Earth America"
+            onChange={(event) => {
+              setName(event.target.value);
+            }}
+            aria-label="Nation name"
+          />
+          <input
+            className="map-color"
+            type="color"
+            value={color}
+            onChange={(event) => {
+              setColor(event.target.value);
+            }}
+            aria-label="Nation color"
+          />
+          <button type="submit" className="map-button" disabled={trimmed === ''}>
+            {stagedCount > 0 ? `Create with ${stagedCount}` : 'Create'}
+          </button>
+        </form>
+
+        <p className="map-muted">
+          {stagedCount > 0
+            ? 'The staged countries below become its members in one write.'
+            : 'Shift-click countries on the map to stage them for a new nation.'}
+        </p>
+
+        {stagedCount > 0 && (
+          <>
+            <div className="map-chips">
+              {props.staged.map((country) => (
+                <button
+                  key={country.id}
+                  type="button"
+                  className="map-chip"
+                  onClick={() => {
+                    props.onUnstage(country.id);
+                  }}
+                  title="Remove from the staged selection"
+                >
+                  {country.name} ×
+                </button>
+              ))}
+            </div>
+            <button type="button" className="map-button" onClick={props.onClearStaged}>
+              Clear selection
+            </button>
+          </>
+        )}
+      </section>
+    </aside>
+  );
+}

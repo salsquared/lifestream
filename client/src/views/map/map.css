@@ -1,0 +1,307 @@
+/*
+ * World Map view styling (P2.3–P2.7).
+ *
+ * Scoped to this view and imported by `MapView.tsx` rather than added to
+ * `client/src/styles.css`, which is the shell's sheet: the map's chrome is not shell
+ * chrome, and the renderer under `./renderer/` brings its own rules for the SVG layers.
+ * The palette is the shell's — `--bg`, `--fg`, `--fg-muted`, `--rule`, `--accent` — so
+ * this panel cannot drift from the top bar it sits under.
+ */
+
+.map-view {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.map-sidebar {
+  flex: none;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px;
+  overflow-y: auto;
+  background: var(--bg-bar);
+  border-right: 1px solid var(--rule);
+  font-size: 13px;
+}
+
+.map-sidebar__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.map-sidebar__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.map-muted {
+  color: var(--fg-muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.map-stats {
+  margin-top: -4px;
+}
+
+.map-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-field__label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.map-input,
+.map-color {
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 5px 7px;
+  min-width: 0;
+}
+
+.map-color {
+  flex: none;
+  width: 34px;
+  padding: 2px;
+  height: 28px;
+}
+
+.map-button {
+  font: inherit;
+  font-size: 12px;
+  color: var(--fg-muted);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.map-button:hover:not(:disabled) {
+  color: var(--fg);
+}
+
+.map-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.map-button--on {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.map-button--danger:hover:not(:disabled) {
+  color: #d2705c;
+  border-color: #d2705c;
+}
+
+.map-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.map-form .map-input {
+  flex: 1;
+}
+
+.map-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.map-list__item {
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.map-list__item--editing {
+  border-color: var(--accent);
+  background: #1f242c;
+}
+
+.map-list__item--primary {
+  background: #232833;
+}
+
+.map-list__item--glow {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.map-list__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-swatch {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--rule);
+}
+
+.map-list__name {
+  flex: 1;
+  text-align: left;
+  font: inherit;
+  color: var(--fg);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-leader {
+  margin: 2px 0 0 20px;
+}
+
+.map-list__actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.map-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.map-chip {
+  font: inherit;
+  font-size: 11px;
+  color: var(--fg-muted);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.map-chip:hover {
+  color: var(--fg);
+}
+
+.map-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #d2705c;
+  color: #e9b3a6;
+  font-size: 12px;
+}
+
+.map-alert__text {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.map-stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.map-placeholder {
+  margin: auto;
+  color: var(--fg-muted);
+}
+
+.map-tooltip,
+.map-banner {
+  position: absolute;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--bg-bar);
+  border: 1px solid var(--rule);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.map-tooltip {
+  top: 10px;
+  right: 10px;
+}
+
+.map-banner {
+  bottom: 10px;
+  left: 10px;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/*
+ * `position: fixed` because `at` is a pointer event's viewport coordinates — see the note
+ * on `CountryMenu`. A high z-index because the menu must sit over the SVG and the tooltip.
+ */
+.map-menu {
+  position: fixed;
+  z-index: 10;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border-radius: 4px;
+  background: var(--bg-bar);
+  border: 1px solid var(--rule);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 45%);
+}
+
+.map-menu__title {
+  padding: 4px 8px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 4px;
+}
+
+.map-menu__item {
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  color: var(--fg);
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+
+.map-menu__item:hover {
+  background: #232833;
+}
