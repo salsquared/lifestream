@@ -12,3 +12,6 @@
 
 /** npm name of this workspace, kept in step with `shared/package.json`. */
 export const SHARED_PACKAGE_NAME = '@lifestream/shared';
+
+/** The entity + wire types (P1.6.2). Also reachable directly as `@shared/types/index`. */
+export * from './types/index.js';
