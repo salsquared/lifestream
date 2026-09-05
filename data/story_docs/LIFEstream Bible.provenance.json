@@ -1,0 +1,22 @@
+{
+  "doc": "bible",
+  "title": "LIFEstream Bible",
+  "driveDocId": "1OMG_OBxCSFkcnuaG2jHnnNtUcYe0ii7JnjGY_fS5Hs0",
+  "target": "data/story_docs/LIFEstream Bible.txt",
+  "bytes": 236268,
+  "sha256": "9668f6042a05e58cfeb703f058023b532b37d55f732a1b69b577211bcc7fd015",
+  "lines": 1108,
+  "encoding": {
+    "bom": true,
+    "newline": "crlf"
+  },
+  "worldTimelineBullets": {
+    "Pre-Big One": 12,
+    "North Korean War": 8,
+    "Black Fever Era": 21,
+    "Reconstruction Era": 41
+  },
+  "source": "/Users/sal/.claude/jobs/ef582148/tmp/bible_drive_raw.txt",
+  "syncedAt": "2026-09-05T22:58:57.891Z",
+  "note": "Fetched outside this script (see scripts/sync-docs.ts) and installed by `sync-docs --write`. Drive modifiedTime is deliberately NOT recorded: every document in that folder carries a near-identical timestamp from a bulk move, so it is not evidence of an edit. The sha256 and the diff are."
+}

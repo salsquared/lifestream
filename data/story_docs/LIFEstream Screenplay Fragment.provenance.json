@@ -1,0 +1,17 @@
+{
+  "doc": "screenplay",
+  "title": "LifeStream by Salvador Salcedo",
+  "driveDocId": "1RtGTs-rT5nwMjqPw1NNG_9pzM3ApoxsnWYqtO_LmZ3A",
+  "target": "data/story_docs/LIFEstream Screenplay Fragment.txt",
+  "bytes": 2769,
+  "sha256": "f0fac2bbf17855c8ecee2d5020b55e4e4524cc7486c682d0f0d90152e2503964",
+  "lines": 141,
+  "encoding": {
+    "bom": true,
+    "newline": "crlf"
+  },
+  "worldTimelineBullets": null,
+  "source": "/Users/sal/.claude/jobs/ef582148/tmp/staged/LIFEstream Screenplay Fragment.txt",
+  "syncedAt": "2026-09-05T23:02:31.204Z",
+  "note": "Fetched outside this script (see scripts/sync-docs.ts) and installed by `sync-docs --write`. Drive modifiedTime is deliberately NOT recorded: every document in that folder carries a near-identical timestamp from a bulk move, so it is not evidence of an edit. The sha256 and the diff are."
+}

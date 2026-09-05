@@ -1,0 +1,17 @@
+{
+  "doc": "visual-style",
+  "title": "Visual Style",
+  "driveDocId": "1dOShf5rbJuDtR3fZ9AfVz_Q9C-KW_BbM9jJa8MxVKQY",
+  "target": "data/story_docs/LIFEstream Visual Style.txt",
+  "bytes": 814,
+  "sha256": "5881241fe8d79362e0275bf74ae915a7097b3e6c1469bf26cb80d7c38790c510",
+  "lines": 32,
+  "encoding": {
+    "bom": true,
+    "newline": "crlf"
+  },
+  "worldTimelineBullets": null,
+  "source": "/Users/sal/.claude/jobs/ef582148/tmp/staged/LIFEstream Visual Style.txt",
+  "syncedAt": "2026-09-05T23:02:31.682Z",
+  "note": "Fetched outside this script (see scripts/sync-docs.ts) and installed by `sync-docs --write`. Drive modifiedTime is deliberately NOT recorded: every document in that folder carries a near-identical timestamp from a bulk move, so it is not evidence of an edit. The sha256 and the diff are."
+}

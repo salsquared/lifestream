@@ -1,0 +1,17 @@
+{
+  "doc": "character",
+  "title": "Character",
+  "driveDocId": "1-oUJDhqO1GbfA1m0Dg0DPX1yVZG1YT5fYJsCGBmYBmo",
+  "target": "data/story_docs/LIFEstream Character.txt",
+  "bytes": 80,
+  "sha256": "042645309b5e55d0f45e1e11b66d0fe54d90a932049c4303147dc8f4ead68871",
+  "lines": 10,
+  "encoding": {
+    "bom": true,
+    "newline": "crlf"
+  },
+  "worldTimelineBullets": null,
+  "source": "/Users/sal/.claude/jobs/ef582148/tmp/staged/LIFEstream Character.txt",
+  "syncedAt": "2026-09-05T23:02:32.568Z",
+  "note": "Fetched outside this script (see scripts/sync-docs.ts) and installed by `sync-docs --write`. Drive modifiedTime is deliberately NOT recorded: every document in that folder carries a near-identical timestamp from a bulk move, so it is not evidence of an edit. The sha256 and the diff are."
+}

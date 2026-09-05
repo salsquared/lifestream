@@ -401,37 +401,37 @@ export const CANON_NON_EVENTS: readonly CanonNonEvent[] = [];
 const MODULE_CITATIONS: readonly Citation[] = [
   {
     of: 'the World Timeline heading the parser anchors on',
-    line: 886,
+    line: 911,
     quote: 'World Timeline:',
   },
   {
-    of: 'the Pre-Big One heading',
-    line: 887,
-    quote: 'Pre-Big One',
+    of: "the Pre-Big One heading — the line above this, the section's first bullet",
+    line: 913,
+    quote: '* 2021: Lazaro Castaneda is born in Los Angeles.',
   },
   {
     of: 'the prose section the heading must NOT be confused with',
-    line: 420,
+    line: 446,
     quote: 'Pre-Big One Era',
   },
   {
     of: 'evt_lazaro_born — canon disagreeing with itself about his birthplace',
-    line: 86,
+    line: 91,
     quote: 'Lazaro was born in 2021 to Mexican immigrants in Lancaster, California',
   },
   {
     of: 'evt_ridge_probing_begins — the unnamed "small military base" is COP Isotope',
-    line: 77,
+    line: 82,
     quote: 'Combat Outpost Isotope, or',
   },
   {
     of: 'evt_megablock_1_groundbreaking — Neo Los Angeles is the post-Big-One name',
-    line: 865,
+    line: 890,
     quote: 'Name of Los Angeles after the Big One',
   },
   {
     of: 'evt_ridge_first_elevator — the elevator belongs to the FOB Oasis phase',
-    line: 78,
+    line: 83,
     quote: 'For the first time there is an elevator built from the command center',
   },
 ];

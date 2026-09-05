@@ -101,17 +101,25 @@ export const CANON_TIMELINES: readonly CanonTimeline[] = [
       "The world before the earthquake, from the births of X's parents to the last of the " +
       'first-generation Megablocks. AUTHORED BOUNDS: canon groups these bullets under one heading ' +
       'and states no start or end for the era, so 2021-2040 is a modelling decision taken from the ' +
-      'extent of the section (L888-L899) and not a date the Bible gives.',
+      'extent of the section and not a date the Bible gives.',
     color: '#7a8899',
     eraStart: { precision: 'year', value: '2021' },
     eraEnd: { precision: 'year', value: '2040' },
     parentId: 'tl_world',
     membershipFromEraBounds: true,
     cites: [
-      { of: 'name', line: 887, quote: 'Pre-Big One' },
-      { of: 'the authored eraStart (first bullet of the section)', line: 888, quote: '2021:' },
-      { of: 'the authored eraEnd (last bullet of the section)', line: 899, quote: '2040:' },
-      { of: 'the section the era ends at', line: 900, quote: 'North Korean War' },
+      {
+        of: 'name — the section heading on the line below this one',
+        line: 911,
+        quote: 'World Timeline:',
+      },
+      { of: 'the authored eraStart (first bullet of the section)', line: 913, quote: '2021:' },
+      { of: 'the authored eraEnd (last bullet of the section)', line: 924, quote: '2040:' },
+      {
+        of: 'the section the era ends at — its first bullet; the heading is the line above',
+        line: 926,
+        quote: 'December 31st, 2041: Kim Jung Un accidentally sends nuclear missiles',
+      },
     ],
   },
 ];

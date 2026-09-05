@@ -11,10 +11,14 @@
  * They used to be `// L<n>` comments, and about twenty-five of them were wrong — the
  * glossary block consistently off by 14-17 lines, several others by 1-6 — because nothing
  * ever read them. A citation is now `{ of, line, quote }` DATA on the row, and
- * `verifyCitations` asserts at input-resolution time that the cited line really carries
- * the quoted phrase. A wrong citation is worse than none: it sends a checker to a line
- * that says something else, and the row looks mistranscribed. P5 writes sixty-eight more
- * of these, which is why the affordance had to become real rather than be tidied up once.
+ * `verifyCitations` checks it at input-resolution time. What it asserts is that the
+ * QUOTE is still somewhere in the Bible; `line` is a navigation hint it refreshes and
+ * reports, not a claim it enforces (P4B.1). It used to assert the line, and that made a
+ * document which merely grew by 28 lines fail all 142 citations at once while every quote
+ * was still correct. A wrong citation is still worse than none — it sends a reader to a
+ * line that says something else, and the row looks mistranscribed — which is why drift is
+ * reported loudly rather than silently tolerated. P5 writes seventy more of these, which
+ * is why the affordance had to become real rather than be tidied up once.
  *
  * ── THREE RULES THIS MODULE EXISTS TO KEEP ────────────────────────────────────────────
  *
@@ -133,34 +137,34 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
       'Born to Mexican immigrants and raised in Mojave, California; the eldest of five. Watched the ' +
       'Marines raise Combat Outpost Isotope on the rim of Disaster Ridge and made joining them his ' +
       'goal. Presumed dead in 2072 with the rest of the Enceladus crew. Canon dates his birth twice: ' +
-      'the character sheet gives October 12, 2021 (L560) while the world timeline gives only the year ' +
-      "(L888) — the linked birth event owns the column, so the sheet's day is recorded here instead.",
+      'the character sheet gives October 12, 2021 while the world timeline gives only the year — ' +
+      "the linked birth event owns the column, so the sheet's day is recorded here instead.",
     // Year precision: the card must print "2072". `lifespan_start` is NOT authored — it is
     // owned by `evt_lazaro_born`, which the F4 check derives rather than this row declaring.
     lifespanEnd: { precision: 'year', value: '2072' },
     cites: [
-      { of: 'name', line: 558, quote: 'Lazaro Castañeda' },
+      { of: 'name', line: 584, quote: '* Lazaro Castañeda.' },
       {
         of: 'role (scientific liaison)',
-        line: 77,
+        line: 82,
         quote: 'Lazaro is designated as a scientific liaison',
       },
       {
         of: 'bio (eldest of five, raised in Mojave)',
-        line: 86,
+        line: 91,
         quote: 'He was the oldest of 5 siblings',
       },
       {
-        of: 'bio (the sheet\'s day-precision DOB, "L560")',
-        line: 560,
+        of: "bio (the sheet's day-precision DOB)",
+        line: 586,
         quote: 'DOB: October 12, 2021',
       },
       {
-        of: 'bio (the world timeline\'s year-only birth, "L888")',
-        line: 888,
+        of: "bio (the world timeline's year-only birth)",
+        line: 913,
         quote: '2021: Lazaro Castaneda is born in Los Angeles.',
       },
-      { of: 'lifespanEnd', line: 561, quote: 'DOD: Presumed Dead (2072)' },
+      { of: 'lifespanEnd', line: 587, quote: 'DOD: Presumed Dead (2072)' },
     ],
   },
   {
@@ -172,23 +176,23 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
       'proving the Black Fever Virus could only reach its full effect in human neural tissue, and left ' +
       'the field in 2056 rather than carry the virus home to her children. Among the last known ' +
       'carriers of Lazy Black Fever. Canon dates her birth twice: March 18, 2025 on the character ' +
-      'sheet (L556), year-only in the world timeline (L889) — the linked birth event owns the column.',
+      'sheet, year-only in the world timeline — the linked birth event owns the column.',
     // Time precision; the only clock canon gives her. `lifespan_start` is owned by
     // `evt_ines_born` and is therefore not authored here.
     lifespanEnd: { precision: 'time', value: '2076-04-05T19:32Z' },
     cites: [
-      { of: 'name', line: 554, quote: 'Ines de la Encarnación Cardenas' },
+      { of: 'name', line: 580, quote: 'Ines de la Encarnación Cardenas' },
       {
-        of: 'bio (the sheet\'s day-precision DOB, "L556")',
-        line: 556,
+        of: "bio (the sheet's day-precision DOB)",
+        line: 582,
         quote: 'DOB: March 18, 2025',
       },
       {
-        of: 'bio (the world timeline\'s year-only birth, "L889")',
-        line: 889,
+        of: "bio (the world timeline's year-only birth)",
+        line: 914,
         quote: '2025: Ines Cardenas is born in Los Angeles.',
       },
-      { of: 'lifespanEnd', line: 557, quote: 'DOD: April 5th, 2076 at 7:32pm' },
+      { of: 'lifespanEnd', line: 583, quote: 'DOD: April 5th, 2076 at 7:32pm' },
     ],
   },
   {
@@ -201,9 +205,13 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
       'official supply was never going to be enough.',
     lifespanStart: { precision: 'day', value: '2058-06-05' },
     cites: [
-      { of: 'name', line: 521, quote: 'Adan Castañeda' },
-      { of: 'bio (POB)', line: 523, quote: 'POB: Los Angeles, CA' },
-      { of: 'lifespanStart', line: 524, quote: 'DOB: June 5th, 2058' },
+      { of: 'name', line: 547, quote: 'Adan Castañeda' },
+      {
+        of: 'bio (POB — on the line below; the POB line is verbatim identical under X)',
+        line: 548,
+        quote: "Xavier's older brother. 25. M.",
+      },
+      { of: 'lifespanStart', line: 550, quote: 'DOB: June 5th, 2058' },
     ],
   },
   {
@@ -213,9 +221,13 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
     bio: 'Born in Los Angeles. Races as "X" for Team Seki Sports on the HRL grid.',
     lifespanStart: { precision: 'day', value: '2062-01-30' },
     cites: [
-      { of: 'name', line: 515, quote: 'Xavier "X" Castaneda' },
-      { of: 'bio (POB)', line: 519, quote: 'POB: Los Angeles, CA' },
-      { of: 'lifespanStart', line: 520, quote: 'DOB: Jan 30th, 2062' },
+      { of: 'name', line: 541, quote: 'Xavier "X" Castaneda' },
+      {
+        of: 'bio (POB — on the line below; the POB line is verbatim identical under Adan)',
+        line: 544,
+        quote: 'Seki HRLz Team Seki Sports Driver',
+      },
+      { of: 'lifespanStart', line: 546, quote: 'DOB: Jan 30th, 2062' },
     ],
   },
   {
@@ -228,10 +240,10 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
       'and X in 2078 during a theft of biomedical equipment.',
     lifespanStart: { precision: 'day', value: '2060-02-02' },
     cites: [
-      { of: 'name', line: 525, quote: 'Han Min-Seo' },
-      { of: 'bio (POB)', line: 527, quote: 'POB: Unified Korea (former North)' },
-      { of: 'lifespanStart', line: 528, quote: 'DOB: Feb 2nd, 2060' },
-      { of: 'bio (her father)', line: 529, quote: 'Han Chol-min' },
+      { of: 'name', line: 551, quote: 'Han Min-Seo' },
+      { of: 'bio (POB)', line: 553, quote: 'POB: Unified Korea (former North)' },
+      { of: 'lifespanStart', line: 554, quote: 'DOB: Feb 2nd, 2060' },
+      { of: 'bio (her father)', line: 555, quote: 'Father: Han Chol-min' },
     ],
   },
   {
@@ -245,12 +257,12 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
     cites: [
       {
         of: 'name and the confinement result',
-        line: 926,
+        line: 951,
         quote: 'Dr. Bruce Deng and his team of scientists',
       },
       {
         of: 'bio (the D-He³ reactor, October 3rd 2044)',
-        line: 995,
+        line: 1022,
         quote: "Dr. Bruce Deng's team on October 3rd, 2044",
       },
     ],
@@ -261,12 +273,16 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
     role: 'Antagonist',
     bio:
       'Place and date of birth both recorded as unknown, which is canon rather than a gap in this ' +
-      'transcription (L536-537). Deimos Vane is his clone.',
+      'transcription. Deimos Vane is his clone.',
     cites: [
-      { of: 'name', line: 534, quote: 'Atticus Pallas' },
-      { of: 'bio (POB unknown, "L536")', line: 536, quote: 'POB: Unknown' },
-      { of: 'bio (DOB unknown, "L537")', line: 537, quote: 'DOB: Unknown' },
-      { of: 'bio (Deimos is his clone)', line: 963, quote: "Deimos Vane, Atticus Pallas's clone" },
+      { of: 'name', line: 560, quote: '* Atticus Pallas' },
+      {
+        of: 'bio (POB unknown) — on the line below; the POB line is verbatim identical under Deimos',
+        line: 561,
+        quote: 'Antagonist. M. Age unknown.',
+      },
+      { of: 'bio (DOB unknown)', line: 563, quote: 'DOB: Unknown' },
+      { of: 'bio (Deimos is his clone)', line: 990, quote: "Deimos Vane, Atticus Pallas's clone" },
     ],
   },
   {
@@ -276,20 +292,20 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
     bio:
       "Atticus Pallas's clone, created and force-matured to adulthood in 2078. His public record " +
       'falsely backdates his birth to 2058, which is why the character sheet gives both years ' +
-      '"2058 (Fiction)/2078 (Reality)" (L543). The real year is the one stored.',
+      '"2058 (Fiction)/2078 (Reality)". The real year is the one stored.',
     // AUTHORING JUDGEMENT: canon states two birth years and labels one of them a
     // fabrication. The stored bound is the real one; the false record lives in the bio.
     lifespanStart: { precision: 'year', value: '2078' },
     cites: [
-      { of: 'name', line: 538, quote: 'Deimos Vane' },
+      { of: 'name', line: 564, quote: '* Deimos Vane' },
       {
-        of: 'lifespanStart and bio (the two years, "L543")',
-        line: 543,
+        of: 'lifespanStart and bio (the two years)',
+        line: 569,
         quote: 'DOB: 2058 (Fiction)/2078 (Reality)',
       },
       {
         of: 'bio (created and force-matured in 2078)',
-        line: 963,
+        line: 990,
         quote: "Deimos Vane, Atticus Pallas's clone, is created and force-matured to adulthood",
       },
     ],
@@ -299,21 +315,23 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
     name: 'Dal',
     role: 'Korean megacorporation — maker of HoloVision and LIFEstream',
     bio:
-      'FLAGGED FOR THE AUTHOR: P3.2.1 lists "Dal" among the fourteen characters, but everywhere the ' +
-      'Bible names Dal it is a company — "Korean Mega DAL" in the LIFEstream glossary entry, a ' +
-      'megacorporation at L645, a marketing department at L379. It is seeded as the plan asks, with ' +
-      'no family edges and no dates, so it can be moved or dropped without touching anything else.',
+      'NOT A PERSON. Dal is a company, ruled by the author on 2026-09-05, and the Bible agrees ' +
+      'everywhere it names it: "Korean Mega DAL" in the LIFEstream glossary, a megacorporation with ' +
+      'a country of origin, a marketing department. P3.2.1 listed it among the fourteen characters ' +
+      'and this row exists only because the plan asked for it. It carries no family edges and no ' +
+      'dates, so nothing depends on it. The row should go — but the seed cannot delete (§7.4), so ' +
+      'removing the authored entry would leave this row behind. See P4B.7.',
     cites: [
-      { of: 'name and bio (the megacorporation entry, "L645")', line: 645, quote: 'Dal' },
-      { of: 'bio (country of origin)', line: 646, quote: 'Country of Origin: Korea' },
+      { of: 'name and bio (the megacorporation entry)', line: 672, quote: '* Dal' },
+      { of: 'bio (country of origin)', line: 673, quote: 'Country of Origin: Korea' },
       {
-        of: 'bio (the marketing department, "L379")',
-        line: 379,
+        of: 'bio (the marketing department)',
+        line: 406,
         quote: "written by Dal's marketing department",
       },
       {
         of: 'bio (the LIFEstream glossary entry)',
-        line: 1011,
+        line: 1039,
         quote: 'Product built by Korean Mega DAL',
       },
     ],
@@ -326,11 +344,11 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
       'Launched a single nuclear missile at South Korea on December 31st, 2041 in an inebriated ' +
       'accident, starting the war that ended his regime. Canon gives him no dates of his own.',
     cites: [
-      { of: 'name', line: 629, quote: 'Kim Jung Un' },
-      { of: 'role', line: 630, quote: 'Supreme Leader of North Korea' },
+      { of: 'name', line: 656, quote: '* Kim Jung Un' },
+      { of: 'role', line: 657, quote: 'Supreme Leader of North Korea' },
       {
         of: 'bio (the accidental launch)',
-        line: 901,
+        line: 926,
         quote: 'December 31st, 2041: Kim Jung Un accidentally sends nuclear missiles',
       },
     ],
@@ -342,10 +360,10 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
     bio: 'Born in Osaka, Japan. Runs the team X drives for.',
     lifespanStart: { precision: 'day', value: '2018-03-14' },
     cites: [
-      { of: 'name', line: 530, quote: 'Motoaki "Moto" Nagai' },
-      { of: 'role', line: 531, quote: 'Head of Seki Sports Racing' },
-      { of: 'bio (POB)', line: 532, quote: 'POB: Osaka, Japan' },
-      { of: 'lifespanStart', line: 533, quote: 'DOB: March 14, 2018' },
+      { of: 'name', line: 556, quote: 'Motoaki "Moto" Nagai' },
+      { of: 'role', line: 557, quote: 'Head of Seki Sports Racing' },
+      { of: 'bio (POB)', line: 558, quote: 'POB: Osaka, Japan' },
+      { of: 'lifespanStart', line: 559, quote: 'DOB: March 14, 2018' },
     ],
   },
   {
@@ -353,23 +371,42 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
     name: 'Max Lauda',
     role: 'Traditional motorsport racing legend',
     bio:
-      'One of the most exceptional drivers in motorsports history. Died in a test drive of his DFD ' +
-      'craft, ending the original Helios Racing League and discouraging a generation of professionals ' +
-      'who reasoned that a craft Lauda could not control was not masterable.',
-    // AUTHORING JUDGEMENT: the character sheet leaves both "DOB" and "DOD" blank. The death
-    // date is read off the world timeline instead. P5 transcribes that bullet as an event;
-    // the moment it carries a `died` actor row this authored bound becomes ILLEGAL and the
-    // seed refuses the run (F4) rather than letting the two writers take turns — so P5's
-    // job is to delete this line in the same commit that adds the actor.
-    lifespanEnd: { precision: 'day', value: '2048-02-07' },
+      'One of the most exceptional drivers in motorsports history. Died during a public test run ' +
+      'of an early commercial p-B¹¹ craft, collapsing the original Helios Racing League before its ' +
+      "first season and putting the public's appetite for space to sleep — the league never made " +
+      'it past the development stage, and a generation of professionals reasoned that a craft ' +
+      'Lauda could not control was not masterable.',
+    // AUTHORING JUDGEMENT, REVISED with the 21 June Bible (P4B.4). This row used to say the
+    // character sheet left both "DOB" and "DOD" blank, so the death date had to be inferred
+    // from the world timeline. The sheet now carries `DOD: 2057` and the timeline carries
+    // `Jan 21st, 2057`, so the two AGREE and nothing is being inferred — the timeline is used
+    // because it is a day where the sheet is a year, not because the sheet was silent. DOB is
+    // still blank, which is why there is no `lifespanStart`.
+    //
+    // The date itself moved nine years, from 2048-02-07. That is the revision the citation
+    // check caught: the old quote was nowhere in the new Bible, and it named this row.
+    //
+    // P5 transcribes that bullet as an event; the moment it carries a `died` actor row this
+    // authored bound becomes ILLEGAL and the seed refuses the run (F4) rather than letting the
+    // two writers take turns — so P5's job is to delete this line in the same commit that adds
+    // the actor.
+    lifespanEnd: { precision: 'day', value: '2057-01-21' },
     cites: [
-      { of: 'name', line: 549, quote: 'Max Lauda' },
-      { of: 'the blank DOB on the character sheet', line: 551, quote: 'DOB' },
-      { of: 'the blank DOD on the character sheet', line: 552, quote: 'DOD' },
+      { of: 'name', line: 575, quote: '* Max Lauda' },
+      {
+        of: 'the blank DOB on the character sheet — on the line below',
+        line: 576,
+        quote: 'Traditional Motorsport Racing Legend',
+      },
+      {
+        of: 'DOD on the character sheet — a year, agreeing with the timeline',
+        line: 578,
+        quote: 'DOD: 2057',
+      },
       {
         of: 'lifespanEnd (read off the world timeline)',
-        line: 937,
-        quote: 'Feb 7th, 2048: Max Lauda dies in a test drive of his DFD craft',
+        line: 972,
+        quote: 'Jan 21st, 2057: Max Lauda dies during a public test run',
       },
     ],
   },
@@ -382,8 +419,8 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
       'the proof-of-concept for X\'s surgery. Loud, yappy, confrontational — "old couch king" turned ' +
       'all-bark-all-bite.',
     cites: [
-      { of: 'name', line: 545, quote: 'Rocko' },
-      { of: 'role and bio', line: 546, quote: 'Chihuahua Therodolon in a large automata body' },
+      { of: 'name', line: 571, quote: '* Rocko' },
+      { of: 'role and bio', line: 572, quote: 'Chihuahua Therodolon in a large automata body' },
     ],
   },
   {
@@ -392,8 +429,8 @@ export const CANON_CHARACTERS: readonly CanonCharacter[] = [
     role: 'Greyhound Therodolon in a large automata body',
     bio: 'An old ex-race dog and the second (final) successful clone. Quick, agile, determined.',
     cites: [
-      { of: 'name', line: 547, quote: 'Laika' },
-      { of: 'role and bio', line: 548, quote: 'Greyhound Therodolon in a large automata body' },
+      { of: 'name', line: 573, quote: '* Laika' },
+      { of: 'role and bio', line: 574, quote: 'Greyhound Therodolon in a large automata body' },
     ],
   },
 ];
@@ -422,10 +459,10 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       'epicenter, home to the ring of 120 fusion reactors powering the Space Fountain section.',
     countryId: '840',
     cites: [
-      { of: 'name', line: 870, quote: 'Star City' },
+      { of: 'name', line: 981, quote: 'Oasis City is renamed Star City' },
       {
         of: 'description',
-        line: 1042,
+        line: 1070,
         quote: 'Star City: Final designation of the Disaster Ridge site',
       },
     ],
@@ -442,12 +479,12 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
     cites: [
       {
         of: 'name and description',
-        line: 1027,
+        line: 1055,
         quote: 'Oasis City: Fourth designation of the Disaster Ridge site',
       },
       {
         of: 'supersededById (renamed Star City in 2066)',
-        line: 954,
+        line: 981,
         quote: 'Oasis City is renamed Star City',
       },
     ],
@@ -464,12 +501,12 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
     cites: [
       {
         of: 'name and description',
-        line: 986,
+        line: 1013,
         quote: 'Camp Oasis: Third designation of the Disaster Ridge',
       },
       {
         of: 'supersededById (incorporated as Oasis City in 2051)',
-        line: 941,
+        line: 963,
         quote: 'Disaster Ridge is incorporated as a city under the new name Oasis City',
       },
     ],
@@ -486,17 +523,17 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
     cites: [
       {
         of: 'name and description',
-        line: 1004,
+        line: 1031,
         quote: 'FOB Oasis: Second designation of the Disaster Ridge',
       },
       {
         of: 'description (the first elevator)',
-        line: 78,
+        line: 83,
         quote: 'For the first time there is an elevator built',
       },
       {
         of: 'supersededById (redesignated Camp Oasis in 2039)',
-        line: 898,
+        line: 923,
         quote: 'FOB Oasis is redesignated Camp Oasis',
       },
     ],
@@ -511,15 +548,15 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
     countryId: '840',
     supersededById: 'loc_fob_oasis',
     cites: [
-      { of: 'name', line: 77, quote: 'Combat Outpost Isotope, or' },
+      { of: 'name', line: 82, quote: 'Combat Outpost Isotope, or' },
       {
         of: 'description',
-        line: 990,
+        line: 1017,
         quote: 'Combat Outpost Isotope (COPI): Original name given to the marine outpost',
       },
       {
         of: 'supersededById (redesignated FOB Oasis in late 2035)',
-        line: 894,
+        line: 919,
         quote: 'COP Isotope is redesignated Forward Operating Base Oasis',
       },
     ],
@@ -537,25 +574,25 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
     // designation. Both lines are cited below.
     supersededById: 'loc_oasis_city',
     cites: [
-      { of: 'name', line: 73, quote: 'Disaster Ridge' },
+      { of: 'name', line: 916, quote: 'the chasm opened above it known as "Disaster Ridge."' },
       {
         of: 'description',
-        line: 998,
+        line: 1025,
         quote: 'Disaster Ridge: The massive geological chasm opened along the San Andreas Fault',
       },
       {
         of: 'description (named by the people of Mojave)',
-        line: 90,
+        line: 95,
         quote: 'it was given by the people of Mojave as Disaster Ridge',
       },
       {
         of: 'supersededById (the chain merge, 2051)',
-        line: 941,
+        line: 963,
         quote: 'Disaster Ridge is incorporated as a city under the new name Oasis City',
       },
       {
         of: 'supersededById (Oasis City is the FOURTH designation)',
-        line: 1027,
+        line: 1055,
         quote: 'Oasis City: Fourth designation',
       },
     ],
@@ -570,8 +607,8 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       'compares what used to be with what is.',
     countryId: '840',
     cites: [
-      { of: 'name', line: 868, quote: 'New Mojave' },
-      { of: 'description', line: 869, quote: 'Rebuilt version of Mojave' },
+      { of: 'name', line: 893, quote: '* New Mojave' },
+      { of: 'description', line: 894, quote: 'Rebuilt version of Mojave' },
     ],
   },
   {
@@ -583,8 +620,8 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
     countryId: '840',
     supersededById: 'loc_new_mojave',
     cites: [
-      { of: 'name', line: 866, quote: 'Mojave' },
-      { of: 'description', line: 867, quote: 'The original town of Mojave in Death Valley' },
+      { of: 'name', line: 891, quote: '* Mojave' },
+      { of: 'description', line: 892, quote: 'The original town of Mojave in Death Valley' },
     ],
   },
 
@@ -597,8 +634,8 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       'and the site of the first-generation Megablocks.',
     countryId: '840',
     cites: [
-      { of: 'name', line: 864, quote: 'Neo Los Angeles' },
-      { of: 'description', line: 865, quote: 'Name of Los Angeles after the Big One' },
+      { of: 'name', line: 889, quote: '* Neo Los Angeles' },
+      { of: 'description', line: 890, quote: 'Name of Los Angeles after the Big One' },
     ],
   },
   {
@@ -610,8 +647,8 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
     countryId: '840',
     supersededById: 'loc_neo_los_angeles',
     cites: [
-      { of: 'name', line: 862, quote: 'Los Angeles' },
-      { of: 'description', line: 863, quote: 'Los Angeles before the Big One' },
+      { of: 'name', line: 447, quote: 'Los Angeles in the early 2030s' },
+      { of: 'description', line: 888, quote: 'Los Angeles before the Big One' },
     ],
   },
 
@@ -625,8 +662,8 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       'Fever vaccine was brute-forced on March 29th, 2045.',
     countryId: '380',
     cites: [
-      { of: 'name', line: 197, quote: 'Gran Sasso National Laboratory (LNGS), Abruzzo' },
-      { of: 'description (the 2045 vaccine)', line: 927, quote: 'Mar 29th, 2045' },
+      { of: 'name', line: 206, quote: 'Gran Sasso National Laboratory (LNGS), Abruzzo' },
+      { of: 'description (the 2045 vaccine)', line: 952, quote: 'Mar 29th, 2045' },
     ],
   },
   {
@@ -638,10 +675,10 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       'for the antibody trials across every UEA member lab.',
     countryId: '840',
     cites: [
-      { of: 'name', line: 168, quote: 'Pacific Missile Range Facility, Kauai, Hawaii' },
+      { of: 'name', line: 177, quote: 'Pacific Missile Range Facility, Kauai, Hawaii' },
       {
         of: 'description',
-        line: 169,
+        line: 178,
         quote: 'Housed biologists, virologists, and chemists running BFV transmission research',
       },
     ],
@@ -654,7 +691,7 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       'its hydroelectric output redirected entirely to the underground lab network — the stopgap that ' +
       'bought Project Xero the runway it needed.',
     countryId: '840',
-    cites: [{ of: 'name', line: 177, quote: 'Hoover Dam, Nevada/Arizona Border' }],
+    cites: [{ of: 'name', line: 186, quote: 'Hoover Dam, Nevada/Arizona Border' }],
   },
   {
     id: 'loc_et1',
@@ -665,14 +702,18 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       'support before transitioning to a passive tether at 36,000km. Opened August 1st, 2066.',
     countryId: '840',
     cites: [
-      { of: 'name', line: 330, quote: 'Earth Tower 1' },
+      {
+        of: 'name',
+        line: 360,
+        quote: "Earth Tower 1 isn't a space elevator in the traditional sense",
+      },
       {
         of: 'description',
-        line: 1001,
+        line: 1028,
         quote:
           'Earth Tower 1 (ET1): The first and only Terra-scale construction project in human history',
       },
-      { of: 'description (opening date)', line: 953, quote: 'Aug 1st, 2066: Earth Tower 1 opens' },
+      { of: 'description (opening date)', line: 980, quote: 'Aug 1st, 2066: Earth Tower 1 opens' },
     ],
   },
   {
@@ -683,11 +724,15 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       'Star City. The transshipment hub where earth-bound freight meets the deep-space cargo arriving ' +
       'on the lunar highway in the sky — a working-class port named by its workers.',
     cites: [
-      { of: 'name', line: 873, quote: 'Port Charon' },
+      {
+        of: 'name',
+        line: 1057,
+        quote: 'Port Charon: Industrial logistics city built at the top of Earth Tower 1',
+      },
       {
         of: 'description',
-        line: 874,
-        quote: 'Industrial logistics city built at the top of Earth Tower 1',
+        line: 899,
+        quote: '* Industrial logistics city built at the top of Earth Tower 1',
       },
     ],
   },
@@ -698,8 +743,13 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       "The counterweight at the top of Earth Tower 1's Space Tether at geostationary orbit, 36,000km " +
       'up. A compacted heap of Processed Regolith from the Moon, held in place by orbital tension.',
     cites: [
-      { of: 'name', line: 875, quote: 'Atlas' },
-      { of: 'description', line: 876, quote: 'The counterweight at the top of Earth Tower 1' },
+      { of: 'name', line: 1005, quote: 'Atlas: The counterweight at the top of Earth Tower 1' },
+      {
+        of: 'description',
+        line: 901,
+        quote:
+          "The counterweight at the top of Earth Tower 1's Space Tether at geostationary orbit",
+      },
     ],
   },
   {
@@ -709,11 +759,12 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       'The deep-space region surrounding Atlas at geostationary altitude. Hosts the Tartarus Run ' +
       "circuit, carved from leftover Processed Regolith from Atlas's construction.",
     cites: [
-      { of: 'name', line: 877, quote: 'Erebus' },
+      { of: 'name', line: 1030, quote: 'Erebus: The deep-space region surrounding Atlas' },
       {
         of: 'description',
-        line: 878,
-        quote: 'The deep-space region surrounding Atlas at geostationary altitude',
+        line: 903,
+        quote:
+          'The deep-space region surrounding Atlas at geostationary altitude. Named for the Greek primordial darkness',
       },
     ],
   },
@@ -724,13 +775,13 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
       'First asteroid target for MEGACORP, in Project Athena. Near edge of the asteroid belt. Reached ' +
       'by the Enceladus in 2071; the crew was presumed dead there in 2072.',
     cites: [
-      { of: 'name', line: 880, quote: 'Etna' },
+      { of: 'name', line: 905, quote: '* Etna' },
       {
         of: 'description',
-        line: 881,
+        line: 906,
         quote: 'First asteroid target for MEGACORP in Project Athena',
       },
-      { of: 'description (near edge)', line: 882, quote: 'Location: Near edge of Asteroid Belt' },
+      { of: 'description (near edge)', line: 907, quote: 'Location: Near edge of Asteroid Belt' },
     ],
   },
   {
@@ -739,13 +790,13 @@ export const CANON_LOCATIONS: readonly CanonLocation[] = [
     description:
       'Second asteroid target for MEGACORP, in Project Aurum. Far edge of the asteroid belt.',
     cites: [
-      { of: 'name', line: 883, quote: 'Chrysus' },
+      { of: 'name', line: 908, quote: '* Chrysus' },
       {
         of: 'description',
-        line: 884,
+        line: 909,
         quote: 'Second asteroid target for MEGACORP in Project Aurum',
       },
-      { of: 'description (far edge)', line: 885, quote: 'Location: Far edge of Asteroid Belt' },
+      { of: 'description (far edge)', line: 910, quote: 'Location: Far edge of Asteroid Belt' },
     ],
   },
 ];
@@ -776,14 +827,19 @@ export const CANON_PROJECTS: readonly CanonProject[] = [
     dateEnd: { precision: 'month', value: '2047-05' },
     status: 'succeeded',
     cites: [
-      { of: 'name', line: 792, quote: 'Presidential Directive 51-Alpha (NSPD-51A)' },
+      {
+        of: 'name',
+        line: 159,
+        quote:
+          'The plan, designated as National Security Presidential Directive 51-Alpha (NSPD-51A)',
+      },
       {
         of: 'description',
-        line: 1026,
+        line: 1054,
         quote: 'NSPD-51A: National Security Presidential Directive 51-Alpha',
       },
-      { of: 'dateStart', line: 795, quote: 'Start: ~Jan 2042' },
-      { of: 'dateEnd', line: 796, quote: 'End: May, 2047' },
+      { of: 'dateStart', line: 820, quote: 'Start: ~Jan 2042' },
+      { of: 'dateEnd', line: 821, quote: 'End: May, 2047' },
     ],
   },
   {
@@ -797,14 +853,14 @@ export const CANON_PROJECTS: readonly CanonProject[] = [
     dateEnd: { precision: 'month', value: '2047-06' },
     status: 'succeeded',
     cites: [
-      { of: 'name', line: 798, quote: 'Project Xero (Zero)' },
+      { of: 'name', line: 823, quote: 'Project Xero (Zero)' },
       {
         of: 'description',
-        line: 1034,
+        line: 1062,
         quote: 'Project Xero: The single most important operation in human history',
       },
-      { of: 'dateStart', line: 801, quote: 'Start: May, 2042' },
-      { of: 'dateEnd', line: 802, quote: 'End: June, 2047' },
+      { of: 'dateStart', line: 826, quote: 'Start: May, 2042' },
+      { of: 'dateEnd', line: 827, quote: 'End: June, 2047' },
     ],
   },
   {
@@ -822,19 +878,19 @@ export const CANON_PROJECTS: readonly CanonProject[] = [
     dateEnd: { precision: 'year', value: '2072' },
     status: 'failed',
     cites: [
-      { of: 'name', line: 804, quote: 'Project Athena' },
+      { of: 'name', line: 521, quote: 'Project Athena and the Etna Incident' },
       {
         of: 'description',
-        line: 1032,
+        line: 1060,
         quote: "Project Athena: MEGACORP's mission to mine asteroid Etna",
       },
       {
         of: 'description (the Project Nero joke)',
-        line: 806,
+        line: 831,
         quote: 'people took to calling it Project Nero',
       },
-      { of: 'dateStart (announcement, not a start)', line: 808, quote: 'Announced: Feb 5th, 2060' },
-      { of: 'dateEnd', line: 811, quote: 'End: 2072 (Crew presumed dead)' },
+      { of: 'dateStart (announcement, not a start)', line: 833, quote: 'Announced: Feb 5th, 2060' },
+      { of: 'dateEnd', line: 836, quote: 'End: 2072 (Crew presumed dead)' },
     ],
   },
   {
@@ -850,21 +906,25 @@ export const CANON_PROJECTS: readonly CanonProject[] = [
     // 2086, and the story's present is 2084 — so the programme is running, not finished.
     status: 'active',
     cites: [
-      { of: 'name', line: 813, quote: 'Project Aurum' },
+      {
+        of: 'name',
+        line: 988,
+        quote: 'Work on a successor to Project Athena, Project Aurum, begins',
+      },
       {
         of: 'description',
-        line: 1033,
+        line: 1061,
         quote: "Project Aurum: MEGACORP's second asteroid mining mission",
       },
-      { of: 'description (the Project Midas joke)', line: 815, quote: 'Project Midas' },
-      { of: 'dateStart', line: 817, quote: 'Start: 2076' },
-      { of: 'dateEnd', line: 818, quote: 'End: Expected 2086' },
+      { of: 'description (the Project Midas joke)', line: 840, quote: 'Project Midas' },
+      { of: 'dateStart', line: 842, quote: 'Start: 2076' },
+      { of: 'dateEnd', line: 843, quote: 'End: Expected 2086' },
       {
         of: 'status (the Chrysus departed 2082)',
-        line: 968,
+        line: 995,
         quote: 'October 18th, 2082: The Chrysus, of Project Aurum, departs',
       },
-      { of: "status (the story's present is 2084)", line: 970, quote: 'April 25, 2084' },
+      { of: "status (the story's present is 2084)", line: 997, quote: 'April 25, 2084' },
     ],
   },
   {
@@ -883,20 +943,20 @@ export const CANON_PROJECTS: readonly CanonProject[] = [
     dateStart: { precision: 'year', value: '2042' },
     status: 'succeeded',
     cites: [
-      { of: 'name', line: 822, quote: 'Project Afterlife' },
+      { of: 'name', line: 1003, quote: 'The commercial successor to Project Afterlife' },
       {
         of: 'description',
-        line: 1031,
+        line: 1059,
         quote: 'Project Afterlife: A covert effort, run inside Project Xero',
       },
       {
         of: 'dateStart (a range, not an instant)',
-        line: 825,
+        line: 850,
         quote: 'Start: alongside cure development',
       },
       {
         of: 'the absent dateEnd',
-        line: 826,
+        line: 851,
         quote: 'Becomes the commercial Afterlife Program under Cognis',
       },
     ],
@@ -926,7 +986,7 @@ export const CANON_CHARACTER_RELATIONS: readonly CanonCharacterRelation[] = [
     fromCharacterId: 'char_ines',
     toCharacterId: 'char_lazaro',
     type: 'spouse-of',
-    cites: [{ of: 'the marriage', line: 946, quote: '2057: Lazaro and Ines get married' }],
+    cites: [{ of: 'the marriage', line: 973, quote: '2057: Lazaro and Ines get married' }],
   },
   {
     id: 'crel_lazaro_adan_parent',
@@ -934,8 +994,8 @@ export const CANON_CHARACTER_RELATIONS: readonly CanonCharacterRelation[] = [
     toCharacterId: 'char_adan',
     type: 'parent-of',
     cites: [
-      { of: 'Lazaro as father', line: 559, quote: "Adan's and X's Father" },
-      { of: "Adan's birth", line: 948, quote: "June 5th, 2058: Adan, X's older brother, is born" },
+      { of: 'Lazaro as father', line: 585, quote: "Adan's and X's Father" },
+      { of: "Adan's birth", line: 975, quote: "June 5th, 2058: Adan, X's older brother, is born" },
     ],
   },
   {
@@ -944,10 +1004,10 @@ export const CANON_CHARACTER_RELATIONS: readonly CanonCharacterRelation[] = [
     toCharacterId: 'char_x',
     type: 'parent-of',
     cites: [
-      { of: 'Lazaro as father', line: 559, quote: "Adan's and X's Father" },
+      { of: 'Lazaro as father', line: 585, quote: "Adan's and X's Father" },
       {
         of: 'both births',
-        line: 38,
+        line: 45,
         quote: 'Adan and X would be born in 2058 and 2062 respectively',
       },
     ],
@@ -957,7 +1017,7 @@ export const CANON_CHARACTER_RELATIONS: readonly CanonCharacterRelation[] = [
     fromCharacterId: 'char_ines',
     toCharacterId: 'char_adan',
     type: 'parent-of',
-    cites: [{ of: 'Ines as mother', line: 555, quote: "Adan's and X's Mother" }],
+    cites: [{ of: 'Ines as mother', line: 581, quote: "Adan's and X's Mother" }],
   },
   {
     id: 'crel_ines_x_parent',
@@ -965,8 +1025,8 @@ export const CANON_CHARACTER_RELATIONS: readonly CanonCharacterRelation[] = [
     toCharacterId: 'char_x',
     type: 'parent-of',
     cites: [
-      { of: 'Ines as mother', line: 555, quote: "Adan's and X's Mother" },
-      { of: "X's birth", line: 950, quote: 'Jan 30th, 2062: X is born' },
+      { of: 'Ines as mother', line: 581, quote: "Adan's and X's Mother" },
+      { of: "X's birth", line: 977, quote: 'Jan 30th, 2062: X is born' },
     ],
   },
   // AUTHORING JUDGEMENT ON DIRECTION. P3.2.5 writes this edge "Atticus clone-of Deimos",
@@ -979,7 +1039,7 @@ export const CANON_CHARACTER_RELATIONS: readonly CanonCharacterRelation[] = [
     fromCharacterId: 'char_atticus',
     toCharacterId: 'char_deimos',
     type: 'clone-of',
-    cites: [{ of: 'the direction', line: 963, quote: "Deimos Vane, Atticus Pallas's clone" }],
+    cites: [{ of: 'the direction', line: 990, quote: "Deimos Vane, Atticus Pallas's clone" }],
   },
 ];
 
@@ -992,11 +1052,11 @@ export const CANON_CHARACTER_RELATIONS: readonly CanonCharacterRelation[] = [
  * character sheet is at L513" is exactly the kind of claim that silently stops being true.
  */
 const SECTION_CITATIONS: readonly Citation[] = [
-  { of: 'the character sheet', line: 513, quote: 'Characters' },
-  { of: 'the locations section', line: 860, quote: 'Locations' },
-  { of: 'the Disaster Ridge site history', line: 76, quote: 'Evolution of Disaster Ridge Site' },
-  { of: 'the projects section', line: 791, quote: 'Projects' },
-  { of: 'the glossary', line: 975, quote: 'Glossary' },
+  { of: 'the character sheet', line: 540, quote: 'Main Characters' },
+  { of: 'the locations section', line: 897, quote: 'Orbital Locations' },
+  { of: 'the Disaster Ridge site history', line: 81, quote: 'Evolution of Disaster Ridge Site' },
+  { of: 'the projects section', line: 823, quote: 'Project Xero (Zero)' },
+  { of: 'the glossary', line: 1002, quote: 'Glossary' },
 ];
 
 /** Every Bible line this module cites, flattened for `verifyCitations`. */

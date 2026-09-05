@@ -1,7 +1,14 @@
 ﻿LIFEstream Bible
-By Salvador Salcedo
+A fusion-powered biopunk death-race thriller.
+By Salvador Salcedo 
+
+
+Logline 
+In a fusion-powered future built on disposable lives, a grieving outlaw pilot lands a seat in the deadliest sport ever staged: three races climbing the side of a space elevator to the edge of orbit, flown at speeds and g-loads that knock a body unconscious — where most at the start line won't live to the finish line, and surviving the season is the only victory that counts.
+
+
 Themes
-Anti-capitalist. Dissociative. Extractive. Fusion-punk. Post-pandemic. Disposable. Neo-industrial. Post-traumatic. Surveillance-saturated. Monopolistic. Medicated. Gilded. Hollowed-out.
+Anti-capitalist. Dissociative. Extractive. Post-pandemic. Disposable. Neo-industrial. Post-traumatic. Surveillance-saturated. Monopolistic. Medicated. Gilded. Hollowed-out.
 
 
 Anti-corporate / Anti-capitalist
@@ -19,13 +26,13 @@ Star City rising from a literal wound in the earth. Lab-grown muscle bolted to m
 Surveillance-saturated
 MEGACORP read the crew's neural telemetry through their suits for years before using it to replace them. Black Fever screening became person-tracking. Everybody is a data source.
 Monopolistic
-Sanctioned by the UEA, not stolen from it. The tiered megacorp system gives each H-Mega exclusive legal rights over an entire manufacturing horizontal at planetary scale. Competition was outlawed in the name of post-pandemic efficiency, and monopoly was enshrined in international statute.
+Sanctioned by the UEA, not stolen from it. The tiered megacorp system gives each H-Mega exclusive legal rights over an entire manufacturing horizontal at planetary scale. Competition was outlawed in the name of efficiency, and monopoly was enshrined in international statute.
 Medicated
 Self-medication is the survival strategy of an entire generation. Drops are sold as a treatment but used as a coping mechanism. Adan synthesizes them by hand for X and the GZVA because the official supply was never going to be enough. To live in this world is to dose your way through it.
 Gilded
 The Helios Racing League dresses corporate sponsorship in the language of national pride. Project Athena was sold as humanity's voyage of the century. Every spectacle hides an extraction.
 Disposable
-People in this world are kept on staff only as long as they're operationally relevant. The Athena crew. Ines the moment her husband died. The blue-collar worker the moment automata could replace them. Useful, then forgotten.
+People in this world are kept on staff only as long as they're operationally relevant for the elite. The Athena crew. Ines. The blue-collar worker the moment automata could replace them. Useful, then forgotten.
 Hollowed-out
 The cultural rot underneath everything else. A generation that survived Black Fever did so without their souls intact, and the generation born after inherited the void. LIFEstream, gambling, extreme sports, the racing league - all of them are popular because dopamine and adrenaline are the only things that still register. People don't seek extremes for thrill anymore; they seek them because nothing less can be felt at all.
 
@@ -45,8 +52,6 @@ Climate displacement defined the era. Intensifying hurricanes, monsoons, and tor
 The Climate Change Attributable Disaster Insurance Fund (CCADIF)
 The rising threat of climate litigation forced international action. In 2035, a UN-brokered statute established the Climate Change Attributable Disaster Insurance Fund - the largest cooperative international funding mechanism since the Marshall Plan. CCADIF assigned each country a percentage liability based on its lifetime atmospheric and nuclear pollution. (Rough early figures: United Kingdom 15%, United States 14.3%.) Receiver nations drew from the fund to rebuild after climate-attributable disasters. The Big One did not qualify - the United States was a principal contributor with sufficient internal FEMA capacity, and the earthquake predated the fund anyway.
 CCADIF had a second, less obvious legacy. The fund created a special visa class for international assessors traveling to disaster zones. This same legal pathway later became the basis on which scientists trapped in foreign countries during the Black Fever Pandemic were granted citizenship and channeled into the underground labs of Project Xero - making CCADIF, almost incidentally, a piece of the infrastructure that would survive into Project Xero a decade later.
-
-
 
 
 The Big One
@@ -99,6 +104,10 @@ After the Black Fever Pandemic
 Once the BFP ends and schools reopen again in 2047, is where Ines and Lazaro meet. Somehow achieving her degree during the BFP online. She started going to school in 2043 and finishing her Bachelor’s in spring 2047. Fall 2047 was the first time she’d be at a university because of the BFP. Ines began her Master’s in Neuroscience at UCLA in the Fall. The two met in the old fashioned way of meeting someone in a school’s meal hall. Ines would get her Master’s & P.h.D at UCLA in the spring of 2051. Her thesis experiment was showing the results of how the brain cells and neural organs of animals react to BFV. It showed that the virus was not  as good at attacking the brain cells in the same way it had in human arteries. Some simply showed the virus attaching normally but failing to build the catalytic material needed to explode the tissue with the same intensity. This was explained by the difference in proteins found in the neural tissue and fluids of humans compared to animals. It seemed that the virus was tuned to use only things found in the human brain. Others failed to even latch at all. Many had networks of BFV nodes too small to impact the brain the same way even after finding the right catalytic materials so the brains would still suffer from a lot of aneurysms but not enough again to explode the brain. It definitely proved that the neural vector could only achieve its cataclysmic result in human tissues. This and other mounting evidence began to paint a terrible picture. This virus had been bred by humans, for humans the old fashioned way - infect thousands of test subjects and breed the virus as it jumps from death to living. The international community recoiled and sought to punish whoever had done so. When the evidence turned out to point to NK, nothing could be definitely proven nor done about since the camps and country were long gone. Her work would support this theory making her a valued member of the scientific community. She would continue her BF research until around 2056 when Lazaro and Ines decided to have a family. It simply wasn’t worth the risk of bringing the virus accidently from work to a home with kids.
 
 
+NovaTech and the Two Reactors
+Lazaro's doctorate, begun at UCLA in the fall of 2047 and completed in the spring of 2052, was sponsored by NovaTech under proprietary terms — the company funding the work and owning whatever came of it. What came of it, on paper, was the p-B¹¹ reactor design: the first aneutronic fusion reactor that could be made small and clean enough to fly, proven out in simulation. He invented the reactor, not the drive — the Direct Fusion Drive and the whole ecology of craft built on it came later, as others productized what he had proven possible (see DFD Vehicle Classes). What he handed NovaTech was the design and the simulations. What he did not hand them — what he never told them existed — was the working unit he had already built by hand in his home workshop, to satisfy himself the thing was real before he would put his name to it. He could not trust a number on a screen he hadn't held in his hands first; it was the same instinct that would later have his younger son taking apart every toy he owned. That hand-built first unit — the true first p-B¹¹ reactor in the world — is the one the brothers would come to call the genesis reactor. NovaTech never knew it existed.
+The company kept him on after the doctorate, his work spanning both the giant D-He³ ground reactors rising to power Earth Tower 1 and the development of his own p-B¹¹ design. In 2053 he built the first commercial p-B¹¹ unit with NovaTech — the reactor that flew the first DFD craft — and the company took it, proudly, to be the world's first, never suspecting that one had been quietly running in a garage for over a year. It was this expertise, more than his service record, that won him his seat on Project Athena in 2063 as the Enceladus's nuclear propulsion engineer: the ship would fly on a scaled-up version of the reactor he had created.
+He received no public credit for any of it. Under his sponsorship, every patent and drawing was NovaTech's from the moment of conception, and the work was published under the company's name. In the records that mattered, NovaTech invented the p-B¹¹ reactor; Lazaro invented nothing. It is why the world could meet him, in the Athena coverage, as a relatively irrelevant crew member — an engineer among engineers — and never know it was looking at the man who built the drive that carried the mission. The company owned his mind and the design it produced. The one thing it never owned, because it never knew to look for it, was the genesis reactor itself. It stayed in the home workshop on his own land, and because its fuel was the one thing NovaTech could never put a meter on, it would run for anyone who could keep it lit. It was still there when he left for the Enceladus in 2070, and still there after MEGACORP buried him and stripped his family — the secret first machine of the entire fusion-craft age, sitting in a garage. It is the drive at the heart of X's Kart, and after it the Rustbucket. X races, without the world ever knowing it, on the true first reactor of his sport — the one his father hid from the people who owned everything else he ever made.
 North Korean War
 In the later years of Kim Jung Un’s life, he felt unaccomplished. The promises he had made his people to reunify Korea under his leader seemed to be getting further and further away from him. Upset about the failures of his tenure and lack of notable legacy, Un grew an intense, strong resentment towards the world. In his mind, it was the World's fault, largely the western countries, for his inability to enact North Korean international aims. His resentment gave him the motivation to create a device that would poison the world as a payback for rejecting and undermining him. A Doomsday Device. 
 Originally started in 2020, over the years KJU researched, developed and tested many Doomsday Mechanisms as they came to be called to different levels of completion. The two most developed weapon efforts, led by the craziest minds in the military's R&D departments - Ri Hyok-chol & Pak Yong-sik, would leave a stain so dark on history nothing in his legacy would ever outlive this blunder. The first was a conventional nuclear salted Doomsday Bomb meant to make space travel and communication impossible through poisoning the Earth's atmosphere with radioactive material for hundreds of years. The second was a virus that would be extremely lethal, transmissive and as psychologically damaging as possible. With this and many other designs under his belt he amassed a number of safe guards towards the toppling of his regime. He reasoned that should his country ever be attacked - he needed cheaper and uninterceptible weapons of mutually assured mass destruction. He didn't care if he didn't live through it, attacking him would cause him to bring the world down along with him. 
@@ -228,9 +237,19 @@ The surface military bases were, for a time, the only functioning institutions l
 Not every base held. Some fell to infiltration when personnel slipped the perimeter and brought the virus back in. Others fell to themselves: factional splits between those who wanted to abandon Project Xero and run an insulated city of their own - defection, in effect - and those who tried to stop them, escalating into attempted coups and internal fighting. Between 2041 and 2046 the surface was a patchwork of disease and mutiny. The only place on Earth genuinely insulated from both was underground, in the labs of the UEA.
 Global Corporatization 
 The Knowledge Collapse and Forced Monopolization
-The Black Fever pandemic eradicated hundreds of millions of people worldwide, severely impacting densely populated urban centers due to the higher transmission rates. Consequently, an immense volume of first-hand human capital was lost. This loss was most catastrophic in highly specialized, artisanal, and bleeding-edge technological sectors-such as advanced silicon processor manufacturing-where institutional knowledge bordered on a blend of art and science. Realizing that fractured competition would lead to the permanent loss of these irreproducible skills, the United Earth and surviving national entities intervened. Traditional antitrust and competition laws were universally suspended. Corporations were mandated to merge and pool their remaining intellectual and material resources.
+The Black Fever pandemic eradicated hundreds of millions of people worldwide, severely impacting densely populated urban centers due to the higher transmission rates. Consequently, an immense volume of first-hand human capital was lost. This loss was most catastrophic in highly specialized, artisanal, and bleeding-edge technological sectors — such as advanced silicon processor manufacturing — where institutional knowledge bordered on a blend of art and science.
+Silicon was the lesson no one forgot. Its supply chain was the most fragmented and globe-spanning of any industry on Earth, split among dozens of fiercely competitive firms that each held one irreplaceable fragment of the whole and shared none of it. When the pandemic broke those chains, no surviving entity held enough of the process to restart it, and the most advanced manufacturing humanity had ever achieved simply died — not for lack of demand, but because competition had scattered the knowledge too thin to survive a shock. It was the cautionary tale the rest of the policy answered to, and the gap the neucomp would later be grown to fill.
+The United Earth treated the pandemic as what it was: a war for the survival of the species, and like every total war before it, one no economy could fight while its industries fought each other. Competition was recast as a luxury of peacetime — the engine of progress when humanity had time to spare, a fatal redundancy when it did not. Realizing that fractured competition would lead to the permanent loss of these irreproducible skills, the United Earth and surviving national entities intervened. Traditional antitrust and competition laws were universally suspended. Corporations were mandated to merge and pool their remaining intellectual and material resources.
+In practice the law trailed behind a fusion that had already begun on its own. The specialists who would later staff the megacorporations had been forced into open communication and shared logistics through the Xero Network for years, and under that pressure the walls between former rivals quietly dissolved long before any statute recognized it. The mandate did not so much create the megacorporations as draw borders around mergers that had already happened in the field.
+What began as an emergency measure never unwound. Every prior war economy had demobilized once the fighting stopped, but this one had nothing to demobilize back into: the pandemic had killed so deeply that un-merging an entity meant splitting its last surviving specialists below the threshold at which their knowledge could stay alive at all. And the emergency never truly ended — it rolled directly from curing the plague into rebuilding the world, the same continental-scale coordination redirected toward fusion, Earth Tower 1, and the lunar economy, with no moment at which the old competitive order could plausibly have returned. The wartime architecture calcified into the permanent shape of the global economy.
+History would record the consolidation as an act of collective sacrifice, humanity pooling its commercial might to save itself. That account is true. It is simply not the whole of it: the same measure that saved the species also enclosed the entirety of human industry into a handful of hands, and the people into whose hands it fell took care, as the mergers were drawn, to secure their own permanence within them (see Project Afterlife). Both things happened at once, and the world that resulted cannot be understood by believing only one.
+
+
 The Tiered Corporate Structure
-This era of aggressive consolidation resulted in a highly structured, tiered global economy. Business horizontals were strictly divided among a designated number of mega-corporations based on their host nation's pre-collapse economic standing.
+This era of aggressive consolidation resulted in a highly structured, tiered global economy. Business horizontals were strictly divided among a designated number of mega-corporations based on their host nation's pre-collapse economic standing. 
+The assignment was not arbitrary, and it was largely decided underground. During Project Xero, the national contingency that solved a given technical problem in its labs became the natural home of the horizontal built on it afterward — the wartime division of scientific labor hardening into the peacetime industrial map. A nation's GDP tier then set how many such horizontals it could anchor: less a reward for wealth than a measure of how deep a surviving talent bench a country had to stake an entire industry on, since each horizontal was by design a global single point of failure that someone had to be capable of holding alone.
+
+
 * Tier 1 Economies (Top 10 GDP Nations): Ultra-wealthy nations, such as the United States, China and Germany were permitted a maximum of a dozen mega-corporations. Each conglomerate was granted absolute monopoly over specific technological or industrial sectors to maximize efficiency. 
 * Tier 2 Economies (Rank 10-50 GDP Nations): Medium-sized economies were heavily consolidated, leaving only two to five mega-corporations per nation. These entities managed broader manufacturing and service portfolios necessary for regional stability and specialized international trade, such as the Indonesian conglomerate's focus on 3D-printed organs or the Mexican conglomerate's monopoly on synthetic skins.
 * Tier 3 Economies (Sub-50 GDP Nations): Smaller economies, such as Bulgaria, Ukraine, or Sri Lanka, were entirely consolidated into a single national mega-corporation. These unitary corporate entities focused exclusively on the region's most historically successful or resource-rich exports, acting as highly specialized nodes within the global supply chain orchestrated by the United Earth.
@@ -245,7 +264,7 @@ When the Knowledge Collapse mergers were imposed, the biomedical megacorporation
 Business Structures
 The business structures of the lifestream world are different and less diverse than those of the present day. The need to make businesses and the work they do as efficient and cost effective as possible by horizontal monopolization of entire industries by nation-sized corporations creates these new business dynamics. 
 Horizontal Megacorporations
-This term describes the baseline entities established during the Black Fever era. They possess a sanctioned, global monopoly over a single stratum of the supply chain or industrial process. Their existence is justified by maximum global efficiency and resource management. They are designed to be interdependent, relying on other Horizontal Megacorporations to function. They are colloquially known as “H-Megas.” 
+This term describes the baseline entities established during the Black Fever era. They possess a sanctioned, global monopoly over a single stratum of the supply chain or industrial process. Their existence is justified by maximum global efficiency and resource management. They are designed to be interdependent, relying on other Horizontal Megacorporations to function. This interdependence is also what keeps the system honest: no H-Mega can push its monopoly too far, because each is hostage to the others' output, and a horizontal that strangles its partners strangles itself. It is the structural check that makes planetary-scale monopoly survivable rather than purely extractive — and its deliberate violation is exactly what defines the Monolithic megacorp. They are colloquially known as H-Megas or simply Megas. 
 Syndicated Megacorporations
 This structure emerges when multiple Horizontal Megacorporations form strategic alliances. By stacking their respective horizontal specializations, they create a vertically integrated supply chain through partnership. This allows them to produce finished products collectively. While this increases their combined profit margins and reduces their reliance on outside entities, it maintains the original horizontal boundaries of the individual corporations within the syndicate.
 S-Megas are not Megacorporations in the typical sense. They are a decision making vehicle to help multiple H-Megas make decisions together. They also help in brand-recognition since the finalized products are sold by the S-Mega and profits are distributed by said S-Mega entity to the H-Megas. 
@@ -304,6 +323,14 @@ Europe
 * Germania
    * Germany, Austria, Czechia, Switzerland 
 * Remaining Countries: Italy, Sicily & Sardinia, France & Corsica, Russia
+
+
+Corporate Nationalism
+The mergers solved the problem of pooled resources but created a quieter one: what was a "Germania" or a "Nordia" now supposed to be? Fusing several nations dissolved several histories, several languages' worth of pride, several sets of heroes, and left a vacuum where national identity used to sit. The horizontal filled it. Lacking an older story they could all share, the merged peoples took their cohesion from the one thing their new nation did better than anyone alive, and over a single generation the enterprise became the identity. To be of Germania was to be one of the people who built the impossible; to be Korean was to be the people who put a human life onto the wire; to be Mexican was to clothe the world in skin it could not tell from its own. The flag and the brand became the same object.
+This was less a break with the past than the perfection of an old habit. The pre-collapse world had always pinned a piece of its pride to its finest products — one nation known for the device in every pocket, another for the marque on the impossible car and the name stitched into the dress, a third for the lens-maker without whom no one else's machines could be built at all. But that pride had been partial, one boast among a hundred: a country was famous for its cars and also fed itself, told its own stories, made its own films, argued its own politics. The mergers stripped the hundred down to the one. A nation's proudest export became its only export, and then its only self. A people no longer just led a field - they were the field - the only people on the planet that did that.. National pride and product loyalty fused into a single feeling, and the Helios Racing League is its purest theater: each driver a national champion and a corporate mascot in one suit, with no seam left between them.
+For most of the world this was simply literal. The GDP to anchor even one global horizontal was more than most nations could muster, so the great majority came out of the mergers as a single people behind a single product, with nothing else to their name — the purest form of the fusion, because there was nothing else for the identity to compete with. The handful of Tier 1 giants that carried several horizontals at once were the exception, and even they bent toward a single face: one flagship mega, keeper of the nation's most vital horizontal, that the world pictured when it pictured the country. The United States ran six, but it was NovaTech — keeper of the fusion flame — that stood for America; Germania was the impossible things Deutsch Con built, whatever else its smaller megas made. Multiplicity, where it existed at all, still resolved to one name. 
+The generation born after the mergers, X's among them, knew no other arrangement; a country being a single product struck them as natural as weather. The older generation could still remember when a Germania had been a Germany and an Austria, when a people had been a thick, contradictory, unprofitable tangle of more than one thing. Something was gained in the trade and something thinned out of the world. The fusion also gave the old corporate rivalries a far more dangerous charge: when a Monolithic megacorp pushes into a horizontal that is not its own, it is no longer felt as mere business but as one nation reaching into the soul of another — which is why such incursions provoke a hostility closer to war than to competition.
+This is what makes a nation, in the new order, as disposable as any worker on a MEGACORP roster. A country that is its horizontal and nothing more has staked its whole reason to exist on one industry's continued relevance; let that horizontal be obsoleted, or breached by a Monolithic rival reaching across the line, and what is lost is not market share but the nation itself — its income, its pride, and its identity in a single stroke. The pride is real. It is also a cage with no other room in it. 
 
 
 Neuro-optic Stabilizer Solution/Opal/Drops/Gotas
@@ -387,9 +414,8 @@ No wireless protocol of the era could carry even 300 Gsps, let alone 600. A full
 
 
 X and Adan’s Childhood
-Even from a young age it was clear to both parents that both of their children were extremely bright. Adan had a knack for remembering vast amounts of information and understanding the underlying mechanisms of physical and biological systems. X on the other hand was a fan of doing things with his hands. He would receive toys as a kid and instead of playing with them in their functional state as a normal kid would, he would use his father’s tools to take them apart in an effort to understand how they worked. Without instructions, notes or taking pictures of the disassembly process, X was always able to put the toy back together by memory. Evidently Adan would take after his mother and X would take after his father. 
-
-
+Even from a young age it was clear to both parents that both of their children were extremely bright. Adan had a knack for remembering vast amounts of information and understanding the underlying mechanisms of physical and biological systems. X on the other hand was a fan of doing things with his hands. He would receive toys as a kid and instead of playing with them in their functional state as a normal kid would, he would use his father’s tools to take them apart in an effort to understand how they worked. Without instructions, notes or taking pictures of the disassembly process, X was always able to put the toy back together by memory. 
+Evidently Adan would take after his mother and X would take after his father — a division that would harden into the shape of both their adult lives. Adan would follow Ines into the brain: neuroscience, neural tissue, the growing of minds. X would follow Lazaro into the machine: fusion, propulsion, the things hands can build. The two halves of their parents, split cleanly between the two sons.
 Ines’ Illness
 Ines was one of the last people alive that still had a dormant, much slower form of Black Fever. Instead of the virus growing sacks of blood in the brain aggressively, this variant of the infirmity chose a much slower rate of oxygenated blood consumption. So much so that it avoided detection from all forms of screening until late 2071, even as the Black Fever virus was thought to be well understood.
 It wasn't wildly contagious like its more aggressive predecessor. Nor was it initially clear if it was fatal. Some cases of Lazy Black Fever, as the variant came to be called, simply died in the person's head. It did not exhibit a rate of consumption high enough to sustain the existing latched Morticells and their spread throughout the brain at the same time. Others however like Ines were not so lucky. Her version of Black Fever was retarded enough to be undetectable for years but still grew as the regular virus did, albeit at a very slow pace. Her symptoms would be different from that of typical Black Fever sufferers. Due to the gradual nature of the disease, she suffered from at first headaches which progressed into migraines. Chills, dizziness and as things got to their most grim, seizures and the eventual dreaded fever.
@@ -549,8 +575,8 @@ Side Characters
 * Max Lauda
    * Traditional Motorsport Racing Legend. M.
    * DOB
-   * DOD
-   * Background: Renowned as one of the most exceptional drivers in motorsports history. Met a tragic end in an ion-Fusion craft accident. His demise cast a long shadow on the iFL, discouraging professionals, who questioned the viability of mastering craft that even Lauda couldn’t control.
+   * DOD: 2057
+   * Background: Renowned as one of the most exceptional drivers in motorsports history. Met a tragic end in an HRL DFD-powered craft accident. His demise cast a long shadow on the HRL, discouraging professionals, who questioned the viability of mastering craft that even Lauda couldn’t control.
 * Ines de la Encarnación Cardenas. 
    * Adan’s and X's Mother. F. 
    * DOB: March 18, 2025
@@ -559,6 +585,7 @@ Side Characters
    * Adan’s and X’s Father. M.
    * DOB: October 12, 2021
    * DOD: Presumed Dead (2072)
+   * Designer of the p-B¹¹ reactor; credited wholly to NovaTech under his sponsored doctorate. Secretly hand-built the first working unit — the genesis reactor — which NovaTech never knew existed and which survives as X's racing drive.
 Helios Racing League Racers
 * Marcus Reeve 
    * Team USA. NovaTech Solaris Racer. 31. M.
@@ -645,35 +672,33 @@ Korea: 1 Megacorp
 * Dal
    * Country of Origin: Korea
    * Specialization: 
-      * Consumer applications of neural technology
+      * Consumer, Enterprise and military applications of neural technology
       * LIFEstream technology
-      * Neural Signal Interpretation
 Japan: 2 Megacorps.
 * Seki
    * Country of Origin: Japan
-   * Specialization: 
-      * Small Fusion-Electric Thrusters
-      * Manufacturing Processes
-      * Neural interface hardware
+   * Specialization: Neural interface hardware
 China: 3 Megacorps
 * Jade Industries: 
    * Country of Origin: China
-   * Specialization: 
-      * Rare Earth Mining 
-      * Hazardous Materials Refining
-      * Steel and Iron Alloy Specialization 
+   * Specialization: Mining
+* ___
+   * Country of Origin: China
+   * Specialization: Materials Refinement 
+* ____
+   * Country of Origin: China
+   * Specialization: Metals Manufacturing 
 USA: 6 Megacorps. 
 * NovaTech
    * Founded: 2012
    * Specialization: 
       * Fusion Reactors
-      * Largest producer of He-3 from lunar mining
-      * Largest claims of lunar territory
+      * Largest consumer of He-3 from lunar mining
+      * Largest claims of He-3
 * HoloJoy
    * Founded: 2026
    * Specialization: 
       * Neural User-Interface Software 
-      * User-Interface Hardware Installation Medicine
 * SpaceV
    * Founded: 2005
    * Specialization: 
@@ -929,20 +954,22 @@ Black Fever Era
 * 2045: Neuro-interpretability is achieved by growing copies of an individual's brain cells. They turn out to be the only ones capable of decoding the signals or understanding the individual's particular brain due to the insane amount of signal noise human brains work with. This helps a normal computer read the extracorporeal computational brainmass.
 * November 18th, 2046: The last confirmed case of Black Fever.
 Reconstruction Era
-* 2046: With a world in need of new forms of entertainment the Helios Racing League (HRL) is formed.
 * 2046: The first fusion reactor built outside the Xero underground labs comes online at Camp Oasis, in still-sealed Disaster Ridge — the same installation whose Lithium-6 had bred the Helium-3 that fueled the first underground reactor. Built in isolation and lit as the world emerges from the pandemic, its completion is taken as the herald of the Reconstruction era.
-* October 8th, 2047: The world’s first fusion powered rocket reaches orbit. Cadence to space is dramatically increased due to the low cost of space travel.
 * Fall, 2047: Ines and Lazaro enroll at UCLA for their Masters and Ph.D respectively. They met for the first time and started dating shortly after. 
 * Late 2040s: As the Reconstruction begins, the sour rain is undeniable and worsening.
-* Feb 7th, 2048: Max Lauda dies in a test drive of his DFD craft and ends the original HRL.
 * April 5th, 2049: The lunar operations are started for the first time since the BF era and the first fusion reactor on the Moon comes online.
 * Early 2050s: The sour rain matures into its full storm-driven form - discrete, building-stripping fronts concentrated over cities. Terrestrial construction abandons concrete and carbonate stone for granite and basalt; the first-generation Megablocks are clad in stone retrofit by retrofit.
 * Jan 3rd, 2051: MEGACORP is formed and announces the plan to build the world’s first space elevator, Earth Tower 1, on top of Disaster Ridge, Death Valley, California.
 * 2051: Disaster Ridge is incorporated as a city under the new name Oasis City. 
+* Spring 2052: Lazaro Castañeda completes his NovaTech-sponsored doctorate. His thesis is the first miniature p-B¹¹ reactor — a hand-built demonstrator, and the first aneutronic fusion reactor compact and clean enough to fly. Per his contract, the design and all IP vest in NovaTech, recorded as sole inventor. 
 * 2052: Ines starts working in hospitals helping people suffering from neural diseases. 
+* 2053: Now working directly with NovaTech, Lazaro builds the first commercial mini-reactor to be used by SpaceV for the first DFD-powered spacecraft. 
+* 2054: The first crewed DFD craft reaches orbit — a single-passenger research SSTO running on NovaTech's miniature p-B¹¹ drive. The dawn of fusion spaceflight; before it, space access had been chemical.
 * 2054: Dal releases the first version of HoloVision (V1), vision-only — the first major consumer neural product of the Reconstruction, arriving once the rebuilt world had the infrastructure and appetite for entertainment technology again.
-* 2056: Lazaro completes his doctorate and joins NovaTech to help build the fusion plants meant to power ET1.
+* 2055: Productionized p-B¹¹ drives spread into distinct DFD vehicle classes — utility, sport, and military — and the first commercial DFD craft enter service (see DFD Vehicle Classes).
+* 2056: Riding the fusion-craft boom, the original Helios Racing League is formed as a straight racing series, to stoke public enthusiasm for spaceflight.
 * 2056: Lazaro is given a plot of land in Disaster Ridge to work and live out of by the US government for his service and his important work with NovaTech.
+* Jan 21st, 2057: Max Lauda dies during a public test run of an early commercial p-B¹¹ craft, collapsing the original HRL before its first season and putting the public's appetite for space to sleep.
 * 2057: Lazaro and Ines get married. 
 * 2057: Ines quits her job and becomes a teacher to stay away from illnesses.
 * June 5th, 2058: Adan, X’s older brother, is born.
@@ -966,7 +993,7 @@ Reconstruction Era
 * Feb 7th, 2082: After years of research, Adan believes he may be able to synthesize a compound that will help his brother with his PTSD episodes. 
 * May 2nd, 2082: The drops work for X and Adan begins making drops for the Ground Zeros Veterans Association (GZVA) for X to deliver. 
 * October 18th, 2082: The Chrysus, of Project Aurum, departs for the further edge of the asteroid ring.
-* Jan 3rd, 2084: 36 years after the close of the original, a new HRL is put together by the Promethean Syndicate Megacorporation.
+* Jan 3rd, 2084: 27 years after the close of the original, a new HRL is put together by the Promethean Syndicate Megacorporation.
 * April 25, 2084: Xavier is getting ready to test upgrades to his homemade spacecraft’s DFD before delivering medication to the GZVA.
 Music
 Psychedelic. Transitive. Uneasy. Surreal. Fugue-like. Oneiric. Phantasmagoric. All words I'd use to describe the sounds that evoke the feelings of the main character X. Mostly inspired by the trance-like state of the visions he goes through as a form of medicinally induced meditation through his use of drops. Paranoia of not being sure if what you're doing is right or wrong. Anxious about the outcome of the certain situation. Like a dream you aren't sure is a nightmare or a bizarre series of harmless events. Moments of safety followed by moments of doubt and anxiety. Scenes of wonder and bliss. Curiosity and anticipation paid off mixed with stillframes of chaos. 
@@ -1002,6 +1029,7 @@ Glossary
 * Eidolon: The scientific and official term for a virtual copy of a person's brain captured at a single point in time. Hosted by Cognis on their servers and able to take control of Anthromata through custom Drivers. Sold through the Afterlife Program to the richest and most influential people alive - celebrities, politicians, the ultra-wealthy - but to a clientele so small, and so officially unacknowledged, that to the general public the technology is little more than rumor. People hear of it; they have no way to confirm it exists.
 * Erebus: The deep-space region surrounding Atlas, the counterweight at the top of Earth Tower 1's Space Tether at geostationary altitude. Named for the Greek primordial darkness that surrounds the underworld and precedes the descent into Tartarus. Hosts the Tartarus Run, the third and final race of the Helios Cup season.
 * FOB Oasis: Second designation of the Disaster Ridge military installation, following Combat Outpost Isotope. Established as extraction operations scaled and the site required broader logistical infrastructure. First elevator connecting Top Ridge and Bottom Ridge built during this phase.
+* Genesis Reactor: The first p-B¹¹ reactor ever physically built — a miniature unit Lazaro Castañeda assembled by hand at home, in secret, to validate his design before submitting it to NovaTech. Knowing only the design and its simulations, the company believed its own 2053 commercial unit to be the world's first; in truth the genesis reactor predated it by over a year. Never recorded and never reclaimed, it survives in the Castañeda workshop as the drive of X's Kart and, later, the Rustbucket.
 * Ground Zeros Veterans Association (GZVA): Veterans Association for veterans of the North Korean War. Lazaro was a member up to his disappearance. X and Adan help them.
 * Helios Racing League (HRL): Dangerous sports racing league for next-generation miniaturized DFD equipped spacecraft.
 * Helios Cup: The annual championship trophy of the Helios Racing League. The 2084 season consists of three races held at successively higher and more dangerous altitudes along Earth Tower 1: the Star City Circuit at the base, Charon's Gauntlet at Port Charon, and the Tartarus Run in Erebus. Winning the Helios Cup requires surviving the Tartarus Run.
@@ -1025,7 +1053,7 @@ Glossary
 * Neuro-Optic Stabilizer Solution (NOSS): An antipsychotic medication developed in the Reconstruction Era to treat schizophrenic hallucinations, post-traumatic trances, phantom pain and other psychosomatic conditions resulting from Black Fever trauma. Administered as eye drops taken at least once daily. Known colloquially as Drops or Gotas.
 * NSPD-51A: National Security Presidential Directive 51-Alpha. An amended version of NSPD-51 enacted during the Black Fever Era that replaced the traditional continuity-of-government structure with a streamlined scientific congress of 435 researcher-representatives empowered to make rapid decisions alongside the President. The blueprint of United Earth governance.
 * Oasis City: Fourth designation of the Disaster Ridge site, following Camp Oasis. Established in 2051 after the military designation was dropped, NovaTech purchased rights to the region from the US government, transforming it into a civilian industrial and corporate hub.
-* p-B¹¹ Reactor: The second fusion reactor technology, developed during the Reconstruction Era for crewed spacecraft. Fully aneutronic - all products are charged alpha particles harvestable via Direct Energy Conversion with zero shielding required. Lower absolute output than D-He³ but unmatched power-to-mass ratio. Fuel: Hydrogen and Boron-11, both Earth-abundant and unmonopolizable.
+* p-B¹¹ Reactor: The second fusion reactor technology — the first aneutronic fusion reactor compact and clean enough to fly, and the basis of all crewed spaceflight and every Direct Fusion Drive that followed. Designed by Lazaro Castañeda under a NovaTech-sponsored doctorate (completed 2052); credited wholly to the company, which built the first commercial unit in 2053 and took it to be the world's first — unaware he had secretly hand-built a working unit, the genesis reactor, over a year earlier.
 * Port Charon: Industrial logistics city built at the top of Earth Tower 1's Space Fountain section, 2,000km above Star City. Named for Charon, the ferryman of the Greek underworld, because it is the transshipment hub where freight crosses between earth-bound traffic and the deep-space cargo arriving on the lunar "highway in the sky." A working-class port city named by its workers rather than by corporate marketing. Hosts Charon's Gauntlet, the second race of the Helios Cup season.
 * Processed Regolith (PR): Compacted lunar regolith used as counterweight mass for Earth Tower 1's tether. Manufactured on the Moon and launched via mass driver toward GEO, creating what workers called a highway in the sky, where it is accreted onto the Atlas counterweight. PR is the counterweight grade of lunar regolith, selected and compacted purely for bulk mass, with no regard to mineralogy, and is distinct from Cast Mare Regolith (CMR), the building grade drawn from the same lunar mining stream but chosen for its titanium-rich, sour-rain-resistant composition, cast or sintered rather than merely compacted, and sent down the elevator to Earth rather than up to GEO. PR rides up; CMR comes down.
 * Project Afterlife: A covert effort, run inside Project Xero, to build neucomp machines capable of hosting a human Eidolon. Officially part of the cure effort but concealed from the public and most lab staff. The mechanism by which the future Megacorp owners were promised digital immortality in exchange for consenting to the mergers; responsible for scanning their brains during the pandemic.

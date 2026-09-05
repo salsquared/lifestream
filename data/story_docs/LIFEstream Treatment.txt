@@ -1,0 +1,63 @@
+﻿Title: LIFEstream
+Logline: 
+X, an obsessive street-racer and his inventive brother, A, are contacted by a Japanese car company with a new and highly dangerous racing technology that, given they don’t die, could catapult them to fame and fortune. 
+
+
+Genre:
+Sci-Fi
+Setting:
+* Time Period: 2084
+* Locations:
+   * Neo Los Angeles
+      * Los Angeles rebuilt after a massive earthquake in the 2040s.  It destroyed several large metropolitan areas but none was hit harder than the freeway-dependent, suburban-concrete ocean that is Southern California. In densely populated areas such as downtown Los Angeles, entire skyscrapers were toppled over and crushed thousands more people on their way down. 
+   * Earth Tower 1
+      * Space elevator built in Nevada.
+   * Oasis
+      * Partially underground city, home of X and his crew. Created in the earthquake of  ‘44, anticipatorily known as “The Big One.” The epicenter of the earthquake was a small strip of the San Andreas fault near what used to be known as Lancaster before it burned to the ground. A chasm opened along this strip called by locals as “Disaster Ridge.” Two years after the earthquake, a group of geologists from UCLA were intrigued by the site and received a grant from the university to explore it. After first probing it with aerial and terrestrial drones they discovered that an entire volcanic shaft that never quite reached ground level and hardened under extreme pressure perhaps millions of years ago had been exposed.
+1 Page Synopsis
+In the latter part of the 21st century, the motorsport racing industry faced an unprecedented decline in viewership, overshadowed by emerging, high-risk sports drawing adrenaline-driven audiences. In a collective bid to reignite the global passion for racing, leading motorsport companies initiated the creation of a groundbreaking racing spectacle, integrating ion-fusion technology from their space subsidiaries, enabling crafts to attain unprecedented speeds and altitudes, culminating in the ion-Fusion League (iFL). 
+Despite immense investments and vigorous efforts to attract the elite drivers of the world to this revolutionary motorsport, the endeavor seemed doomed following a catastrophic incident. Max Lauda, renowned as one of the most exceptional drivers in motorsport history, met a tragic end in a fusion-ion craft accident. His demise cast a long shadow on the iFL, discouraging professionals, who questioned the viability of mastering crafts even Lauda couldn't control.
+In a desperate quest to salvage the league and under coercive pressure from his superiors, Motoaki “Moto” Nagai, the leader of Seki Sports Ion Racing Division, ventures beyond traditional racing circles to recruit the enigmatic X, compelling him to represent Seki in the inaugural season of the iFL. With a timeline of merely six months, they must construct a formidable team, develop their state-of-the-art racing craft, and conquer tracks from the earth's surface to its low orbit, striving for the prestigious first-place position.
+Characters:
+* Xavier
+   * Protagonist. 20. M.
+   * Nickname: X
+   * POB: Los Angeles, CA
+   * DOB: Jan 30th, 2064
+* Adan
+   * Xavier’s older brother. 23. M.
+   * POB: Los Angeles, CA
+   * DOB: June 5th, 2061
+* Min-Seo
+   * X’s girlfriend. 22. F.
+   * POB: North Korea
+   * DOB: Feb 2nd, 2062
+* Motoaki “Moto” Nagai
+   * Head of Seki Sports Ion Racing Division. 57. M.
+   * POB: Japan
+
+
+
+
+
+
+Vehicles:
+* Name: Julius
+   * Owner: X
+   * Manufacturer: X and Seki Ion Sports Team
+* Name: Magnus
+   * Owner/Pilot: ANTAGONIST_PILOT
+   * Manufacturer: ANTAGONIST_CORP
+
+
+Unknown Variables:
+* ANTAGONIST_PILOT
+* ANTAGONIST_CORP
+* BIG_5_CORPS
+* BIG_5_CONSORTIUM_MISSION_CONTROL
+
+
+LIFEstream Technology:
+* LIFEstream allows Conduits to share their physical reality by replacing the Receiver's perceived reality with that of the Conduit’s.
+* LIFEstream is a technology developed and released a year prior by the Interactive Media division of the Korean mega-conglomerate Dal. 
+* The LIFEstream system consists of a Transmitting Unit and a Receiving Unit. The Transmitting Unit is a neck-worn collar that straps around the Transmitter’s neck. The collar reads the signals going from the body to the brain and relays them into a computer to be read and decoded. The computer then sends it back to servers run by the Transmitting party to be distributed to the Receivers. The Receivers in turn have two things operating on them. First their brain needs to stop receiving the electrical/sensory signals that their bodies produce but only the ones that are going to be replaced by the sensory signals coming from the Transmitter. Instead, the signals coming from the Transmitter are fed back into the brain of the Receiver. To them it is as though they are actually sensing what the Transmitter is sensing. The intended effect is for the Receiver to experience the same physical reality as the Transmitter.
