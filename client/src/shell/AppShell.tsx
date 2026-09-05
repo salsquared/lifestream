@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { HealthBadge } from './HealthBadge';
 import { useSaveLoad } from './useSaveLoad';
@@ -12,6 +13,20 @@ import { useSaveLoad } from './useSaveLoad';
  * own per-save query, so four views never race to load the same event list. It is mounted
  * HERE, on the frame every route renders inside, so the load survives view switches; a
  * per-view mount would refetch the world every time a tab is clicked.
+ *
+ * ── THE SUSPENSE BOUNDARY BELONGS HERE, AROUND THE OUTLET ────────────────────────────
+ * The four routes are `React.lazy` (see `router.tsx`), so a first visit to a tab suspends
+ * while its chunk loads. The boundary that catches that must be INSIDE this component,
+ * below `useSaveLoad`, and must never be hoisted to wrap `<Routes>` in the router.
+ *
+ * React hides a suspended boundary's existing children and **tears down their effects**,
+ * re-running them on reveal. A boundary above `<Routes>` therefore contains this
+ * component, so every first tab switch would destroy `useSaveLoad`'s effect — whose
+ * cleanup calls `controller.abort()` — cancel the in-flight per-save load, and refetch all
+ * seven requests when the chunk lands. That is exactly the "a per-view mount would refetch
+ * the world every time a tab is clicked" failure the paragraph above says this mount
+ * prevents, reintroduced by a boundary rather than by a second mount. Around the
+ * `<Outlet/>` only the view area suspends and the shell's effects sit outside it.
  *
  * The save picker and command palette are still inert, and the URL sync that serializes
  * save + primary + filters into search params (§4.3) lands with the Corridor's filter work
@@ -62,7 +77,12 @@ export function AppShell() {
       </header>
 
       <main className="shell__main">
-        <Outlet />
+        {/* Deliberately empty fallback: the chunk is served from the same loopback origin
+            this app is bound to, so the wait is a frame or two and a spinner would flash
+            rather than inform. The chrome above stays on screen throughout. */}
+        <Suspense fallback={null}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );
