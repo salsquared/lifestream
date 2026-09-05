@@ -239,6 +239,13 @@ export async function replaceGroupingCountries(
  * and `move` was not set — see that class for why the caller has to be able to tell it
  * apart. Pass `{ move: true }` to have the server delete the old row and insert the new
  * one in one transaction, which is what the author confirming "Move from ⟨X⟩?" sends.
+ *
+ * A CONFIRMED MOVE CARRIES `is_leader` WHEN THE DESTINATION HAS NO LEADER (P3.7.3). It is
+ * cleared only when the destination is already led, because that is the only case where
+ * the flag has anywhere to collide — until P3.7 it was cleared unconditionally, which made
+ * an ordinary move destroy authored canon the interface could not put back. The returned
+ * row is the authority on which happened; the optimistic reducer applies the same rule so
+ * the two agree before the response lands.
  */
 export async function assignCountryToGrouping(
   saveId: string,
@@ -256,6 +263,36 @@ export async function assignCountryToGrouping(
     throw asConflict(cause, countryId) ?? cause;
   }
 
+  return objectField<GroupingCountry>(body, 'member', url);
+}
+
+/**
+ * `PATCH /api/groupings/:id/countries/:countryId` — mark a member as its union's leader,
+ * or clear the union's leader with `isLeader: false` (P3.7.1).
+ *
+ * THE ONLY WRITE PATH `is_leader` HAS. It was seeded from the Bible's ten `(Leader)`
+ * markers and written by nothing else, while the map cleared it on every move — so a
+ * leader lost through ordinary editing was unrecoverable from any file in the repo. This
+ * is the endpoint that puts it back.
+ *
+ * A SET CLEARS THE PREVIOUS LEADER, and it happens server-side in one transaction: the
+ * partial unique index `grouping_country_leader_unique` admits one leader per union, so
+ * the caller neither sends nor sequences the demotion. The response is the row that was
+ * written — the NEW leader — and the demoted one is not in it, which is why the container
+ * clears the union's flag optimistically rather than reconciling from this payload alone.
+ *
+ * The country must already be a member of `groupingId`: a country in no union answers 404
+ * and one in a different union answers 409 with `ownedBy`, exactly as the DELETE does.
+ */
+export async function setGroupingLeader(
+  saveId: string,
+  groupingId: string,
+  countryId: string,
+  isLeader: boolean,
+  options?: RequestOptions,
+): Promise<GroupingCountry> {
+  const url = `${GROUPINGS_WRITE_URL}/${segment(groupingId)}/countries/${segment(countryId)}`;
+  const body = await sendForSave('PATCH', url, saveId, { isLeader }, options);
   return objectField<GroupingCountry>(body, 'member', url);
 }
 

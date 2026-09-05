@@ -18,7 +18,10 @@
  * `country` is global and `country_override` is per-save, so `/api/map/countries` is a
  * PER-SAVE read despite reading a global table: the payload it returns differs by save
  * (architecture §5.1). "Global" here means the response does not depend on which save is
- * active — `/api/health` today, `/api/tags` when P3.6 arrives.
+ * active — `/api/health` is the only one. `/api/tags` was expected to join it and did NOT: it carries
+ * per-save usage counts, so it is a per-save read despite `tag` being a global table —
+ * the same shape as `/api/map/countries`, which reads a global table through per-save
+ * overrides.
  *
  * ── WHY THE SAVE ID IS AN ARGUMENT AND NOT READ FROM THE STORE ────────────────────────
  * `getForSave` could read `useSave.getState().activeSaveId` itself and spare every caller

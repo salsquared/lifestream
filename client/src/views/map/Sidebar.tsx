@@ -16,24 +16,37 @@ import type { ProjectionId } from './renderer';
  * edited, what is staged, what the primary is) belongs to the container, since the
  * renderer is drawing from the same values.
  *
- * TWO KINDS OF "EDITING" MEET HERE AND THEY ARE NOT THE SAME THING:
+ * THREE KINDS OF "EDITING" MEET HERE AND THEY ARE NOT THE SAME THING:
  *   · `editingGroupingId` — the P2.4.3 toggle. While it is set, clicks ON THE MAP change
  *     that nation's membership. It is the container's, because the renderer needs it too.
  *   · `renamingId` — this panel's inline name/color form. Local, and closing it changes
  *     nothing anywhere else.
+ *   · `leadingId` — this panel's inline leader picker (P3.7.2). Local for the same reason:
+ *     which row has its picker open changes nothing the map draws.
  * They are deliberately independent: renaming a nation while pointing at it on the map is
  * an ordinary thing to want.
+ *
+ * ── THE LEADER PICKER APPLIES ON CHANGE, THE RENAME FORM ON SUBMIT ──────────────────
+ * The rename form holds a draft, so it needs a Save. The leader picker does not: its whole
+ * input is one choice out of the union's members, and there is no half-typed state for a
+ * submit to guard. Picking writes, and the select then shows the value from props — which
+ * is the optimistic state and then the server's, so a refused write visibly snaps back
+ * instead of leaving a draft that disagrees with the map.
+ *
+ * The projection picker's OPTIONS are not declared in this file: `PROJECTIONS` carries each
+ * projection's label beside the factory that builds it (P2.1.3), so the list a reader picks
+ * from and the list `projectionFor` can actually build are one list. A local label table
+ * would compile perfectly while offering a projection the renderer does not have.
  */
 
 /**
- * A country staged for a bulk unify, with the name to print on its chip.
- *
- * The picker's OPTIONS are not declared here: `PROJECTIONS` carries each projection's
- * label beside the factory that builds it (P2.1.3), so the list a reader picks from and
- * the list `projectionFor` can actually build are one list. A local label table would
- * compile perfectly while offering a projection the renderer does not have.
+ * A country in one of this panel's lists: a staged chip, or a union member in the leader
+ * picker. One shape for both, so P3.7.2 needed no type of its own.
  */
-export type StagedCountry = { id: string; name: string };
+export type NamedCountry = { id: string; name: string };
+
+/** A country staged for a bulk unify, with the name to print on its chip. */
+export type StagedCountry = NamedCountry;
 
 export type SidebarProps = {
   projection: ProjectionId;
@@ -43,6 +56,20 @@ export type SidebarProps = {
   memberCounts: ReadonlyMap<string, number>;
   /** `grouping_id -> the display name of its leader country`, where one is marked (§2.4). */
   leaderNames: ReadonlyMap<string, string>;
+  /**
+   * `grouping_id -> its leader's country id`. The ids beside {@link leaderNames}'s names,
+   * because the picker's `value` is an id and a name is not a key — two members of one
+   * union can carry the same display name once the author renames one of them.
+   */
+  leaderIds: ReadonlyMap<string, string>;
+  /**
+   * `grouping_id -> its member countries`, named and ordered for the leader picker.
+   *
+   * The panel does not otherwise list members — the map does — so this arrives only
+   * because P3.7.2 has to name one of them. Ordering is the container's: this component
+   * prints the list it is handed.
+   */
+  membersByGrouping: ReadonlyMap<string, readonly NamedCountry[]>;
   countryCount: number;
   independentCount: number;
 
@@ -59,6 +86,13 @@ export type SidebarProps = {
   onCreateGrouping: (draft: { name: string; color: string }) => void;
   onUpdateGrouping: (groupingId: string, patch: { name: string; color: string }) => void;
   onDeleteGrouping: (groupingId: string) => void;
+  /**
+   * P3.7.2 — mark a member as this union's leader, or clear the union's leader with
+   * `null`. `is_leader` had no write path before this: it was seeded from the Bible and
+   * cleared by every move, so an author who moved a leading country lost a fact no file in
+   * the repo could give back.
+   */
+  onSetLeader: (groupingId: string, countryId: string | null) => void;
   onUnstage: (countryId: string) => void;
   onClearStaged: () => void;
 
@@ -88,6 +122,7 @@ export function Sidebar(props: SidebarProps) {
   const [name, setName] = useState('');
   const [color, setColor] = useState(randomColor);
   const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [leadingId, setLeadingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState('');
   const [draftColor, setDraftColor] = useState('#000000');
 
@@ -168,7 +203,10 @@ export function Sidebar(props: SidebarProps) {
             if (isEditing) classes.push('map-list__item--editing');
             if (props.primaryGroupingId === group.id) classes.push('map-list__item--primary');
             if (props.glowGroupingIds.has(group.id)) classes.push('map-list__item--glow');
+            const isLeading = leadingId === group.id;
             const leader = props.leaderNames.get(group.id);
+            const leaderId = props.leaderIds.get(group.id);
+            const members = props.membersByGrouping.get(group.id) ?? [];
 
             return (
               <li key={group.id} className={classes.join(' ')}>
@@ -212,6 +250,17 @@ export function Sidebar(props: SidebarProps) {
                   </button>
                   <button
                     type="button"
+                    className={isLeading ? 'map-button map-button--on' : 'map-button'}
+                    onClick={() => {
+                      setLeadingId(isLeading ? null : group.id);
+                    }}
+                    disabled={members.length === 0}
+                    title="Choose which member country leads this nation"
+                  >
+                    {isLeading ? 'Leader — done' : 'Leader'}
+                  </button>
+                  <button
+                    type="button"
                     className="map-button map-button--danger"
                     onClick={() => {
                       props.onDeleteGrouping(group.id);
@@ -221,6 +270,29 @@ export function Sidebar(props: SidebarProps) {
                     Delete
                   </button>
                 </div>
+
+                {isLeading && (
+                  <div className="map-form">
+                    <select
+                      className="map-input"
+                      value={leaderId ?? ''}
+                      onChange={(event) => {
+                        // '' is the "no leader" option and is not a country id, so it maps
+                        // to the clear rather than to an assignment nobody can name.
+                        const picked = event.target.value;
+                        props.onSetLeader(group.id, picked === '' ? null : picked);
+                      }}
+                      aria-label={`Leader of ${group.name}`}
+                    >
+                      <option value="">— no leader —</option>
+                      {members.map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {isRenaming && (
                   <form

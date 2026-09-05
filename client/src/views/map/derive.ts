@@ -150,12 +150,12 @@ export function leaderIds(data: MapData): ReadonlyMap<string, string> {
 /**
  * The countries that LEAD their union — `grouping_country.is_leader` (§2.4).
  *
- * WHY THE CONTAINER NEEDS THIS AND NOT JUST THE per-grouping leader. Moving a country to
- * another nation clears the flag, deliberately: leadership is a fact about a membership
- * row, and the destination may already have a leader. P2 ships no write path for
- * `is_leader` at all — it is seed-only, and canon marks one on ten of the unions — so a
- * move made without noticing destroys authored content the interface cannot restore. This
- * set is what lets the confirmation say so before it happens.
+ * WHY THE CONTAINER NEEDS THIS AND NOT JUST THE per-grouping leader. It is what the move
+ * prompts check before they warn. P3.7 narrowed what there is to warn about: a move now
+ * CARRIES the flag into a union that has no leader, so the only writes that still discard
+ * leadership are a move into a union that is already led, and the bulk membership replace,
+ * which lands every country as an ordinary member. Both are still worth saying out loud —
+ * but they are recoverable now, because P3.7.1 gave the flag a write path.
  */
 export function leaderCountryIds(data: MapData): ReadonlySet<string> {
   const ids = new Set<string>();
@@ -242,9 +242,12 @@ export function withoutGrouping(data: MapData, groupingId: string): MapData {
  * `(save_id, country_id)` primary key, and it is what makes the optimistic version of a
  * confirmed move correct without a separate "remove from the old owner" step.
  *
- * `isLeader` defaults to false, matching what the server writes for a new or moved
- * membership; a row the server sends back replaces this one, so a leader whose membership
- * was merely re-confirmed keeps its flag.
+ * `isLeader` IS THE SERVER'S RULE, RESTATED (P3.7.3): a country that led its old union
+ * keeps the flag when the destination has no leader, and loses it when the destination is
+ * already led. It used to be an unconditional `false` here, which was right while the
+ * server cleared it unconditionally too — now it would flash a demotion the write is not
+ * going to make. The server's row still replaces this one on reconciliation and remains
+ * the authority; this only has to agree with it for the duration of the request.
  */
 export function withMember(
   data: MapData,
@@ -252,8 +255,36 @@ export function withMember(
   groupingId: string,
   countryId: string,
 ): MapData {
+  const moving = data.members.find((member) => member.countryId === countryId);
+  // The country itself is excluded so that re-writing a leader's own membership reads its
+  // union as unled and keeps the flag, rather than seeing itself and clearing it.
+  const led = data.members.some(
+    (member) =>
+      member.groupingId === groupingId && member.isLeader && member.countryId !== countryId,
+  );
+
   const members = data.members.filter((member) => member.countryId !== countryId);
-  members.push({ saveId, groupingId, countryId, isLeader: false });
+  members.push({ saveId, groupingId, countryId, isLeader: moving?.isLeader === true && !led });
+  return { ...data, members };
+}
+
+/**
+ * Set or clear a union's leader — the optimistic twin of
+ * `PATCH /api/groupings/:id/countries/:countryId` (P3.7.1).
+ *
+ * IT REWRITES EVERY MEMBER OF THE UNION, not just the one named. At most one row per
+ * grouping may carry the flag (`grouping_country_leader_unique`), and the server clears
+ * the previous leader in the same transaction as it sets the new one — but the response
+ * carries only the row that was WRITTEN, so a reducer that flipped just that row would
+ * leave the demoted leader showing on screen until the next full read. `countryId` of
+ * `null` is the clear, which is the same pass with nothing set.
+ */
+export function withLeader(data: MapData, groupingId: string, countryId: string | null): MapData {
+  const members = data.members.map((member) =>
+    member.groupingId === groupingId
+      ? { ...member, isLeader: countryId !== null && member.countryId === countryId }
+      : member,
+  );
   return { ...data, members };
 }
 

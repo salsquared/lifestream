@@ -4,6 +4,7 @@ import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { createDb } from '@server/db/index';
+import { assignMembership, setMembershipLeader } from '@server/routes/map';
 import { readSeedInputs, runSeed, SeedInputError } from '@server/seed/index';
 import { deriveFeatures } from '@shared/geo/deriveFeatures';
 
@@ -403,6 +404,163 @@ describe('union leaders — the one fact only the Bible carries (P1.11.2)', () =
       'New Pakistan -> Pakistan',
       'Unified Korea -> East Asian Alliance',
     ]);
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * P3.7.4 — the leader WRITE path, against the world the seed just built.
+ *
+ * The block above proves the ten markers are written. This one proves they survive being
+ * edited, which is the half P2 got wrong: the map cleared `is_leader` on every move, the
+ * flag had no write path anywhere in the application, and the ten leaders exist only in
+ * `data/story_docs/LIFEstream Bible.txt` — the authored map export has no leader field. So
+ * a leader lost through ordinary editing was gone from every file in the repo, recoverable
+ * only by re-running the seed, which an author would not think to do.
+ *
+ * It drives the route module's two writers directly rather than through HTTP. They take
+ * their connection as an argument for exactly this reason (`server/src/routes/map.ts`):
+ * the handlers close over `appDb`, which is bound to `data/lifestream.db`, and the whole
+ * point of this file is that nothing in it touches the real world.
+ * ------------------------------------------------------------------ */
+
+describe('leader write path — a seeded leader survives editing (P3.7)', () => {
+  /**
+   * A SEEDED WORLD OF ITS OWN PER CASE, because this is the one block in the file that
+   * writes. The shared `handle` is read by the idempotence spec, which compares a dump of
+   * it against a second seed run — a leader moved out from under that comparison would fail
+   * it for a reason that has nothing to do with idempotence. A private world per case also
+   * keeps the exact counts below true no matter what order the cases run in.
+   */
+  const freshWorld = (): DbHandle => {
+    const world = seeded();
+    runSeed(world, inputs);
+    return world;
+  };
+
+  /** One row of a query against a given world — the module-scope helpers read `handle`. */
+  const row = <T>(world: DbHandle, sql: string, ...params: unknown[]): T | undefined =>
+    world.sqlite.prepare(sql).get(...(params as never[])) as T | undefined;
+
+  const total = (world: DbHandle, sql: string, ...params: unknown[]): number => {
+    const first = row<Record<string, unknown>>(world, sql, ...params);
+    return Number(Object.values(first ?? {})[0] ?? 0);
+  };
+
+  /** Where a country sits and whether it leads — the whole of what these cases assert. */
+  const seatOf = (world: DbHandle, countryId: string) =>
+    row<{ grouping_id: string; is_leader: number }>(
+      world,
+      'select grouping_id, is_leader from grouping_country where save_id = ? and country_id = ?',
+      CANON_SAVE_ID,
+      countryId,
+    );
+
+  const leadersIn = (world: DbHandle, groupingId: string): number =>
+    total(
+      world,
+      'select count(*) from grouping_country where save_id = ? and grouping_id = ? and is_leader = 1',
+      CANON_SAVE_ID,
+      groupingId,
+    );
+
+  const groupingNamed = (world: DbHandle, name: string): string => {
+    const found = row<{ id: string }>(
+      world,
+      'select id from `grouping` where save_id = ? and name = ?',
+      CANON_SAVE_ID,
+      name,
+    );
+    expect(found, `no grouping named "${name}" in the canon save`).toBeDefined();
+    return found?.id ?? '';
+  };
+
+  // Three of the ten markers, by country id. Panama leads `Estados Unidos de Central
+  // America`, China leads `Greater China`, India leads `Greater India` — asserted by name
+  // in the block above, so a re-authoring that moved them fails there first.
+  const PANAMA = '591';
+  const CHINA = '156';
+  const INDIA = '356';
+
+  it('carries a leader into a union that has none, and back — the P2 regression', () => {
+    const world = freshWorld();
+
+    const home = seatOf(world, PANAMA);
+    expect(home?.is_leader, 'Panama is one of the ten seeded leaders').toBe(1);
+    const homeId = home?.grouping_id ?? '';
+
+    const unled = groupingNamed(world, 'Guyana');
+    expect(leadersIn(world, unled), '"Guyana" is seeded with no leader').toBe(0);
+
+    // OUT. Before P3.7.3 this wrote `is_leader = 0` unconditionally and the fact was gone.
+    assignMembership(world, CANON_SAVE_ID, unled, PANAMA);
+    expect(seatOf(world, PANAMA)).toEqual({ grouping_id: unled, is_leader: 1 });
+    expect(leadersIn(world, homeId), 'the union it left is unled now, not double-led').toBe(0);
+
+    // AND BACK. The home union lost its leader when Panama left, so the flag has nothing to
+    // collide with on the return trip and the round trip is lossless.
+    assignMembership(world, CANON_SAVE_ID, homeId, PANAMA);
+    expect(seatOf(world, PANAMA)).toEqual({ grouping_id: homeId, is_leader: 1 });
+    expect(leadersIn(world, unled)).toBe(0);
+
+    // The canon count, restored exactly. This is the number the regression moved, and the
+    // reason it is asserted here as well as in the seed block above.
+    expect(
+      total(
+        world,
+        'select count(*) from grouping_country where save_id = ? and is_leader = 1',
+        CANON_SAVE_ID,
+      ),
+    ).toBe(10);
+  });
+
+  it('clears the flag when the destination is already led, and never writes two', () => {
+    const world = freshWorld();
+
+    expect(seatOf(world, CHINA)?.is_leader).toBe(1);
+    const greaterIndia = seatOf(world, INDIA)?.grouping_id ?? '';
+    expect(seatOf(world, INDIA)?.is_leader).toBe(1);
+
+    // The one case where clearing is right: `grouping_country_leader_unique` admits one
+    // leader per union and India is already it, so the flag has nowhere to land.
+    assignMembership(world, CANON_SAVE_ID, greaterIndia, CHINA);
+    expect(seatOf(world, CHINA)).toEqual({ grouping_id: greaterIndia, is_leader: 0 });
+    expect(seatOf(world, INDIA)).toEqual({ grouping_id: greaterIndia, is_leader: 1 });
+    expect(leadersIn(world, greaterIndia)).toBe(1);
+  });
+
+  it('promotes a member by demoting the previous leader in the same write, and clears it', () => {
+    const world = freshWorld();
+
+    const greaterIndia = seatOf(world, INDIA)?.grouping_id ?? '';
+    const successor = row<{ country_id: string }>(
+      world,
+      'select country_id from grouping_country where save_id = ? and grouping_id = ? and country_id <> ? order by country_id limit 1',
+      CANON_SAVE_ID,
+      greaterIndia,
+      INDIA,
+    )?.country_id;
+    expect(successor, 'the union has a second member to promote').toBeDefined();
+    const promoted = successor ?? '';
+
+    // SET. The demotion and the promotion are one transaction, in that order: promoting
+    // first would violate the partial unique index and fail here rather than pass.
+    setMembershipLeader(world, CANON_SAVE_ID, greaterIndia, promoted, true);
+    expect(seatOf(world, promoted)?.is_leader).toBe(1);
+    expect(seatOf(world, INDIA)?.is_leader).toBe(0);
+    expect(leadersIn(world, greaterIndia)).toBe(1);
+
+    // CLEAR. Leaderlessness is a flag on rows that stay — unlike independence, which is the
+    // absence of a row (§2.4) — so the membership is untouched.
+    setMembershipLeader(world, CANON_SAVE_ID, greaterIndia, promoted, false);
+    expect(leadersIn(world, greaterIndia)).toBe(0);
+    expect(
+      total(
+        world,
+        'select count(*) from grouping_country where save_id = ? and grouping_id = ?',
+        CANON_SAVE_ID,
+        greaterIndia,
+      ),
+    ).toBeGreaterThan(1);
   });
 });
 

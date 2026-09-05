@@ -14,7 +14,9 @@
  *
  * P1.12 filled in the two READS; P2.6 added the write surface below, alongside the view
  * that calls it — the conflict rule on `PUT /api/groupings/:id/countries/:countryId` only
- * has a definition once the "Move from <X>?" prompt exists to send it.
+ * has a definition once the "Move from <X>?" prompt exists to send it. P3.7 added the
+ * LEADER write path: `PATCH /api/groupings/:id/countries/:countryId`, and the rule that a
+ * move carries `is_leader` into a union that has none instead of always clearing it.
  *
  * ── THE WIRE FORMAT IS camelCase ──────────────────────────────────────────────────────
  * SQL columns are snake_case and stay inside `db/schema.ts`; Drizzle's inferred row types
@@ -27,14 +29,16 @@
  */
 import { randomUUID } from 'node:crypto';
 
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { Context } from 'hono';
 
 import type { Country, CountryOverride, Grouping, GroupingCountry } from '@shared/types/index';
 
-import { db, sqlite } from '../db/index.js';
+import { appDb, db, sqlite } from '../db/index.js';
 import { country, countryOverride, grouping, groupingCountry, save } from '../db/schema.js';
+
+import type { DbHandle } from '../db/index.js';
 
 /**
  * `GET /api/map/countries` — the global `country` rows with this save's renames applied
@@ -193,6 +197,12 @@ mapRoutes.get('/groupings', (c) => {
  *    drizzle's own `db.transaction()` hands back a differently-typed handle that would
  *    infect every signature it touches.
  *
+ *    P3.7 adds two more transactions for a DIFFERENT reason. `assignMembership` and
+ *    `setMembershipLeader` each write a single row, but each decides WHAT to write from a
+ *    read of `grouping_country_leader_unique`'s one-leader-per-grouping scope — and a
+ *    decision taken outside the transaction that acts on it is a decision about a world
+ *    that may already have moved.
+ *
  * 4. INDEPENDENCE IS THE ABSENCE OF A ROW. `DELETE /:id/countries/:countryId` deletes
  *    and stores nothing; deleting a grouping deletes its membership rows and the
  *    countries are independent again by consequence, not by a flag (§2.4).
@@ -317,6 +327,23 @@ function readMove(body: Record<string, unknown>): MoveFlag {
   if (raw === undefined) return { ok: true, move: false };
   if (typeof raw !== 'boolean') return { ok: false, error: "'move' must be a boolean" };
   return { ok: true, move: raw };
+}
+
+type LeaderFlag = { ok: true; isLeader: boolean } | { ok: false; error: string };
+
+/**
+ * `{ isLeader }` — the whole body of the leader PATCH (P3.7.1).
+ *
+ * REQUIRED, and a non-boolean is rejected rather than coerced, for the reason
+ * {@link readMove} gives: `"isLeader": "false"` is truthy, so a client that stringified
+ * its state would DEMOTE a union's leader with the value that says to keep it. There is
+ * no default either — an absent field would make an empty body mean "clear the leader",
+ * and an empty body is exactly what a mis-built request sends.
+ */
+function readIsLeader(body: Record<string, unknown>): LeaderFlag {
+  const raw = body.isLeader;
+  if (typeof raw !== 'boolean') return { ok: false, error: "'isLeader' must be a boolean" };
+  return { ok: true, isLeader: raw };
 }
 
 /**
@@ -533,6 +560,144 @@ function membersOf(saveId: string, groupingId: string): GroupingCountry[] {
     .all();
 }
 
+/* ==================================================================================== *
+ * THE LEADER WRITE PATH (P3.7)
+ *
+ * `is_leader` was written by the seed and by nothing else. P2 shipped a map that CLEARS
+ * the flag on every move with no surface anywhere that sets it, and the ten leaders exist
+ * only in `data/story_docs/LIFEstream Bible.txt` — the authored map export has no leader
+ * field — so a leader lost through ordinary editing was gone from every file in the repo,
+ * recoverable only by re-running the seed. The warning P2 added to the move prompts was a
+ * mitigation, not a fix.
+ *
+ * ── WHY THESE TWO TAKE A CONNECTION AND THE REST OF THE MODULE DOES NOT ──────────────
+ * Every other helper here closes over the module-scope `db` / `sqlite`, which are bound to
+ * `data/lifestream.db`. These two carry the invariant worth a spec — the partial unique
+ * index `grouping_country_leader_unique` admits ONE leader per grouping, and each writer
+ * passes through a moment where the wrong statement order trips it — so they take the
+ * handle as an argument and `tests/countryImport.test.ts` (P3.7.4) drives them against its
+ * own `:memory:` world. The handlers pass `appDb`, which IS that module-scope pair.
+ * ==================================================================================== */
+
+/** The connection one membership write runs on: the app's handle, or a spec's. */
+export type MembershipWriter = Pick<DbHandle, 'db' | 'sqlite'>;
+
+/** Is this grouping already led by some country other than `exceptCountryId`? */
+function hasLeader(
+  handle: MembershipWriter,
+  saveId: string,
+  groupingId: string,
+  exceptCountryId: string,
+): boolean {
+  const row = handle.db
+    .select({ countryId: groupingCountry.countryId })
+    .from(groupingCountry)
+    .where(
+      and(
+        eq(groupingCountry.saveId, saveId),
+        eq(groupingCountry.groupingId, groupingId),
+        eq(groupingCountry.isLeader, true),
+        // Excluded so that re-writing a leader's own membership reads the grouping as
+        // unled and keeps the flag, rather than seeing itself and clearing it.
+        ne(groupingCountry.countryId, exceptCountryId),
+      ),
+    )
+    .get();
+
+  return row !== undefined;
+}
+
+/**
+ * P3.7.3 — write one membership row, CARRYING `is_leader` where it can.
+ *
+ * The flag used to be reset unconditionally, on the grounds that leadership is a fact
+ * about a membership and the destination may already have a leader (§2.4). The second
+ * half is true; the first does not follow from it. When the destination has NO leader
+ * there is nothing for the flag to collide with, and clearing it destroys authored canon
+ * for no reason — which is the whole of the P2 regression. So the rule is now the narrow
+ * one: cleared only when the destination is already led.
+ *
+ * ONE TRANSACTION, because the decision and the write have to see the same world. A
+ * "does the destination have a leader" read taken outside it can be true when read and
+ * false when written, and the write it authorises is the one that puts two leaders in one
+ * grouping — which `grouping_country_leader_unique` then refuses, turning an ordinary
+ * click into a 500 about a constraint.
+ */
+export function assignMembership(
+  handle: MembershipWriter,
+  saveId: string,
+  groupingId: string,
+  countryId: string,
+): GroupingCountry {
+  return handle.sqlite.transaction((): GroupingCountry => {
+    const moving = handle.db
+      .select({ isLeader: groupingCountry.isLeader })
+      .from(groupingCountry)
+      .where(and(eq(groupingCountry.saveId, saveId), eq(groupingCountry.countryId, countryId)))
+      .get();
+
+    // A country arriving from independence leads nothing, so the absent row is `false`
+    // rather than a case of its own.
+    const isLeader = moving?.isLeader === true && !hasLeader(handle, saveId, groupingId, countryId);
+
+    return handle.db
+      .insert(groupingCountry)
+      .values({ saveId, groupingId, countryId, isLeader })
+      .onConflictDoUpdate({
+        target: [groupingCountry.saveId, groupingCountry.countryId],
+        set: { groupingId, isLeader },
+      })
+      .returning()
+      .get();
+  })();
+}
+
+/**
+ * P3.7.1 — mark a member as its union's leader, or clear the union's leader.
+ *
+ * SETTING ONE CLEARS THE PREVIOUS ONE IN THE SAME TRANSACTION, AND THE ORDER IS PART OF
+ * THE CONTRACT. `grouping_country_leader_unique` is a partial unique index over
+ * `(save_id, grouping_id) WHERE is_leader = 1`: promoting the new leader before demoting
+ * the old one fails on the constraint, and demoting first WITHOUT a transaction leaves the
+ * union with no leader at all if the promotion does not land. Clear, then set — both or
+ * neither.
+ *
+ * The caller has already established that `countryId` is a member of `groupingId`, so the
+ * final update is keyed on the primary key `(save_id, country_id)`: it writes the row the
+ * URL names, or no row at all.
+ */
+export function setMembershipLeader(
+  handle: MembershipWriter,
+  saveId: string,
+  groupingId: string,
+  countryId: string,
+  isLeader: boolean,
+): GroupingCountry {
+  return handle.sqlite.transaction((): GroupingCountry => {
+    if (isLeader) {
+      handle.db
+        .update(groupingCountry)
+        .set({ isLeader: false })
+        .where(
+          and(
+            eq(groupingCountry.saveId, saveId),
+            eq(groupingCountry.groupingId, groupingId),
+            eq(groupingCountry.isLeader, true),
+            ne(groupingCountry.countryId, countryId),
+          ),
+        )
+        .run();
+    }
+
+    return handle.db
+      .update(groupingCountry)
+      .set({ isLeader })
+      .where(and(eq(groupingCountry.saveId, saveId), eq(groupingCountry.countryId, countryId)))
+      .returning()
+      .get();
+  })();
+}
+
 /**
  * P2.6.2 — replace this grouping's whole membership. `{ countryIds, move? }` in,
  * `{ members }` out.
@@ -685,10 +850,12 @@ groupingRoutes.put('/:id/countries', async (c) => {
             saveId: scope.saveId,
             groupingId: target.id,
             countryId,
-            // A country arriving from another nation arrives as an ordinary member. The
-            // leader flag belongs to a membership, not to a country (§2.4), and carrying
-            // it across would either invent a second leader here or trip
-            // `grouping_country_leader_unique` if this nation already has one.
+            // A country arriving from another nation arrives as an ordinary member, and
+            // this endpoint KEEPS that rule where P3.7.3 relaxed it for the single
+            // assign. A whole-membership replace can move several leaders in at once and
+            // `grouping_country_leader_unique` admits one, so carrying the flag here
+            // would mean picking which of them keeps it — the author's decision, not this
+            // handler's, and `PATCH /:id/countries/:countryId` is where they make it.
             isLeader: false,
           })),
         )
@@ -738,8 +905,10 @@ groupingRoutes.put('/:id/countries', async (c) => {
  * carrying `ownedBy`, which is what the "Move from <X>?" prompt is written from; the
  * author's confirmation comes back as `{ move: true }` and reassigns.
  *
- * The write is a single upsert statement, so the move needs no transaction of its own: it
- * cannot leave the country in two nations or in none.
+ * The write is still one upsert against the `(save_id, country_id)` primary key, so a move
+ * cannot leave the country in two nations or in none. Since P3.7.3 it runs inside a
+ * transaction anyway — not for the row, but because the `is_leader` it writes depends on a
+ * read of the destination's current leader. See {@link assignMembership}.
  */
 groupingRoutes.put('/:id/countries/:countryId', async (c) => {
   const scope = resolveSave(c.req.query('save'));
@@ -763,9 +932,11 @@ groupingRoutes.put('/:id/countries/:countryId', async (c) => {
 
   const current = ownerOf(scope.saveId, countryId);
 
-  // Already a member of THIS grouping: return the row unchanged. Not re-upserted, because
-  // the upsert below clears `is_leader` and this country may be the nation's leader — a
-  // repeated click would quietly demote it.
+  // Already a member of THIS grouping: return the row unchanged. `assignMembership` would
+  // now preserve `is_leader` here too — it clears only when the DESTINATION is already led
+  // by someone else — but a re-confirmation has nothing to write, and this short-circuit
+  // is what makes "a repeat click cannot demote a leader" a property of the endpoint
+  // rather than of one branch inside the writer.
   if (current !== undefined && current.member.groupingId === target.id) {
     return c.json({ member: current.member } satisfies GroupingMemberResponse);
   }
@@ -780,18 +951,73 @@ groupingRoutes.put('/:id/countries/:countryId', async (c) => {
     );
   }
 
-  const member = db
-    .insert(groupingCountry)
-    .values({ saveId: scope.saveId, groupingId: target.id, countryId, isLeader: false })
-    .onConflictDoUpdate({
-      target: [groupingCountry.saveId, groupingCountry.countryId],
-      // Reached only on the confirmed move, and only from ANOTHER grouping. `is_leader`
-      // is reset for the reason given on the bulk insert: leadership is a fact about a
-      // membership, and the destination may already have a leader.
-      set: { groupingId: target.id, isLeader: false },
-    })
-    .returning()
-    .get();
+  // Reached on a fresh assign and on the CONFIRMED move, never on a re-confirmation —
+  // that short-circuited above. The writer decides `is_leader` inside its own
+  // transaction: carried when the country led its old union and the destination has no
+  // leader, cleared when the destination is already led (P3.7.3).
+  const member = assignMembership(appDb, scope.saveId, target.id, countryId);
+
+  return c.json({ member } satisfies GroupingMemberResponse);
+});
+
+/**
+ * P3.7.1 — mark a member as its union's leader, or clear the union's leader.
+ * `{ isLeader }` in, `{ member }` out.
+ *
+ * WHY IT IS A SEPARATE ENDPOINT. `PUT /:id/countries/:countryId` already owns the row's
+ * existence and which grouping it names; folding the flag into it would make the
+ * membership assign and the leadership edit one request, so every re-assign would have to
+ * either carry the flag or clear it — which is the defect this task exists to remove.
+ * PATCH, because the request changes ONE column of a row it does not otherwise describe.
+ *
+ * THE COUNTRY MUST ALREADY BE A MEMBER OF THIS GROUPING, and the two ways that fails
+ * answer exactly as `DELETE /:id/countries/:countryId` does: a country in no grouping is a
+ * 404, one in a DIFFERENT grouping is a 409 naming the owner (rule 2). Leadership is a
+ * fact about a membership row (§2.4) — with no row there is nothing to set the flag on,
+ * and creating the membership here would be a second write the author did not ask for.
+ *
+ * `{ isLeader: false }` on a member that does not lead is a 200 with the row untouched:
+ * the request describes the state it wants, and that state already holds.
+ */
+groupingRoutes.patch('/:id/countries/:countryId', async (c) => {
+  const scope = resolveSave(c.req.query('save'));
+  if (!scope.ok) return c.json({ error: scope.error }, scope.status);
+
+  const id = c.req.param('id');
+  const target = resolveGrouping(scope.saveId, id);
+  if (target === undefined) return c.json({ error: noSuchGrouping(scope.saveId, id) }, 404);
+
+  const body = await readJsonBody(c);
+  if (!body.ok) return c.json({ error: body.error }, 400);
+
+  const flag = readIsLeader(body.value);
+  if (!flag.ok) return c.json({ error: flag.error }, 400);
+
+  // No separate `country` lookup: an id that is in no `grouping_country` row of this save
+  // is not a member whether or not it is a country, and the 404 below says the thing the
+  // author can act on. `PUT` checks the global table because its INSERT would otherwise
+  // fail on the foreign key; this handler only ever updates.
+  const countryId = c.req.param('countryId');
+  const current = ownerOf(scope.saveId, countryId);
+
+  if (current === undefined) {
+    return c.json(
+      { error: `country '${countryId}' belongs to no grouping in save '${scope.saveId}'` },
+      404,
+    );
+  }
+
+  if (current.member.groupingId !== target.id) {
+    return c.json(
+      {
+        error: `country '${countryId}' belongs to '${current.ownerName}', not to '${target.name}'`,
+        ownedBy: { id: current.member.groupingId, name: current.ownerName },
+      } satisfies OwnedByError,
+      409,
+    );
+  }
+
+  const member = setMembershipLeader(appDb, scope.saveId, target.id, countryId, flag.isLeader);
 
   return c.json({ member } satisfies GroupingMemberResponse);
 });

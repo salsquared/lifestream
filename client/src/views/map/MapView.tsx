@@ -15,7 +15,10 @@ import {
   replaceGroupingCountries,
   setCountryOverride,
   updateGrouping,
+  setGroupingLeader,
 } from '../../api';
+// `setGroupingLeader` (P3.7.1) is imported from the endpoint module rather than the `api`
+// `../../api`, and this line belongs there too the moment that barrel re-exports it.
 import { useGlow } from '../../shell/stores/selectGlow';
 import { useSave } from '../../shell/stores/save';
 import { useSelection } from '../../shell/stores/selection';
@@ -33,6 +36,7 @@ import {
   membersOf,
   nameById,
   withGrouping,
+  withLeader,
   withMember,
   withMembership,
   withoutGrouping,
@@ -252,13 +256,39 @@ export function MapView() {
     [staged, names],
   );
 
+  const leaders = useMemo(() => leaderIds(data), [data]);
+
   const leaderNames = useMemo(() => {
-    const leaders = new Map<string, string>();
-    for (const [groupingId, countryId] of leaderIds(data)) {
-      leaders.set(groupingId, names.get(countryId) ?? countryId);
+    const named = new Map<string, string>();
+    for (const [groupingId, countryId] of leaders) {
+      named.set(groupingId, names.get(countryId) ?? countryId);
     }
-    return leaders;
-  }, [data, names]);
+    return named;
+  }, [leaders, names]);
+
+  /**
+   * `grouping_id -> its members, named and sorted` — the sidebar's leader picker (P3.7.2).
+   *
+   * Sorted by DISPLAY NAME rather than by country id, because it is a list a person reads:
+   * the ids are zero-padded ISO numerics (`032`, `156`, `x:GUF`) and ordering by them puts
+   * Argentina next to China for reasons only the atlas knows. `localeCompare` is right here
+   * and wrong in `derive.ts`'s grouping sort, which has to match SQLite's `ORDER BY name`.
+   */
+  const membersByGrouping = useMemo<ReadonlyMap<string, readonly { id: string; name: string }[]>>(
+    () => {
+      const byGrouping = new Map<string, { id: string; name: string }[]>();
+      for (const group of data.groupings) byGrouping.set(group.id, []);
+      for (const member of data.members) {
+        const list = byGrouping.get(member.groupingId);
+        if (list !== undefined) {
+          list.push({ id: member.countryId, name: names.get(member.countryId) ?? member.countryId });
+        }
+      }
+      for (const list of byGrouping.values()) list.sort((a, b) => a.name.localeCompare(b.name));
+      return byGrouping;
+    },
+    [data, names],
+  );
 
   const primaryCountryId = primary?.type === 'country' ? primary.id : undefined;
   const primaryGroupingId = primary?.type === 'grouping' ? primary.id : undefined;
@@ -286,27 +316,38 @@ export function MapView() {
   );
 
   /**
-   * The line a move prompt gains when it would destroy authored leadership.
+   * The line a prompt gains when the write would still discard authored leadership.
    *
-   * A move CLEARS `is_leader` — the destination may already have a leader, and a
-   * membership's flag cannot travel with it (§2.4) — and P2 ships no write path for the
-   * flag at all: it is seed-only, and canon marks one on ten of the unions. So a move made
-   * without noticing removes something the interface cannot put back, which is the one
-   * case in this view where "undo it afterwards" is not available. The prompt says so
-   * before the write rather than after it.
+   * P3.7 CHANGED WHAT THERE IS TO WARN ABOUT, twice. A single move now CARRIES `is_leader`
+   * into a union that has no leader (P3.7.3), so the only losing case left is a move into
+   * one that is already led — the flag has somewhere to collide, and
+   * `grouping_country_leader_unique` admits one. And the sidebar can now set a leader
+   * again (P3.7.2), so the old closing clause — "nothing in this view can set it again" —
+   * became false and is replaced by the instruction.
+   *
+   * `destination` is the union a single move is going to, or `null` for the bulk
+   * membership write, which lands every country as an ordinary member whatever the
+   * destination holds.
    */
   const leaderWarning = useCallback(
-    (countryIds: readonly string[]) => {
-      const leaders = leaderCountryIds(dataRef.current);
-      const affected = countryIds.filter((id) => leaders.has(id));
+    (countryIds: readonly string[], destination: string | null) => {
+      const current = dataRef.current;
+      const leading = leaderCountryIds(current);
+      const affected = countryIds.filter((id) => leading.has(id));
       if (affected.length === 0) return '';
+      // Carried, not cleared: there is nothing to warn about.
+      if (destination !== null && !leaderIds(current).has(destination)) return '';
 
+      const one = affected.length === 1;
       const listed = affected.map((id) => names.get(id) ?? id).join(', ');
       return (
-        `\n\nWARNING — ${listed} ` +
-        `${affected.length === 1 ? 'leads its' : 'lead their'} current union. Moving ` +
-        `${affected.length === 1 ? 'it' : 'them'} clears that leadership, and nothing in ` +
-        'this view can set it again.'
+        `\n\nWARNING — ${listed} ${one ? 'leads its' : 'lead their'} current union, and ` +
+        `${
+          destination === null
+            ? 'a bulk membership write lands every country as an ordinary member'
+            : 'the destination already has a leader'
+        }, so this clears that leadership. You can mark a new leader from the “Leader” ` +
+        'control on a nation in the sidebar.'
       );
     },
     [names],
@@ -340,7 +381,7 @@ export function MapView() {
             const owner = cause.ownedBy.name;
             const confirmed = window.confirm(
               `“${country}” already belongs to “${owner}”.` +
-                leaderWarning([countryId]) +
+                leaderWarning([countryId], groupingId) +
                 `\n\nMove from ${owner}?`,
             );
             if (!confirmed) throw new Declined();
@@ -500,7 +541,10 @@ export function MapView() {
               const confirmed = window.confirm(
                 `${String(cause.conflicts.length)} of the staged countries already belong to ` +
                   `another nation:\n\n${owners}` +
-                  leaderWarning(cause.conflicts.map((conflict) => conflict.countryId)) +
+                  leaderWarning(
+                    cause.conflicts.map((conflict) => conflict.countryId),
+                    null,
+                  ) +
                   '\n\nMove them?',
               );
               if (!confirmed) throw new Declined();
@@ -531,6 +575,42 @@ export function MapView() {
         async () => {
           const updated = await updateGrouping(saveId, groupingId, patch);
           return (prev) => withGrouping(prev, updated);
+        },
+      );
+    },
+    [write, saveId],
+  );
+
+  /**
+   * P3.7.2 — mark a member as its union's leader, or clear the union's leader.
+   *
+   * THE OPTIMISTIC STEP REWRITES THE WHOLE UNION, not the one row the request names. The
+   * partial unique index admits one leader per union, so the server demotes the previous
+   * one in the same transaction — but it answers with only the row it WROTE, so flipping
+   * just that row would leave the old leader still labelled until the next full read.
+   * `withLeader` clears the union and sets at most one; `withServerMember` then replaces
+   * the written row with the server's copy, which is a no-op here and the habit everywhere.
+   *
+   * The CLEAR sends the current leader's own id with `isLeader: false`, because the URL
+   * names a membership and "this union has no leader" is not a membership. Reading it from
+   * the ref rather than from the render's `data` is note 2 applied to a click that can land
+   * between a write and its state update.
+   */
+  const setLeader = useCallback(
+    (groupingId: string, countryId: string | null) => {
+      const current = leaderIds(dataRef.current).get(groupingId);
+      // Nothing to write: the union already has exactly the leader that was asked for,
+      // including the case of clearing one that is not there.
+      if (current === countryId || (countryId === null && current === undefined)) return;
+
+      const target = countryId ?? current;
+      if (target === undefined) return;
+
+      void write(
+        (prev) => withLeader(prev, groupingId, countryId),
+        async () => {
+          const member = await setGroupingLeader(saveId, groupingId, target, countryId !== null);
+          return (prev) => withServerMember(prev, member);
         },
       );
     },
@@ -589,6 +669,8 @@ export function MapView() {
         groupings={data.groupings}
         memberCounts={counts}
         leaderNames={leaderNames}
+        leaderIds={leaders}
+        membersByGrouping={membersByGrouping}
         countryCount={data.countries.length}
         independentCount={independents.size}
         primaryGroupingId={primaryGroupingId}
@@ -608,6 +690,7 @@ export function MapView() {
         onCreateGrouping={createNation}
         onUpdateGrouping={editNation}
         onDeleteGrouping={removeNation}
+        onSetLeader={setLeader}
         onUnstage={(countryId) => {
           setStaged((previous) => previous.filter((id) => id !== countryId));
         }}
