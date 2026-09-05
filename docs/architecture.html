@@ -854,13 +854,33 @@ shared/                          # types + small pure utils used by both ends
                                  #   disambiguating the duplicate `036` — see §3.1
 
 scripts/                         # one-shot CLIs, all run from the repo root off the root install
+  lib/                           # the guards the db:* scripts share — one implementation each,
+                                 #   because three copies of a destructive-path check is three
+                                 #   chances to get one subtly wrong
+    repo.mjs                     #   the import.meta.url anchor + the is-this-really-lifestream
+                                 #     check, and a flag parser that rejects unknown flags
+    backup.mjs                   #   the dump-freshness gate (§7.4). FIVE states, not a boolean:
+                                 #     no-database · fresh · stale · no-dumps · no-tooling
+    fingerprint.mjs              #   row-content hashing (order-independent) and SQLite-level
+                                 #     snapshots — backup(), never cp
+  backfills/                     # &lt;migration tag&gt;.ts — or &lt;migration tag&gt;.data-free.md when the
+                                 #   change is provably data-free. Exactly one per migration past
+                                 #   the baseline; db-check-migrations.mjs enforces it (§7.4)
   seed.ts                        # Version 1 seed from Bible + map JSON — see §7.4. Root `db:seed`
                                  #   runs THIS, not a script inside server/
   db-reset.mjs                   # npm run db:reset. Paths anchored on import.meta.url, never on
                                  #   cwd; deletes the .db plus its -wal and -shm siblings; refuses
-                                 #   unless the resolved root really is this repo; prints a
+                                 #   unless the resolved root really is this repo; refuses AGAIN
+                                 #   unless a dump is newer than the last write — which --force
+                                 #   overrides and the identity check does not; prints a
                                  #   restart-the-dev-server notice, because unlinking a file the
                                  #   server still holds open leaves it writing to a dead inode
+  db-check-migrations.mjs        # §7.4's migration rule as a command: one backfill (or one
+                                 #   written waiver) per migration, and the journal agrees with
+                                 #   the .sql files actually on disk
+  db-check-seed.mjs              # §7.4's idempotence rule as a command: a static destructive-SQL
+                                 #   scan, then the seed run TWICE against a snapshot. Exit 2 is
+                                 #   "inconclusive" and is not a pass
   dump.ts                        # npm run db:dump → data/save_dumps/&lt;save&gt;.json — see §7.4
   export.ts                      # run an export manifest from the terminal
   simulate.ts                    # batch runner of the world-sim chain (§3)
@@ -1062,14 +1082,23 @@ useWorld: {
 </table>
 
 <p>The endpoints this view needs. They are listed here because <a href="#s5-2">§5.2</a>'s block covers only the timeline side, and the API surface is the <i>union</i> of the two — a route that exists in neither block gets invented at build time. All of these live in <code>map.ts</code>, including the two top-level write prefixes; which module owns which prefix is <a href="#s4-4">§4.4</a>:</p>
-<pre><code>GET    /api/map/countries              # country JOINed with this save's country_override:
-                                       #   id, name (overridden where a row exists, otherwise
-                                       #   the topojson default), iso_numeric?, alpha3?,
-                                       #   geometry_source. Geometry itself is NOT in this
-                                       #   payload — it comes from the vendored topojson (§3.1)
-GET    /api/map/groupings              # grouping rows + their grouping_country members for the
-                                       #   save. A country in none of the lists is independent;
-                                       #   that is derived on the client, never a row (§2.4)
+<pre><code>GET    /api/map/countries              # -&gt; { countries }: country JOINed with this save's
+                                       #   country_override — id, name (overridden where a row
+                                       #   exists, otherwise the topojson default),
+                                       #   iso_numeric?, alpha3?, geometry_source. Geometry
+                                       #   itself is NOT in this payload; it comes from the
+                                       #   vendored topojson (§3.1)
+GET    /api/map/groupings              # -&gt; { groupings, members }: the save's grouping rows,
+                                       #   and its grouping_country rows VERBATIM — is_leader
+                                       #   INCLUDED. §2.4 makes leadership authored, with canon
+                                       #   as its only source and nothing to derive it from, so
+                                       #   the wire shape is the join rows themselves: the flat
+                                       #   groupingOf index §4.2's store holds has nowhere to
+                                       #   put the flag, and would drop it silently. The store
+                                       #   builds that index FROM these rows. A country in none
+                                       #   of the member lists is independent — derived on the
+                                       #   client, never a row, and never a field on this
+                                       #   response (§2.4)
 
 POST   /api/groupings                  PATCH  /api/groupings/:id      DELETE /api/groupings/:id
                                        # create / rename+recolor / delete a unified nation.
@@ -1101,6 +1130,10 @@ DELETE /api/country-overrides/:countryId       #   keyed (save_id, country_id) s
                                                #   by removing the row rather than writing it
                                                #   back (§7.4 — importing defaults is the bug
                                                #   this shape avoids)</code></pre>
+
+<div class="callout">
+<b>Every read answers a <i>named object</i>, never a bare array — and every error is <code>{ error: string }</code>.</b> Neither shape was written down anywhere before the first read endpoint had to pick one, and the first one to ship fixes the convention for every read after it, so it is stated here rather than left to whoever writes the next. <b>Reads:</b> <code>GET /api/map/countries</code> → <code>{ countries: [&hellip;] }</code>; <code>GET /api/map/groupings</code> → <code>{ groupings: [&hellip;], members: [&hellip;] }</code>. A top-level array has nowhere to grow: it cannot carry a second collection — which <code>/groupings</code> needs on day one, since the join rows travel beside the grouping rows — and it can never later gain the save it was read under, a <code>computedAt</code>, or a cursor without breaking every caller. <a href="#s5-2">§5.2</a>'s timeline reads and <a href="#s7-2">§7.2</a>'s save reads follow the same rule. <b>Errors:</b> <code>{ error: string }</code>, with <b>400</b> when the <code>save</code> query parameter is missing and <b>404</b> when it names a save that does not exist. Both are deliberately loud. Defaulting an absent scope to canon would hide a client bug behind data that looks right; and a save id that no longer resolves is exactly the id drift a fork introduces (<a href="#s2-6">§2.6</a>), whose natural symptom — an empty app rather than an error — is the hardest kind to diagnose.
+</div>
 
 <h3 id="s5-2">5.2 Time Corridor (3D)</h3>
 <p>The flagship view: a depth-stratified corridor you fly <i>through</i>, where moving forward moves through time and moving <b>deeper</b> moves through <b>levels of abstraction</b> — from four eras spanning sixty years, down to individual events minutes apart. This section is normative. <a href="implementation.html">implementation.html</a> owns the build sequence and cites the contracts below; it does not define them.</p>
@@ -1472,16 +1505,48 @@ X's crew`"]
 <h4 id="s7-4-reseed">Re-seeding is idempotent, and never destructive</h4>
 <p><code>scripts/seed.ts</code> reads the source files, opens <code>data/lifestream.db</code>, and writes under the target save. It <b>does not drop and recreate that save.</b> Dropping it would delete rows that any fork's <code>parent_save_id</code> points at, orphaning every child save — and, once in-app editing exists, would silently destroy hand-authored edits made on top of the seed.</p>
 <ul>
-  <li><code>npm run db:seed</code> is <b>idempotent</b>: it upserts by natural key (a Bible bullet's stable slug, a grouping's name, a country code) so re-running it updates what the sources changed and leaves everything else — including hand edits to rows the sources don't own — alone.</li>
+  <li><code>npm run db:seed</code> is <b>idempotent</b>: it upserts by natural key (a Bible bullet's stable slug, a grouping's name, a country code) so re-running it updates what the sources changed and leaves everything else — including hand edits to rows the sources don't own — alone. <b>Checked rather than asserted</b>: <code>node scripts/db-check-seed.mjs</code> runs the seed twice against a snapshot and compares the result (<a href="#s7-4-enforcement">below</a>).</li>
   <li>If the target save has children (any save with <code>parent_save_id</code> = it), a destructive re-seed is <b>refused</b>. The way to get a clean slate is <code>db:seed --new-save</code>, which creates a fresh save and leaves the existing tree intact.</li>
-  <li><code>npm run db:reset</code> (drop the whole DB) refuses unless a dump under <code>data/save_dumps/</code> is newer than the last write to <code>lifestream.db</code>. Three further properties of <code>scripts/db-reset.mjs</code>, each of which was a way to delete the wrong thing: it resolves its paths from <b><code>import.meta.url</code></b> and never from <code>process.cwd()</code> — run from another directory, a cwd-anchored version deletes files <i>there</i>; it <b>refuses outright when the resolved root is not this repo</b>, checked against a <code>package.json</code> whose <code>name</code> is <code>lifestream</code>; and it deletes <b><code>lifestream.db-wal</code> and <code>lifestream.db-shm</code></b> alongside the database, because in WAL mode the committed data lives in the <code>-wal</code> file and removing only the <code>.db</code> leaves a half-reset. Both sidecars are gitignored with the <code>.db</code>. It also prints a <b>restart-the-dev-server</b> notice: unlinking the file while the server holds it open does not close the handle, and the server goes on writing to an unlinked inode nobody can read.</li>
+  <li><code>npm run db:reset</code> (drop the whole DB) refuses unless a dump under <code>data/save_dumps/</code> is newer than the last write to <code>lifestream.db</code> — where "last write" is the newest mtime across the <code>.db</code> <b>and</b> its <code>-wal</code>/<code>-shm</code>/<code>-journal</code> sidecars, since in WAL mode the committed rows are in the <code>-wal</code> and a gate reading only the <code>.db</code> misses them. The gate distinguishes five states — <code>no-database</code> and <code>fresh</code> proceed; <code>stale</code>, <code>no-dumps</code> and <code>no-tooling</code> refuse — and <code>--force</code> overrides it, <code>--dry-run</code> lists the targets without deleting anything. Three further properties of <code>scripts/db-reset.mjs</code>, each of which was a way to delete the wrong thing: it resolves its paths from <b><code>import.meta.url</code></b> and never from <code>process.cwd()</code> — run from another directory, a cwd-anchored version deletes files <i>there</i>; it <b>refuses outright when the resolved root is not this repo</b>, checked against a <code>package.json</code> whose <code>name</code> is <code>lifestream</code>; and it deletes <b><code>lifestream.db-wal</code> and <code>lifestream.db-shm</code></b> alongside the database, because in WAL mode the committed data lives in the <code>-wal</code> file and removing only the <code>.db</code> leaves a half-reset. Both sidecars are gitignored with the <code>.db</code>. It also prints a <b>restart-the-dev-server</b> notice: unlinking the file while the server holds it open does not close the handle, and the server goes on writing to an unlinked inode nobody can read.</li>
 </ul>
 
 <h4 id="s7-4-migrations">Migration policy</h4>
-<p>Once the seed has run, the schema can no longer change by editing <code>schema.ts</code> and re-seeding — that is the destructive path just ruled out. So: <b>every post-seed schema change ships a drizzle migration <i>plus</i> a backfill script</b>, in the same commit. The migration moves the structure; the backfill moves the data (a new NOT NULL column gets its values computed for existing rows, a split column gets its parse, a renamed enum member gets its rewrite). A migration with no backfill is only acceptable when the change is provably data-free, and the commit says so.</p>
+<p>Once the seed has run, the schema can no longer change by editing <code>schema.ts</code> and re-seeding — that is the destructive path just ruled out. So: <b>every post-seed schema change ships a drizzle migration <i>plus</i> a backfill script</b>, in the same commit. The migration moves the structure; the backfill moves the data (a new NOT NULL column gets its values computed for existing rows, a split column gets its parse, a renamed enum member gets its rewrite). A migration with no backfill is only acceptable when the change is provably data-free, and the commit says so — and "says so" has a filename: <code>scripts/backfills/&lt;tag&gt;.data-free.md</code>, sitting where the backfill would have been, carrying the argument. Exactly one of <code>scripts/backfills/&lt;tag&gt;.ts</code> or <code>scripts/backfills/&lt;tag&gt;.data-free.md</code> per migration past the baseline; <code>node scripts/db-check-migrations.mjs</code> is what makes that a rule rather than an intention (<a href="#s7-4-enforcement">below</a>).</p>
 
 <h4 id="s7-4-backup">Backup, before editing — not after</h4>
 <p><code>data/lifestream.db</code> is gitignored. The moment in-app editing exists, that file is <b>the only home for authored content</b> — the Bible and the map JSON stop being the source of truth for everything typed into the side panel. So <code>npm run db:dump</code> (writing <code>data/save_dumps/&lt;save&gt;.json</code> via <code>GET /api/saves/:id/dump</code>) must exist and be part of the routine <b>before</b> the editing surfaces ship, not several phases later. The dumps are committed; the DB is not. This is also what makes <code>db:reset</code> safe and what gives <code>POST /api/saves/import</code> something to read.</p>
+
+<h4 id="s7-4-enforcement">The three rules, as three commands</h4>
+<p>A policy that lives only in prose is a policy that gets discovered after it has been broken — which is the whole story of migration #1, written before any of this existed and correct by luck. So each of the three rules above is <b>also a command that exits non-zero when the rule is violated</b>. They share their guards through <code>scripts/lib/</code> (<a href="#s4-1">§4.1</a>), because the anchor-and-identity check, the freshness gate and the content hash each need exactly one implementation: three copies of a destructive-path guard is three chances to get one subtly wrong.</p>
+<table>
+  <tr><th>Rule</th><th>Command</th><th>What it actually checks</th><th>How it fails</th></tr>
+  <tr>
+    <td>Migration <b>+ backfill</b></td>
+    <td><code>node scripts/db-check-migrations.mjs</code></td>
+    <td>For every migration in <code>meta/_journal.json</code> past the baseline, <b>exactly one</b> of <code>scripts/backfills/&lt;tag&gt;.ts</code> or <code>scripts/backfills/&lt;tag&gt;.data-free.md</code>, the waiver being at least 40 characters of argument. Also that the journal and the <code>.sql</code> files on disk agree.</td>
+    <td><code>MISSING</code> (neither) · <code>AMBIGUOUS</code> (both) · <code>EMPTY</code> (a waiver that says nothing) · a backfill matching no migration · a <code>.sql</code> the journal does not list, which <code>db:migrate</code> would never run</td>
+  </tr>
+  <tr>
+    <td><code>db:seed</code> idempotent &amp; non-destructive</td>
+    <td><code>node scripts/db-check-seed.mjs</code></td>
+    <td><i>Statically</i>, that no seed source contains <code>DROP</code>, <code>DELETE FROM</code>, <code>TRUNCATE</code> or drizzle's <code>.delete(</code> (comments stripped first). <i>Dynamically</i>, that a second run against a snapshot changes nothing — compared by an order-independent per-table content hash.</td>
+    <td><code>1</code> a destructive construct, a second run that moved rows, or a seed that ignored the redirect and wrote the real database · <code>2</code> <b>inconclusive</b>: the seed failed, or wrote nothing to an empty database. Exit 2 is not a pass.</td>
+  </tr>
+  <tr>
+    <td>No reset without a fresh dump</td>
+    <td><code>npm run db:reset</code> — the gate is inside it</td>
+    <td>The newest <code>data/save_dumps/*.json</code> is at least as new as the newest mtime across <code>lifestream.db</code> and its three sidecars.</td>
+    <td>Refuses on <code>stale</code>, <code>no-dumps</code> and <code>no-tooling</code>, naming both timestamps and the gap. <code>--force</code> is the only way past, and an unknown flag is a hard error — a mistyped <code>--force</code> must never read as "not forced".</td>
+  </tr>
+</table>
+
+<div class="callout warn">
+<b>The reset gate refuses; it does not warn. That is a decision, and it is why the gate ships four phases before the tooling that can satisfy it.</b> <code>db:dump</code> arrives in <a href="implementation.html">the plan</a>'s backup phase; the gate is in the schema phase. In between, its precondition cannot be met <i>at all</i>, which left two honest options: warn and proceed, or refuse and require <code>--force</code>. It refuses. A destructive command whose guard prints a warning and then does the destructive thing has trained its user to skip the warning by the third time — and the loss it guards against is total, because <code>data/lifestream.db</code> is gitignored and there is no other copy. <code>--force</code> costs one flag, is visible in shell history, and prints what is being overridden. What <code>--force</code> does <b>not</b> override is the repo-identity check: <code>db-reset</code> refuses outright when the anchored root is not this repository, forced or not, because there is no circumstance in which deleting another tree's database from here is what was meant.
+</div>
+
+<div class="callout">
+<b>The seed checker never runs the seed against <code>data/lifestream.db</code> — and it verifies that rather than assuming it.</b> It takes a SQLite-level snapshot (<code>backup()</code>, not <code>cp</code>: a file copy of a database with a live writer is torn) and points the seed at the copy through the <code>LIFESTREAM_DB</code> environment variable, which the <code>createDb(url)</code> factory reads (<a href="#s4-1">§4.1</a>). Because that contract is new, the real database and its sidecars are <b>re-hashed after every run</b>, and a seed that wrote there despite the redirect fails the check naming the file: a seed that cannot be redirected is a seed that cannot be tested, and that is itself the finding. Two silences are handled separately, because they are not the same silence. A seed that exits non-zero, or that writes nothing to an <i>empty</i> database, gives exit 2 — nothing was proven. But a seed that changes <b>no bytes</b> on an already-seeded database is the <i>expected</i> result, not a suspicious one: SQLite commits no page when an upsert assigns the values already stored, so the file stays byte-identical. That is exactly why the run-to-run comparison is a row-content hash and never a byte hash — a byte comparison would report every correctly idempotent seed as broken.
+</div>
 
 <h3 id="s7-5">7.5 Migrating off <code>map/</code></h3>
 <p><code>map/</code> is the existing standalone React app this design replaces. It is not scaffolding to be deleted when the new Map view looks right — it currently <b>holds authored content that exists nowhere else</b>, and neither this document nor the implementation plan had ever named the migration. Three ordered steps, and the third is gated on the second.</p>
