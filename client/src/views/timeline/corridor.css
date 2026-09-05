@@ -1,0 +1,71 @@
+/*
+ * Time Corridor view styling (P4.5, P4.6).
+ *
+ * Scoped to this view and imported by `TimelineView.tsx` rather than added to
+ * `client/src/styles.css`, which is the shell's sheet — the same split the Map view uses.
+ * The palette is the shell's (`--bg`, `--fg`, `--fg-muted`, `--rule`, `--accent`), so the
+ * HUD cannot drift from the top bar it sits under. Nothing here styles the canvas: the
+ * scene chrome under `views/_shared/` owns that.
+ */
+
+.corridor-view {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg);
+
+  /* The pan gesture is handled as a wheel event with preventDefault (P4.5). This stops
+     the browser from also treating a horizontal trackpad swipe as a back-navigation
+     before the listener ever sees it. */
+  overscroll-behavior-x: contain;
+}
+
+/* Top centre, over the canvas. `pointer-events: none` throughout: the HUD is a readout,
+   and a transparent box across the top of the corridor would swallow the drag that pans
+   it. */
+.corridor-hud {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+  text-align: center;
+  user-select: none;
+}
+
+.corridor-hud p {
+  margin: 0;
+}
+
+.corridor-hud__date {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+  text-shadow: 0 1px 6px var(--bg);
+}
+
+/* Faded in by an inline opacity from `cutoffOpacity()` — the element is always mounted so
+   the ramp has something to animate and the layout never pops. */
+.corridor-hud__cutoff {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  transition: opacity 200ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .corridor-hud__cutoff {
+    transition: none;
+  }
+}
+
+.corridor-hud__notice {
+  font-size: 11px;
+  color: var(--fg-muted);
+}
