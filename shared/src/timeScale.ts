@@ -17,16 +17,26 @@
  *
  * ## What is fixed and what is derived
  *
- * The map is a straight line in time with a **constant slope**: `WORLD_UNITS_PER_YEAR`
- * world units per mean Gregorian year, always. Only the *origin* depends on the
- * argument — `createTimeScale(earliest)` puts `earliest` at x = 0. Two consequences
- * worth stating, because both are load-bearing:
+ * **Nothing about the map is derived from a corpus.** It is a straight line in time with
+ * a constant slope — `WORLD_UNITS_PER_YEAR` world units per mean Gregorian year, always
+ * — pinned between two constants: {@link CORRIDOR_START} at x = 0 and
+ * {@link CORRIDOR_END} at the far end. {@link TIME_SCALE} is that map, built once per
+ * process, and it is what every view imports. Three consequences, all load-bearing:
  *
  *   - Moving {@link CORRIDOR_END} does **not** rescale the world. If the range were a
  *     fixed world length instead, extending the corridor would compress every existing
  *     node and silently invalidate every shared URL and saved camera pose.
- *   - Seeding an *earlier* event translates the world rather than stretching it. Node
- *     spacing — which is what the reader actually perceives — is invariant.
+ *   - Seeding an *earlier* event does not move existing nodes **at all** — not even by a
+ *     translation. An origin taken from `min(event.when)` would slide the whole world
+ *     under every serialized camera x (§4.3) and every saved viewport (P8.6) the moment
+ *     a save gained an earlier event, and would put the Corridor and a category-filtered
+ *     Tech Tree (P13.2 fetches `category='tech'`, earliest 2035-08-01, against the
+ *     corpus-wide 2021-02-09) ~145 world units apart against a ~66-unit visible pane.
+ *     Neither failure raises anything; both simply land the camera somewhere else.
+ *   - An event **before** `CORRIDOR_START` maps to a **negative x**. That is outside
+ *     `range()`, therefore outside `panBounds` (P4.5), therefore unreachable: the node is
+ *     drawn and the camera cannot be moved to it. This is why the constant sits a minute
+ *     before canon's earliest instant rather than on it.
  *
  * ## Precision
  *
@@ -54,6 +64,21 @@ import type { IsoInstant } from './types/enums.js';
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
+
+/**
+ * x = 0 — the corridor's origin, for every view, in every process, forever.
+ *
+ * A CONSTANT, and deliberately not `min(event.when)` over whatever corpus is on screen.
+ * A corpus-derived origin is a scale that moves: it differs between two views holding
+ * different subsets of the same save, and it shifts under every persisted camera pose the
+ * first time an earlier event is seeded. See the module header for the arithmetic.
+ *
+ * One minute before canon's earliest `when_min` (`2021-01-01T00:01:00.000Z`, Lazaro is
+ * born), and not later, because anything before this instant maps to a negative x and is
+ * therefore outside `panBounds` and unreachable. `tests/timeScale.test.ts` asserts that
+ * containment rather than trusting the seed to stay where it is.
+ */
+export const CORRIDOR_START: IsoInstant = '2021-01-01T00:00:00.000Z';
 
 /**
  * The Bible's last dated bullet, and therefore the upper bound of the corridor.
@@ -148,8 +173,9 @@ function parseCanonical(value: string, label: string): number {
 // ---------------------------------------------------------------------------
 
 /**
- * The canonical date ⇄ world-x map. One instance per save, built from the save's
- * earliest event; see {@link createTimeScale}.
+ * The canonical date ⇄ world-x map. There is one live instance — {@link TIME_SCALE} —
+ * and views import it; {@link createTimeScale} exists for the callers that legitimately
+ * want a different origin.
  */
 export interface TimeScale {
   /**
@@ -181,12 +207,16 @@ export interface TimeScale {
 }
 
 /**
- * Build the canonical scale for a save.
+ * Build a scale on an explicit origin.
  *
- * @param earliest The earliest instant the corridor must cover — in practice
- *                 `min(event.when)` across the save's events. `min(event.when_min)` is
- *                 equally valid and slightly roomier; either way the caller picks it
- *                 once and every view shares the result.
+ * **Application code does not call this** — it imports {@link TIME_SCALE}, whose origin
+ * is {@link CORRIDOR_START}. Two callers legitimately want another origin: a spec pinning
+ * the map's algebra, and the P15 export renderer framing a sub-range onto a fixed canvas.
+ * A view that called it would be a view with a second world x for the same date, and
+ * nothing downstream compares the two.
+ *
+ * @param earliest The instant the corridor's x = 0 sits on. Must be before
+ *                 {@link CORRIDOR_END}; everything before it extrapolates negative.
  *
  * @throws RangeError if `earliest` is not a canonical instant, or is not strictly before
  *         {@link CORRIDOR_END} — a zero-width or reversed domain has no invertible map,
@@ -254,3 +284,15 @@ export function createTimeScale(earliest: IsoInstant): TimeScale {
     domain: () => domain,
   };
 }
+
+/**
+ * THE canonical scale — architecture §5.2, normative. One per **process**: not one per
+ * save, not one per corpus, not one per view, not one per mount.
+ *
+ * Every piece of cross-view or cross-jump math goes through this object, so "the Tech
+ * Tree shares the Corridor's scale" is a fact about object identity rather than a claim
+ * about two constructions agreeing. Nothing about it depends on data, so it is built at
+ * module evaluation and never rebuilt — there is no hook, and a view that wanted one
+ * would be a view that thought the scale could change.
+ */
+export const TIME_SCALE: TimeScale = createTimeScale(CORRIDOR_START);

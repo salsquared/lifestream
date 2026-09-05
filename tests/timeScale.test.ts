@@ -241,9 +241,13 @@ describe('the scale is a straight line with a fixed slope', () => {
   });
 
   it('translates rather than rescales when the domain start moves', () => {
-    // Seeding an earlier event must not compress the world. If the range were a fixed
-    // world length instead of a fixed units-per-year, every existing node would move and
-    // every shared URL and saved camera pose would silently point somewhere else.
+    // A guard on the FACTORY's algebra, not on the app's behaviour: since D1 the origin
+    // is `CORRIDOR_START` and no application caller picks one, so a moving domain start
+    // is now only reachable from a spec or the P15 export renderer. It still has to
+    // translate rather than compress there — a range that were a fixed world length
+    // instead of a fixed units-per-year would move every node when the start moved.
+    // `tests/timeScaleSingleton.test.ts` asserts the stronger property the app relies
+    // on: `TIME_SCALE` does not move at all.
     const shifted = createTimeScale('2019-01-01T00:00:00.000Z');
     const a = '2036-10-07T05:55:00.000Z';
     const b = '2040-08-14T01:35:00.000Z';
