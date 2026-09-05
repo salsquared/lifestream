@@ -1,0 +1,95 @@
+/*
+ * Renderer-local styling (P2.1). Scoped under `.world-map` and imported by `WorldMap.tsx`
+ * rather than added to `client/src/styles.css`, which is the shell's file: the map's
+ * palette is the map's business, and the container is being built against the same shell
+ * stylesheet at the same time.
+ *
+ * FILLS ARE NOT SET HERE, deliberately. A CSS `fill` rule outranks a `fill` presentation
+ * attribute, so a `.world-map__country { fill: ... }` declaration would silently override
+ * every colour the container passes in `fillById`. Country fills are set as attributes in
+ * the component, defaulting to `DEFAULT_COUNTRY_FILL`. Strokes are safe here because
+ * nothing sets a stroke attribute.
+ */
+
+.world-map {
+  --map-ocean: #10141a;
+  --map-border: #171b21;
+  --map-graticule: #262c36;
+  --map-hover: #e6e6e6;
+  --map-glow: var(--accent, #a8c878);
+  --map-editing: #5bc8c0;
+  --map-primary: #f2efe6;
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--map-ocean);
+}
+
+.world-map__svg {
+  display: block;
+  /* The gesture owner reads raw pointer events; the browser must not also pan or scroll. */
+  touch-action: none;
+}
+
+.world-map__svg--zoom {
+  cursor: default;
+}
+
+.world-map__svg--rotate {
+  cursor: grab;
+}
+
+.world-map__svg--rotate:active {
+  cursor: grabbing;
+}
+
+.world-map__sphere {
+  fill: var(--map-ocean);
+  stroke: var(--map-graticule);
+  stroke-width: 1;
+}
+
+.world-map__graticule {
+  stroke: var(--map-graticule);
+  stroke-width: 0.5;
+  stroke-dasharray: 2 3;
+}
+
+.world-map__country {
+  stroke: var(--map-border);
+  stroke-width: 0.5;
+  stroke-linejoin: round;
+  cursor: pointer;
+}
+
+.world-map__country--hover {
+  stroke: var(--map-hover);
+  stroke-width: 1;
+}
+
+/*
+ * The redraw layer. These paint above every fill, so a selected country's outline is not
+ * overdrawn by whichever neighbour happens to come later in document order.
+ */
+.world-map__mark {
+  stroke-linejoin: round;
+}
+
+.world-map__mark--glow {
+  stroke: var(--map-glow);
+  stroke-width: 1.5;
+  opacity: 0.9;
+}
+
+.world-map__mark--editing {
+  stroke: var(--map-editing);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 2;
+}
+
+.world-map__mark--primary {
+  stroke: var(--map-primary);
+  stroke-width: 2;
+}
