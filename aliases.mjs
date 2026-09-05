@@ -17,6 +17,12 @@ import { fileURLToPath } from 'node:url';
 export const aliasTable = Object.freeze([
   { prefix: '@shared/', target: 'shared/src/' },
   { prefix: '@server/', target: 'server/src/' },
+  // The client's own source, aliased for ONE reason: `tests/` lives at the repo root and
+  // a spec reaching into a view would otherwise carry a `../../client/src/...` chain that
+  // silently breaks the moment a file moves. Client code itself uses relative imports —
+  // this prefix exists so the pure, headless-testable modules under `client/src/views/`
+  // (layout, pan, hud, the visual tables) can be exercised from the root suite.
+  { prefix: '@client/', target: 'client/src/' },
 ]);
 
 /** Absolute path to a repo-root-relative `p`, anchored on THIS file's directory. */

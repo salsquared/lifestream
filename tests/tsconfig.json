@@ -6,6 +6,11 @@
     // that `composite` in the base config opts every workspace into. Root `npm run
     // typecheck` is `tsc -b client server shared` and does not reference `tests/`.
     "composite": false,
+    // The specs reach into `client/src` through `@client/*` (see aliases.mjs), and that
+    // code is browser code: `reducedMotion.ts` reads `window.matchMedia`, `cameraChannel`
+    // is a `useSyncExternalStore` source. DOM is in the lib set so those typecheck here;
+    // it does NOT leak to shared/, which stays isomorphic via its own `"types": []`.
+    "lib": ["ES2022", "DOM"],
     "noEmit": true,
     "declaration": false,
     // `aliases.mjs` is plain JS (the tsconfig cannot import it, but Vite, Vitest and
