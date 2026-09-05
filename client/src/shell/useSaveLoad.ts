@@ -37,6 +37,22 @@ import { useWorld } from './stores/world';
  * `requestedSave` the initial load captured, so a reload triggered by a write cannot pick
  * up a different save than the effect it belongs to.
  *
+ * ── AT P4 THE SECOND TRIGGER HAS NO PRODUCER ─────────────────────────────────────────
+ * Nothing in `client/src` calls `invalidate()`. `useWorld` and `useRegistry` both expose
+ * it, but no component, view or API wrapper fires it — so at P4 `'stale'` is a status the
+ * application never enters, and the abort-and-restart path below, the most intricate
+ * machinery in this file, is unreachable in the running app. (The server-side
+ * `invalidateSave` in `resolveTimeline.ts` is a different cache and is not this trigger.)
+ * It is kept rather than deferred because the ordering hazard it defends against is a
+ * property of the loader, not of its caller, and retrofitting it under a live producer
+ * would be the wrong time to get it right.
+ *
+ * Its first real exercise is P6.3.3 (on save switch, invalidate every cache; views
+ * re-fetch). **P6 is therefore landing on untried code**: the transition guard, the
+ * `AbortController` swap and the captured-id closure have never run against any
+ * invalidation at all. Treat a P6 bug in this area as "never worked" rather than
+ * "regressed", and give the path a spec when P6 gives it a producer.
+ *
  * ── WHAT IS NOT DONE HERE ────────────────────────────────────────────────────────────
  * The stores are NOT emptied at the start of a save switch — `hydrate()` replaces them
  * atomically when the new payload lands, and blanking first would mean calling
