@@ -12,8 +12,9 @@
  * `/api/groupings/groupings`, and every `/api/groupings/:id` write would answer under
  * `/api/map` and `/api/country-overrides` too.
  *
- * P1.12 fills in the two READS. The write surface stays a placeholder until P2, which
- * builds it alongside the view that calls it — see the note on the write routers below.
+ * P1.12 filled in the two READS; P2.6 added the write surface below, alongside the view
+ * that calls it — the conflict rule on `PUT /api/groupings/:id/countries/:countryId` only
+ * has a definition once the "Move from <X>?" prompt exists to send it.
  *
  * ── THE WIRE FORMAT IS camelCase ──────────────────────────────────────────────────────
  * SQL columns are snake_case and stay inside `db/schema.ts`; Drizzle's inferred row types
@@ -24,12 +25,15 @@
  * dropped by `JSON.stringify`, so `?? undefined` is what makes the payload omit the key
  * rather than send `null`.
  */
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
+
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 
-import type { Country, Grouping, GroupingCountry } from '@shared/types/index';
+import type { Country, CountryOverride, Grouping, GroupingCountry } from '@shared/types/index';
 
-import { db } from '../db/index.js';
+import { db, sqlite } from '../db/index.js';
 import { country, countryOverride, grouping, groupingCountry, save } from '../db/schema.js';
 
 /**
@@ -158,28 +162,752 @@ mapRoutes.get('/groupings', (c) => {
   return c.json({ groupings, members } satisfies MapGroupingsResponse);
 });
 
+/* ==================================================================================== *
+ * THE WRITE SURFACE (P2.6) — `/api/groupings` and `/api/country-overrides`
+ *
+ * Two more routers, mounted at their own top-level prefixes (§4.4). Shared with the
+ * reads above: `resolveSave`, the `{ error: string }` envelope, and the rule that a
+ * response is always a NAMED object.
+ *
+ * ── FOUR RULES THIS SURFACE FOLLOWS, STATED ONCE ────────────────────────────────────
+ *
+ * 1. THE SAVE IS THE SCOPE, ALWAYS. Every handler resolves `?save=` first and derives
+ *    `save_id` for every row it writes from that one value; `:id` is then looked up
+ *    WITHIN it (`resolveGrouping`). A cross-save write is therefore unrepresentable here
+ *    rather than merely rejected — and the composite FK on `(save_id, grouping_id)` is
+ *    still the backstop for anything that writes the table without coming through this
+ *    module (§2.5).
+ *
+ * 2. FAILURE IS LOUD AND NAMES THE THING. The defect this endpoint set exists to fix is
+ *    the old app's silent refusal (`map/src/App.jsx:96-97`): clicking a country another
+ *    nation owned did nothing at all, which reads as a broken UI. So a refusal here
+ *    always carries what the author needs to act on it — the 409 on an owned country
+ *    names the OWNER, in the `ownedBy` field §5.1's "Move from <X>?" prompt is built
+ *    from. Addressing a row that is not there is a 404 on every route, never a quiet
+ *    success.
+ *
+ * 3. A MULTI-ROW WRITE IS ONE TRANSACTION. `PUT /:id/countries` and `DELETE /:id` both
+ *    touch several rows, and a partial application of either is a visibly half-built
+ *    nation (§5.1). Both run through `sqlite.transaction()` — the raw connection is
+ *    exported beside the drizzle handle for exactly this (`db/index.ts`), because
+ *    drizzle's own `db.transaction()` hands back a differently-typed handle that would
+ *    infect every signature it touches.
+ *
+ * 4. INDEPENDENCE IS THE ABSENCE OF A ROW. `DELETE /:id/countries/:countryId` deletes
+ *    and stores nothing; deleting a grouping deletes its membership rows and the
+ *    countries are independent again by consequence, not by a flag (§2.4).
+ * ==================================================================================== */
+
+/** `POST /api/groupings`, `PATCH /api/groupings/:id` — the created / updated row. */
+export type GroupingResponse = { grouping: Grouping };
+
+/** `PUT /api/groupings/:id/countries` — the grouping's membership AFTER the write. */
+export type GroupingMembersResponse = { members: GroupingCountry[] };
+
+/** `PUT /api/groupings/:id/countries/:countryId` — the single membership row written. */
+export type GroupingMemberResponse = { member: GroupingCountry };
+
+/** `PUT /api/country-overrides/:countryId` — the upserted rename. */
+export type CountryOverrideResponse = { override: CountryOverride };
+
+/** Every DELETE on this surface. There is nothing left to return but the fact. */
+export type OkResponse = { ok: true };
+
 /**
- * `/api/groupings` — create / rename / delete a unified nation and edit its membership
- * (§5.1). PLACEHOLDER UNTIL P2.
+ * The 409 body for a country another grouping already owns (§5.1, P2.3.3).
  *
- * Held back with the view that calls it rather than shipped ahead of it: the interesting
- * half of this surface is the conflict rule on
- * `PUT /api/groupings/:id/countries/:countryId` — a 409 naming the current owner unless
- * the body carries `{ move: true }` — and that rule only has a definition once the "Move
- * from <X>?" prompt exists to send it. P1.12 is reads.
+ * `ownedBy` IS THE POINT OF THE STATUS CODE. A bare 409 would be the old silent refusal
+ * with a number attached — the client cannot write "Move from <X>?" without X, and
+ * cannot look it up either, because the owning grouping is exactly the thing it did not
+ * know. Retrying the same request with `{ move: true }` is what the prompt sends.
+ */
+export type OwnedByError = { error: string; ownedBy: { id: string; name: string } };
+
+/**
+ * The bulk analogue of {@link OwnedByError}: `PUT /:id/countries` can collide on several
+ * countries at once, each with a different owner, so the conflicts arrive as a list.
  *
- * When it lands: POST `/`, PATCH `/:id`, DELETE `/:id`, PUT `/:id/countries` (bulk
- * membership replace, one transaction), PUT and DELETE `/:id/countries/:countryId`.
+ * NOT IN THE PINNED P2 CONTRACT, which specifies `ownedBy` for the single assign only —
+ * the bulk shape had no definition to build to. This is the same rule generalized, and
+ * the singular field is left alone so the client's existing reader keeps working.
+ */
+export type MembershipConflictError = {
+  error: string;
+  conflicts: { countryId: string; ownedBy: { id: string; name: string } }[];
+};
+
+/**
+ * A save-scoped grouping lookup. Returns the row rather than a boolean because every
+ * caller that reports a conflict needs the NAME, not just the existence (rule 2).
+ */
+function resolveGrouping(saveId: string, id: string): Grouping | undefined {
+  return db
+    .select()
+    .from(grouping)
+    .where(and(eq(grouping.saveId, saveId), eq(grouping.id, id)))
+    .get();
+}
+
+/** `{ error }` for a `:id` that is not a grouping of this save — rule 1's 404. */
+function noSuchGrouping(saveId: string, id: string): string {
+  return `no grouping with id '${id}' in save '${saveId}'`;
+}
+
+type JsonBody = { ok: true; value: Record<string, unknown> } | { ok: false; error: string };
+
+/**
+ * Read a JSON object body, tolerating an absent one.
+ *
+ * `c.req.json()` THROWS on an empty body, and an empty body is legitimate on three of
+ * these routes — `PUT /:id/countries/:countryId` carries `{ move: true }` only when the
+ * author has confirmed the prompt, so the common case sends nothing at all. Parsed here
+ * instead so that a malformed body is a 400 naming the problem rather than a bare 500.
+ */
+async function readJsonBody(c: Context): Promise<JsonBody> {
+  const raw = await c.req.text();
+  if (raw.trim() === '') return { ok: true, value: {} };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { ok: false, error: 'request body is not valid JSON' };
+  }
+
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    return { ok: false, error: 'request body must be a JSON object' };
+  }
+  return { ok: true, value: parsed as Record<string, unknown> };
+}
+
+/**
+ * Names are TRIMMED before they are stored. `UNIQUE (save_id, name)` compares the raw
+ * text, so `'UEA'` and `'UEA '` are two rows the constraint accepts and the sidebar
+ * draws identically — the half-populated-nation failure the schema comment warns about,
+ * arriving through the UI instead of the importer.
+ */
+function readName(raw: unknown): string | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const trimmed = raw.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+/**
+ * `#rrggbb`, lower-cased. Every seeded color is in that form and `<input type="color">`
+ * emits nothing else, so accepting more would only let two spellings of one color into
+ * a column that is compared as text.
+ */
+function readColor(raw: unknown): string | undefined {
+  if (typeof raw !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(raw)) return undefined;
+  return raw.toLowerCase();
+}
+
+type MoveFlag = { ok: true; move: boolean } | { ok: false; error: string };
+
+/**
+ * `{ move: true }` — the confirmed "Move from <X>?" (§5.1).
+ *
+ * A non-boolean is REJECTED rather than coerced. `"move": "false"` is truthy and
+ * `"move": "true"` sent by a client that stringified its state would otherwise decide a
+ * reassignment by accident — and the 409 exists precisely so that a move is something
+ * the author said yes to.
+ */
+function readMove(body: Record<string, unknown>): MoveFlag {
+  const raw = body.move;
+  if (raw === undefined) return { ok: true, move: false };
+  if (typeof raw !== 'boolean') return { ok: false, error: "'move' must be a boolean" };
+  return { ok: true, move: raw };
+}
+
+/**
+ * The message from a write the database refused, or `undefined` if the error is not a
+ * constraint failure and belongs to the 500 handler.
+ *
+ * Both callers wrap a TRANSACTION, so their messages can promise that nothing was
+ * written — which is the only reason the promise is true.
+ */
+function constraintFailure(err: unknown): string | undefined {
+  if (!(err instanceof Error) || !('code' in err)) return undefined;
+  const code = err.code;
+  if (typeof code !== 'string' || !code.startsWith('SQLITE_CONSTRAINT')) return undefined;
+  return err.message;
+}
+
+/**
+ * `/api/groupings` — create / rename / recolor / delete a unified nation, and edit its
+ * membership (§5.1, P2.6.1–P2.6.3).
  */
 export const groupingRoutes = new Hono();
 
 /**
- * `/api/country-overrides` — the per-save country rename (§5.1). PLACEHOLDER UNTIL P2,
- * alongside the right-click rename in the view.
+ * P2.6.1 — create a unified nation. `{ name, color }` in, `{ grouping }` out.
  *
- * When it lands: PUT `/:countryId` (an upsert — the row is keyed `(save_id, country_id)`)
- * and DELETE `/:countryId`, which restores the default name by REMOVING the row rather
- * than writing the default back into it (§7.4). The read half is already live: this
- * module's `/api/map/countries` is where an override becomes visible.
+ * The id is MINTED HERE, never accepted from the body: it is the primary key, and a
+ * client that picks it can collide with a row in another save (`grouping.id` is globally
+ * unique, not per-save) or re-point an existing nation by resending its id. `grp_<uuid>`
+ * matches the 29 rows the map seed already wrote — the schema header's "runtime rows get
+ * a ULID" is a convention with no CHECK behind it and nothing reads id order (the
+ * groupings read sorts by name for exactly that reason), so matching the existing data
+ * beats introducing a second id shape.
+ *
+ * A duplicate name is a 409, not a 500 from `grouping_save_id_name_unique`. Two nations
+ * with one name are two half-populated nations the importer believes are one (§2.5), and
+ * the author renaming one of them is the fix — which needs to be readable in the body.
+ */
+groupingRoutes.post('/', async (c) => {
+  const scope = resolveSave(c.req.query('save'));
+  if (!scope.ok) return c.json({ error: scope.error }, scope.status);
+
+  const body = await readJsonBody(c);
+  if (!body.ok) return c.json({ error: body.error }, 400);
+
+  const name = readName(body.value.name);
+  if (name === undefined) return c.json({ error: "'name' must be a non-empty string" }, 400);
+
+  const color = readColor(body.value.color);
+  if (color === undefined) {
+    return c.json({ error: "'color' must be a hex color like '#4f9dff'" }, 400);
+  }
+
+  const taken = db
+    .select({ id: grouping.id })
+    .from(grouping)
+    .where(and(eq(grouping.saveId, scope.saveId), eq(grouping.name, name)))
+    .get();
+  if (taken !== undefined) {
+    return c.json(
+      { error: `save '${scope.saveId}' already has a grouping named '${name}' (id '${taken.id}')` },
+      409,
+    );
+  }
+
+  const row = db
+    .insert(grouping)
+    .values({ id: `grp_${randomUUID()}`, saveId: scope.saveId, name, color })
+    .returning()
+    .get();
+
+  return c.json({ grouping: row } satisfies GroupingResponse);
+});
+
+/**
+ * P2.6.1 — rename and/or recolor. Both fields optional, at least one required.
+ *
+ * An empty patch is a 400 rather than a no-op 200: it is a client that meant to send
+ * something, and answering it with the unchanged row would confirm a write that did not
+ * happen. Renaming a grouping to the name it already has is fine — the uniqueness check
+ * excludes the row being edited, so re-submitting an unchanged form is not a conflict.
+ */
+groupingRoutes.patch('/:id', async (c) => {
+  const scope = resolveSave(c.req.query('save'));
+  if (!scope.ok) return c.json({ error: scope.error }, scope.status);
+
+  const id = c.req.param('id');
+  const target = resolveGrouping(scope.saveId, id);
+  if (target === undefined) return c.json({ error: noSuchGrouping(scope.saveId, id) }, 404);
+
+  const body = await readJsonBody(c);
+  if (!body.ok) return c.json({ error: body.error }, 400);
+
+  const patch: { name?: string; color?: string } = {};
+
+  if (body.value.name !== undefined) {
+    const name = readName(body.value.name);
+    if (name === undefined) return c.json({ error: "'name' must be a non-empty string" }, 400);
+    patch.name = name;
+  }
+
+  if (body.value.color !== undefined) {
+    const color = readColor(body.value.color);
+    if (color === undefined) {
+      return c.json({ error: "'color' must be a hex color like '#4f9dff'" }, 400);
+    }
+    patch.color = color;
+  }
+
+  if (patch.name === undefined && patch.color === undefined) {
+    return c.json({ error: "body must carry at least one of 'name' or 'color'" }, 400);
+  }
+
+  if (patch.name !== undefined && patch.name !== target.name) {
+    const taken = db
+      .select({ id: grouping.id })
+      .from(grouping)
+      .where(and(eq(grouping.saveId, scope.saveId), eq(grouping.name, patch.name)))
+      .get();
+    if (taken !== undefined) {
+      return c.json(
+        {
+          error: `save '${scope.saveId}' already has a grouping named '${patch.name}' (id '${taken.id}')`,
+        },
+        409,
+      );
+    }
+  }
+
+  const row = db
+    .update(grouping)
+    .set(patch)
+    .where(and(eq(grouping.saveId, scope.saveId), eq(grouping.id, id)))
+    .returning()
+    .get();
+
+  return c.json({ grouping: row } satisfies GroupingResponse);
+});
+
+/**
+ * P2.6.1 — delete a unified nation and return its countries to independent.
+ *
+ * THE CASCADE IS APPLICATION-LEVEL AND HAS TO BE. §5.1 says "DELETE cascades its
+ * grouping_country rows", but the composite FK to `grouping (save_id, id)` is declared
+ * `ON DELETE no action` in the migration — deleting a grouping that still has members
+ * would simply fail. The two statements therefore run in ONE transaction (rule 3): a
+ * membership delete that committed without the grouping delete would silently disband a
+ * nation the author still sees in the sidebar.
+ *
+ * `location` also points at `grouping (save_id, grouping_id)`, and that reference is NOT
+ * cascaded — a place cannot be un-referenced by deleting the nation it names. The FK
+ * refusal is surfaced as a 409 naming the constraint rather than a 500.
+ */
+groupingRoutes.delete('/:id', (c) => {
+  const scope = resolveSave(c.req.query('save'));
+  if (!scope.ok) return c.json({ error: scope.error }, scope.status);
+
+  const id = c.req.param('id');
+  if (resolveGrouping(scope.saveId, id) === undefined) {
+    return c.json({ error: noSuchGrouping(scope.saveId, id) }, 404);
+  }
+
+  try {
+    sqlite.transaction(() => {
+      db.delete(groupingCountry)
+        .where(and(eq(groupingCountry.saveId, scope.saveId), eq(groupingCountry.groupingId, id)))
+        .run();
+      db.delete(grouping)
+        .where(and(eq(grouping.saveId, scope.saveId), eq(grouping.id, id)))
+        .run();
+    })();
+  } catch (err) {
+    const refusal = constraintFailure(err);
+    if (refusal === undefined) throw err;
+    return c.json(
+      { error: `grouping '${id}' is still referenced, so nothing was deleted: ${refusal}` },
+      409,
+    );
+  }
+
+  return c.json({ ok: true } satisfies OkResponse);
+});
+
+/**
+ * One membership row joined to the grouping that owns it — the shape every conflict
+ * report needs.
+ *
+ * The join is INNER and cannot drop a row: `grouping_country`'s composite FK guarantees
+ * a membership names a grouping in the same save. So `undefined` here means exactly one
+ * thing — the country belongs to no nation in this save — which is what makes it usable
+ * as the membership lookup as well as the owner lookup.
+ */
+function ownerOf(
+  saveId: string,
+  countryId: string,
+): { member: GroupingCountry; ownerName: string } | undefined {
+  return db
+    .select({ member: groupingCountry, ownerName: grouping.name })
+    .from(groupingCountry)
+    .innerJoin(
+      grouping,
+      and(eq(grouping.saveId, groupingCountry.saveId), eq(grouping.id, groupingCountry.groupingId)),
+    )
+    .where(and(eq(groupingCountry.saveId, saveId), eq(groupingCountry.countryId, countryId)))
+    .get();
+}
+
+/** The grouping's membership as the reads emit it — ordered by `country_id` (§5.1). */
+function membersOf(saveId: string, groupingId: string): GroupingCountry[] {
+  return db
+    .select()
+    .from(groupingCountry)
+    .where(and(eq(groupingCountry.saveId, saveId), eq(groupingCountry.groupingId, groupingId)))
+    .orderBy(asc(groupingCountry.countryId))
+    .all();
+}
+
+/**
+ * P2.6.2 — replace this grouping's whole membership. `{ countryIds, move? }` in,
+ * `{ members }` out.
+ *
+ * WHY THIS IS NOT N SINGLE ASSIGNS. The sidebar's "unify these selected countries" is
+ * inherently bulk, and N requests fail independently: one 409 in the middle leaves a
+ * half-built nation on screen, with no request left to undo the ones that succeeded
+ * (§5.1). So the handler diffs the request against `grouping_country` and writes the
+ * delta — the removals and the additions — inside ONE transaction. Either the membership
+ * is what was asked for, or it is untouched.
+ *
+ * THE DIFF IS INSIDE THE TRANSACTION TOO, not just the writes. It reads the rows it is
+ * about to overwrite; computing it outside would be a read of a state the write no
+ * longer applies to.
+ *
+ * The conflict rule is the same one `PUT /:id/countries/:countryId` enforces, applied to
+ * every requested country at once: without `{ move: true }` a country another nation owns
+ * refuses the WHOLE request (nothing is written, including the parts that would have
+ * succeeded), and the body lists every conflict with its owner. Countries dropped from
+ * the membership become independent — no row, no flag (rule 4).
+ */
+groupingRoutes.put('/:id/countries', async (c) => {
+  const scope = resolveSave(c.req.query('save'));
+  if (!scope.ok) return c.json({ error: scope.error }, scope.status);
+
+  const id = c.req.param('id');
+  const target = resolveGrouping(scope.saveId, id);
+  if (target === undefined) return c.json({ error: noSuchGrouping(scope.saveId, id) }, 404);
+
+  const body = await readJsonBody(c);
+  if (!body.ok) return c.json({ error: body.error }, 400);
+
+  const move = readMove(body.value);
+  if (!move.ok) return c.json({ error: move.error }, 400);
+
+  const rawIds = body.value.countryIds;
+  if (!Array.isArray(rawIds) || rawIds.some((v) => typeof v !== 'string' || v === '')) {
+    return c.json({ error: "'countryIds' must be an array of country ids" }, 400);
+  }
+  // Deduplicated because the request describes a SET — the membership after the write —
+  // and `(save_id, country_id)` would reject the repeat anyway, as a 500 about a
+  // constraint instead of the write the author meant.
+  const requested = [...new Set(rawIds as string[])];
+
+  // Unknown ids are rejected BEFORE the transaction so the message can name them. The FK
+  // to `country` would catch them too, with `FOREIGN KEY constraint failed` and no clue
+  // which of the fifty ids was wrong. A 400, not a 404: the missing thing is in the body,
+  // not the URL. Ids are zero-padded strings and synthetics look like `x:GUF` (§3.1) —
+  // never coerced, here or anywhere.
+  if (requested.length > 0) {
+    const known = new Set(
+      db
+        .select({ id: country.id })
+        .from(country)
+        .where(inArray(country.id, requested))
+        .all()
+        .map((row) => row.id),
+    );
+    const unknown = requested.filter((countryId) => !known.has(countryId));
+    if (unknown.length > 0) {
+      return c.json(
+        {
+          error: `'countryIds' names ${unknown.length} id(s) that are not countries: ${unknown
+            .map((countryId) => `'${countryId}'`)
+            .join(', ')}`,
+        },
+        400,
+      );
+    }
+  }
+
+  type Outcome =
+    | { ok: true; members: GroupingCountry[] }
+    | { ok: false; conflicts: MembershipConflictError['conflicts'] };
+
+  // The transaction RETURNS the refusal rather than throwing it: a conflict has written
+  // nothing, so committing an empty transaction and reporting it is honest, and it keeps
+  // the 409 out of the catch below, which is about writes the DATABASE refused.
+  const run = sqlite.transaction((): Outcome => {
+    const owners = new Map<string, { groupingId: string; ownerName: string }>();
+    if (requested.length > 0) {
+      for (const row of db
+        .select({ member: groupingCountry, ownerName: grouping.name })
+        .from(groupingCountry)
+        .innerJoin(
+          grouping,
+          and(
+            eq(grouping.saveId, groupingCountry.saveId),
+            eq(grouping.id, groupingCountry.groupingId),
+          ),
+        )
+        .where(
+          and(
+            eq(groupingCountry.saveId, scope.saveId),
+            inArray(groupingCountry.countryId, requested),
+          ),
+        )
+        .all()) {
+        owners.set(row.member.countryId, {
+          groupingId: row.member.groupingId,
+          ownerName: row.ownerName,
+        });
+      }
+    }
+
+    const claimed = requested.filter((countryId) => {
+      const owner = owners.get(countryId);
+      return owner !== undefined && owner.groupingId !== target.id;
+    });
+
+    if (claimed.length > 0 && !move.move) {
+      return {
+        ok: false,
+        conflicts: claimed.map((countryId) => {
+          // Non-null: `claimed` is built from the map's own entries.
+          const owner = owners.get(countryId) as { groupingId: string; ownerName: string };
+          return { countryId, ownedBy: { id: owner.groupingId, name: owner.ownerName } };
+        }),
+      };
+    }
+
+    const keep = new Set(requested);
+    const dropped = membersOf(scope.saveId, target.id)
+      .map((row) => row.countryId)
+      .filter((countryId) => !keep.has(countryId));
+
+    // One delete for both halves of the diff: the countries leaving this grouping, and
+    // the ones being taken from another. Both are `(save_id, country_id)` rows, and the
+    // second must go before its replacement can be inserted — the primary key is the
+    // reason a move is a delete-and-insert rather than an overwrite.
+    const removals = [...dropped, ...claimed];
+    if (removals.length > 0) {
+      db.delete(groupingCountry)
+        .where(
+          and(
+            eq(groupingCountry.saveId, scope.saveId),
+            inArray(groupingCountry.countryId, removals),
+          ),
+        )
+        .run();
+    }
+
+    const additions = requested.filter(
+      (countryId) => owners.get(countryId)?.groupingId !== target.id,
+    );
+    if (additions.length > 0) {
+      db.insert(groupingCountry)
+        .values(
+          additions.map((countryId) => ({
+            saveId: scope.saveId,
+            groupingId: target.id,
+            countryId,
+            // A country arriving from another nation arrives as an ordinary member. The
+            // leader flag belongs to a membership, not to a country (§2.4), and carrying
+            // it across would either invent a second leader here or trip
+            // `grouping_country_leader_unique` if this nation already has one.
+            isLeader: false,
+          })),
+        )
+        .run();
+    }
+
+    return { ok: true, members: membersOf(scope.saveId, target.id) };
+  });
+
+  let outcome: Outcome;
+  try {
+    outcome = run();
+  } catch (err) {
+    const refusal = constraintFailure(err);
+    if (refusal === undefined) throw err;
+    // The transaction rolled back, so this is a true statement and not a hopeful one.
+    return c.json(
+      { error: `the membership delta was refused, so nothing was written: ${refusal}` },
+      409,
+    );
+  }
+
+  if (!outcome.ok) {
+    return c.json(
+      {
+        error:
+          `${outcome.conflicts.length} of the requested countries already belong to another ` +
+          `grouping in save '${scope.saveId}'; resend with { "move": true } to reassign them`,
+        conflicts: outcome.conflicts,
+      } satisfies MembershipConflictError,
+      409,
+    );
+  }
+
+  return c.json({ members: outcome.members } satisfies GroupingMembersResponse);
+});
+
+/**
+ * P2.6.3 — assign one country to this grouping. `{ member }` out.
+ *
+ * PUT, NOT POST: the row is keyed `(save_id, country_id)`, so the request fully specifies
+ * the resource it writes and repeating it changes nothing (§5.1).
+ *
+ * THIS IS THE ENDPOINT THE PHASE EXISTS FOR. `grouping_country`'s primary key allows one
+ * nation per country per save, so a country another grouping owns is a CONFLICT, not an
+ * overwrite — and the old app answered that click with nothing at all. Here it is a 409
+ * carrying `ownedBy`, which is what the "Move from <X>?" prompt is written from; the
+ * author's confirmation comes back as `{ move: true }` and reassigns.
+ *
+ * The write is a single upsert statement, so the move needs no transaction of its own: it
+ * cannot leave the country in two nations or in none.
+ */
+groupingRoutes.put('/:id/countries/:countryId', async (c) => {
+  const scope = resolveSave(c.req.query('save'));
+  if (!scope.ok) return c.json({ error: scope.error }, scope.status);
+
+  const id = c.req.param('id');
+  const target = resolveGrouping(scope.saveId, id);
+  if (target === undefined) return c.json({ error: noSuchGrouping(scope.saveId, id) }, 404);
+
+  // 404 rather than the FK's `FOREIGN KEY constraint failed`: `country` is global, so an
+  // id that is not in it is not in any save either.
+  const countryId = c.req.param('countryId');
+  const known = db.select({ id: country.id }).from(country).where(eq(country.id, countryId)).get();
+  if (known === undefined) return c.json({ error: `no country with id '${countryId}'` }, 404);
+
+  const body = await readJsonBody(c);
+  if (!body.ok) return c.json({ error: body.error }, 400);
+
+  const move = readMove(body.value);
+  if (!move.ok) return c.json({ error: move.error }, 400);
+
+  const current = ownerOf(scope.saveId, countryId);
+
+  // Already a member of THIS grouping: return the row unchanged. Not re-upserted, because
+  // the upsert below clears `is_leader` and this country may be the nation's leader — a
+  // repeated click would quietly demote it.
+  if (current !== undefined && current.member.groupingId === target.id) {
+    return c.json({ member: current.member } satisfies GroupingMemberResponse);
+  }
+
+  if (current !== undefined && !move.move) {
+    return c.json(
+      {
+        error: `country '${countryId}' already belongs to '${current.ownerName}' in save '${scope.saveId}'; resend with { "move": true } to reassign it`,
+        ownedBy: { id: current.member.groupingId, name: current.ownerName },
+      } satisfies OwnedByError,
+      409,
+    );
+  }
+
+  const member = db
+    .insert(groupingCountry)
+    .values({ saveId: scope.saveId, groupingId: target.id, countryId, isLeader: false })
+    .onConflictDoUpdate({
+      target: [groupingCountry.saveId, groupingCountry.countryId],
+      // Reached only on the confirmed move, and only from ANOTHER grouping. `is_leader`
+      // is reset for the reason given on the bulk insert: leadership is a fact about a
+      // membership, and the destination may already have a leader.
+      set: { groupingId: target.id, isLeader: false },
+    })
+    .returning()
+    .get();
+
+  return c.json({ member } satisfies GroupingMemberResponse);
+});
+
+/**
+ * P2.6.3 — the inverse: back to independent. Deletes the row and stores nothing, because
+ * independence is the absence of a row and never a stored flag (§2.4, rule 4).
+ *
+ * Deleting a membership that belongs to a DIFFERENT grouping is refused with the same
+ * 409 + `ownedBy` as the assign, rather than deleting it anyway. The request names the
+ * grouping in its path; honouring it would let a stale sidebar disband a nation the
+ * author was not looking at.
+ */
+groupingRoutes.delete('/:id/countries/:countryId', (c) => {
+  const scope = resolveSave(c.req.query('save'));
+  if (!scope.ok) return c.json({ error: scope.error }, scope.status);
+
+  const id = c.req.param('id');
+  const target = resolveGrouping(scope.saveId, id);
+  if (target === undefined) return c.json({ error: noSuchGrouping(scope.saveId, id) }, 404);
+
+  const countryId = c.req.param('countryId');
+  const current = ownerOf(scope.saveId, countryId);
+
+  if (current === undefined) {
+    return c.json(
+      { error: `country '${countryId}' belongs to no grouping in save '${scope.saveId}'` },
+      404,
+    );
+  }
+
+  if (current.member.groupingId !== target.id) {
+    return c.json(
+      {
+        error: `country '${countryId}' belongs to '${current.ownerName}', not to '${target.name}'`,
+        ownedBy: { id: current.member.groupingId, name: current.ownerName },
+      } satisfies OwnedByError,
+      409,
+    );
+  }
+
+  db.delete(groupingCountry)
+    .where(and(eq(groupingCountry.saveId, scope.saveId), eq(groupingCountry.countryId, countryId)))
+    .run();
+
+  return c.json({ ok: true } satisfies OkResponse);
+});
+
+/**
+ * `/api/country-overrides` — the per-save country rename (§5.1, P2.6.4). The read half
+ * is already live: this module's `/api/map/countries` coalesces these rows over the
+ * global defaults, so a write here is visible on the next read of that endpoint.
  */
 export const countryOverrideRoutes = new Hono();
+
+/**
+ * P2.6.4 — rename a country for this save. `{ name }` in, `{ override }` out.
+ *
+ * PUT and an upsert, for the same reason as the membership assign: the row is keyed
+ * `(save_id, country_id)`, so the URL fully specifies it.
+ *
+ * The default name is NOT compared against. The old map app wrote `geo.properties.name`
+ * on every click (`map/src/App.jsx:157`), which is why the seed filters names equal to
+ * the derived default — but that filter belongs to the IMPORT of a display cache, not to
+ * an authored rename. An author who types the default name has pinned it against a later
+ * change to the global row, and refusing that would be this module guessing.
+ */
+countryOverrideRoutes.put('/:countryId', async (c) => {
+  const scope = resolveSave(c.req.query('save'));
+  if (!scope.ok) return c.json({ error: scope.error }, scope.status);
+
+  const countryId = c.req.param('countryId');
+  const known = db.select({ id: country.id }).from(country).where(eq(country.id, countryId)).get();
+  if (known === undefined) return c.json({ error: `no country with id '${countryId}'` }, 404);
+
+  const body = await readJsonBody(c);
+  if (!body.ok) return c.json({ error: body.error }, 400);
+
+  const name = readName(body.value.name);
+  if (name === undefined) return c.json({ error: "'name' must be a non-empty string" }, 400);
+
+  const override = db
+    .insert(countryOverride)
+    .values({ saveId: scope.saveId, countryId, name })
+    .onConflictDoUpdate({
+      target: [countryOverride.saveId, countryOverride.countryId],
+      set: { name },
+    })
+    .returning()
+    .get();
+
+  return c.json({ override } satisfies CountryOverrideResponse);
+});
+
+/**
+ * P2.6.4 — restore the default name by REMOVING the row, never by writing the default
+ * into it (§7.4). A stored copy of the default is a value that stops tracking the global
+ * row it copied, and the import that did exactly that is the bug this shape avoids.
+ */
+countryOverrideRoutes.delete('/:countryId', (c) => {
+  const scope = resolveSave(c.req.query('save'));
+  if (!scope.ok) return c.json({ error: scope.error }, scope.status);
+
+  const countryId = c.req.param('countryId');
+  const removed = db
+    .delete(countryOverride)
+    .where(and(eq(countryOverride.saveId, scope.saveId), eq(countryOverride.countryId, countryId)))
+    .returning()
+    .get();
+
+  if (removed === undefined) {
+    return c.json(
+      { error: `save '${scope.saveId}' has no rename for country '${countryId}'` },
+      404,
+    );
+  }
+
+  return c.json({ ok: true } satisfies OkResponse);
+});
