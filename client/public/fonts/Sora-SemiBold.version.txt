@@ -1,0 +1,22 @@
+Sora SemiBold (600) — vendored, not fetched at runtime.
+
+  source   https://fonts.gstatic.com/s/sora/v17/xMQOuFFYT72X5wkB_18qmnndmSeMmX-K.ttf
+  family   Sora v17, weight 600, latin subset
+  licence  SIL Open Font License 1.1 — https://openfontlicense.org
+  sha256   4e79171a1720d04b72eb68bd7604f85888c31c05bb6b432147d4524e9439af30
+  format   TrueType. troika-three-text parses ttf/otf/woff, NOT woff2, which is why
+           this is a .ttf and not the woff2 Google Fonts serves to modern browsers.
+
+WHY THIS IS HERE, and why it must not become a URL again:
+
+  `<Text>` from drei with no `font` prop silently resolves a face from
+  cdn.jsdelivr.net at render time. This application is loopback-bound, single-user
+  and local-only by design — so without this file every node label in the 3D views
+  is BLANK offline, with no error. The same reasoning vendored the border geometry
+  in client/public/topojson/.
+
+  Sora is already the heading face of the project's HTML docs, so the 3D views and
+  the written docs read as one system.
+
+To re-vendor: fetch the URL above, confirm the checksum changes only if you intend
+it to, and update this file.
