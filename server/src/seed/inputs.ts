@@ -20,8 +20,10 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
+import { readPreBigOneBullets } from './events.js';
 import { resolveBibleLeaders } from './leaders.js';
 
+import type { PreBigOneBullet } from './events.js';
 import type { BibleUnionLeader } from './leaders.js';
 import type { deriveFeatures } from '@shared/geo/deriveFeatures';
 import type { DeriveWarning, DerivedCountry } from '@shared/geo/deriveFeatures';
@@ -140,6 +142,21 @@ export interface SeedInputs {
   leaderMarkers: (BibleUnionLeader & { line: number })[];
   /** One per file in `data/map_saves/`, in filename order. */
   saves: MapSaveInput[];
+  /**
+   * The save the authored P3 world is written under — characters, locations, projects,
+   * the twelve Pre-Big One events and the two timelines are all canon's, not every
+   * save's. Carried here rather than re-typed in the writer, because
+   * `client/src/shell/stores/save.ts` hard-codes the same string and one of the two has
+   * to be the source.
+   */
+  canonSaveId: string;
+  /**
+   * The World Timeline's Pre-Big One bullets, straight off the file (P3.3.1). The seed
+   * checks its authored reading against these and takes every `event.description` from
+   * them, so no bullet is ever retyped — the same relationship `leaderMarkers` has to
+   * `BIBLE_UNION_LEADERS`.
+   */
+  preBigOneBullets: PreBigOneBullet[];
 }
 
 /** The shape of a map export. Everything else in the file is ignored by the importer. */
@@ -487,6 +504,7 @@ export function readSeedInputs(repoRoot: string, derive: DeriveFeatures): SeedIn
 
   const inverse = invertIsoMapping(numericToAlpha3);
   const leaderMarkers = resolveBibleLeaders(bibleText);
+  const preBigOneBullets = readPreBigOneBullets(bibleText);
 
   const mapSavesDir = at('data', 'map_saves');
   const files = readdirSync(mapSavesDir)
@@ -537,5 +555,7 @@ export function readSeedInputs(repoRoot: string, derive: DeriveFeatures): SeedIn
     isoKeyDriftSuspected,
     leaderMarkers,
     saves,
+    canonSaveId: CANON_SAVE.id,
+    preBigOneBullets,
   };
 }
