@@ -8,12 +8,13 @@ import { TimelineView } from '../views/timeline/TimelineView';
 /**
  * P0.7.2 — the four view routes, all mounted inside the AppShell frame.
  *
- * The default redirect points at /v/map, NOT /v/timeline: the Time Corridor renders
- * nothing until P4, so landing there would open the app on an empty canvas. P4.8 flips
- * this redirect (and the unmatched-path fallback below) to /v/timeline once the Corridor
- * actually draws.
+ * P4.8: the default redirect (and the unmatched-path fallback below) now points at
+ * /v/timeline. P0.7.2 pointed it at /v/map only because the Time Corridor rendered nothing
+ * until P4 and landing there would have opened the app on an empty canvas. The Corridor
+ * draws now, so the Corridor is what the app opens on — this constant is the one place
+ * that decides it, which is why there is a constant and not two string literals.
  */
-const DEFAULT_VIEW = '/v/map';
+const DEFAULT_VIEW = '/v/timeline';
 
 export function AppRouter() {
   return (

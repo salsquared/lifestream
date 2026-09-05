@@ -1,15 +1,21 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { HealthBadge } from './HealthBadge';
+import { useSaveLoad } from './useSaveLoad';
 
 /**
  * P0.7.1 — the app frame. A top bar (brand · view tabs · status/actions) over the mounted
  * view, which React Router renders into the <Outlet/>.
  *
- * At P0 the shell owns no state: the save picker and command palette are present but
- * disabled, and nothing here reads the zustand stores yet. The shell-owned per-save
- * registry/world fetch (architecture §4.2) is what the views start reading in P2; the
- * URL sync that serializes save + primary + filters into search params (§4.3) is not
- * P2 — it lands with the Corridor's filter work in P9.5.
+ * P4.1 gave the shell the one thing it owns beyond chrome: the per-save load. `useSaveLoad`
+ * fetches the world and the registry once per save and hydrates `useWorld` / `useRegistry`,
+ * which is what architecture §4.2 means by "the shell owns the fetch" — no view issues its
+ * own per-save query, so four views never race to load the same event list. It is mounted
+ * HERE, on the frame every route renders inside, so the load survives view switches; a
+ * per-view mount would refetch the world every time a tab is clicked.
+ *
+ * The save picker and command palette are still inert, and the URL sync that serializes
+ * save + primary + filters into search params (§4.3) lands with the Corridor's filter work
+ * in P9.5.
  */
 
 const TABS = [
@@ -24,6 +30,8 @@ function tabClass({ isActive }: { isActive: boolean }): string {
 }
 
 export function AppShell() {
+  useSaveLoad();
+
   return (
     <div className="shell">
       <header className="shell__bar">
