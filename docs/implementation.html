@@ -44,7 +44,8 @@
   <tr><td><a href="#phase-P2">P2</a> World Map</td><td>First pixels</td><td>Validates the country key (<a href="#dec-country">D2</a>) and the membership PK (<a href="#dec-grouping">D3</a>) against 237 authored codes <i>before</i> 80 events depend on the same schema. Ends by deleting <code>map/</code>.</td></tr>
   <tr><td><a href="#phase-P3">P3</a> Data layer II</td><td>Tag vocabulary, registry seed, <b>thin slice</b> of events (Pre-Big One, 12 bullets), one era timeline, <code>resolveTimeline()</code>, remaining read APIs</td><td>A slice, not the corpus. Enough to light the Corridor.</td></tr>
   <tr><td><a href="#phase-P4">P4</a> Time Corridor I</td><td>Events on a 3D time axis</td><td>Second feedback moment, still before bulk transcription.</td></tr>
-  <tr><td><a href="#phase-P5">P5</a> World Timeline transcription</td><td>The remaining 68 bullets, timelines, relations</td><td>Transcription errors are only visible with the Corridor open. This is the single largest hand-authoring block and it is done <i>last</i> among the data work.</td></tr>
+  <tr><td><a href="#phase-P4B">P4B</a> Canon source pipeline</td><td>Drive sync, citations keyed on text, <code>db:seed --new-save</code></td><td>Interim. The Bible gained <b>2 bullets</b> and its Reconstruction Era was rewritten since the repo copy; P5 transcribes that era. Cheaper to take the new doc than to transcribe the old one twice.</td></tr>
+  <tr><td><a href="#phase-P5">P5</a> World Timeline transcription</td><td>The remaining 70 bullets, timelines, relations</td><td>Transcription errors are only visible with the Corridor open. This is the single largest hand-authoring block and it is done <i>last</i> among the data work.</td></tr>
   <tr><td><a href="#phase-P6">P6</a> Saves UI &amp; fork</td><td>Fork, switch, archive</td><td>The fork is the hardest backend routine in the plan. It is unverifiable until two views can show two saves diverging.</td></tr>
   <tr><td><a href="#phase-P7">P7</a>–<a href="#phase-P9">P9</a> Corridor II–IV</td><td>Depth, focus, relations, filters</td><td>Depth and cross-jump need a full corpus to be worth navigating.</td></tr>
   <tr><td><a href="#phase-P10">P10</a> Random-date UI</td><td>Picker + standalone route</td><td>The <i>function</i> shipped in <a href="#P1.8">P1.8</a>; only the UI waits for the editor.</td></tr>
@@ -76,13 +77,15 @@ hand-authored data.</p>
   <thead><tr><th>Phase</th><th>Review</th><th>Why</th></tr></thead>
   <tbody>
     <tr><td><b>P3</b> registry + event seed</td><td><b>single rank-0</b></td>
-        <td>Writes authored content, and <a href="#phase-P5">P5</a> transcribes 68 more events onto whatever shape it establishes.</td></tr>
+        <td>Writes authored content, and <a href="#phase-P5">P5</a> transcribes 70 more events onto whatever shape it establishes.</td></tr>
     <tr><td><b>P6</b> saves &amp; fork</td><td><b>single rank-0</b>, adversarial</td>
         <td>Copies authored data between branches. The remap manifest has already produced three separate bugs under review; a missed column is silent corruption.</td></tr>
     <tr><td><b>P11</b> backup &amp; restore</td><td><b>single rank-0</b></td>
         <td>The silent-failure class: a broken dump is indistinguishable from a working one until the day you need it, and the database is gitignored.</td></tr>
     <tr><td><b>P12</b> editors</td><td><b>single rank-0</b></td>
         <td>First in-app writes to authored content. Until here, everything authored arrives through the seed and is reproducible.</td></tr>
+    <tr><td><b>P4B</b> canon source pipeline</td><td><b>single rank-0</b></td>
+        <td>It changes a <i>guard</i>. A citation checker that has been weakened rather than fixed is indistinguishable from one that passes, and it is the only thing standing between an edited Bible and a silently wrong corpus.</td></tr>
     <tr><td><b>P4</b> Corridor, first render</td><td>rank-1</td>
         <td>Terminal itself, but it establishes the 3D patterns P5, P7 and P13 inherit. Worth one cheaper pass.</td></tr>
     <tr><td><b>P15</b> export</td><td>rank-1</td>
@@ -812,7 +815,7 @@ task text catches the same class of gap for a fraction of the cost.</li>
     <span class="phase-count" data-phase="P4"></span>
   </summary>
   <div class="phase-body">
-    <p class="phase-goal">Goal: open <code>/v/timeline</code> and see the seeded slice as glowing nodes along a 3D time axis. Horizontal trackpad scroll pans the camera along time. No depth strata yet — that is <a href="#phase-P7">P7</a>. This is the second feedback moment: it is where the event schema stops being a guess, and it happens <i>before</i> the remaining 68 bullets are transcribed.</p>
+    <p class="phase-goal">Goal: open <code>/v/timeline</code> and see the seeded slice as glowing nodes along a 3D time axis. Horizontal trackpad scroll pans the camera along time. No depth strata yet — that is <a href="#phase-P7">P7</a>. This is the second feedback moment: it is where the event schema stops being a guess, and it happens <i>before</i> the remaining 70 bullets are transcribed.</p>
     <ul class="tasks">
 
       <li class="task" id="P4.1"><div class="task-row">
@@ -928,19 +931,133 @@ task text catches the same class of gap for a fraction of the cost.</li>
   </div>
 </details>
 
+<!-- ========================= P4B ========================= -->
+<details class="phase" id="phase-P4B">
+  <summary>
+    <span class="phase-id">P4B</span>
+    <span class="phase-title">Canon source pipeline &mdash; Drive to repo to save</span>
+    <span class="phase-count" data-phase="P4B"></span>
+  </summary>
+  <div class="phase-body">
+    <p class="phase-goal">Goal: the Bible arrives from Google Drive instead of a hand export, a changed doc produces a <b>new save</b> rather than mutating the one in place, and the citation checker survives a document that grew. An interim phase, numbered <code>P4B</code> rather than <code>P4.5</code> because <a href="#P4.5">P4.5</a> is already a task and phases and tasks share a namespace.</p>
+
+    <div class="callout warn">
+      <h4>Why this lands before <a href="#phase-P5">P5</a> and not after</h4>
+      <p>Measured 2026-09-05 against the live Drive document. The repo copy of <code>data/story_docs/LIFEstream Bible.txt</code> dates from 28 May; the Drive original was edited since. The diff is <b>140 lines across ~24 hunks</b>, net <b>+28</b>, and it is not cosmetic:</p>
+      <table>
+        <thead><tr><th>Section</th><th>Repo copy</th><th>Drive</th></tr></thead>
+        <tbody>
+          <tr><td>Pre-Big One</td><td>12</td><td>12</td></tr>
+          <tr><td>North Korean War</td><td>8</td><td>8</td></tr>
+          <tr><td>Black Fever Era</td><td>21</td><td>21</td></tr>
+          <tr><td><b>Reconstruction Era</b></td><td><b>39</b></td><td><b>41</b></td></tr>
+          <tr><td><b>Total</b></td><td><b>80</b></td><td><b>82</b></td></tr>
+        </tbody>
+      </table>
+      <p>The first three eras are byte-identical. The <b>Reconstruction Era was rewritten</b>, and <a href="#P5.3">P5.3</a> transcribes exactly that era: the Helios Racing League founding moved <b>2046 &rarr; 2056</b>, Max Lauda's death <b>Feb 7 2048 &rarr; Jan 21 2057</b> with his character sheet updated to match, Lazaro's doctorate <b>2056 &rarr; Spring 2052</b> and became a p-B<sup>11</sup> reactor thesis, and three bullets are new. A new <i>Cities / Orbital Locations / Asteroids</i> block also defines Star City, Port Charon, Atlas, Erebus, Etna, Chrysus, Neo Los Angeles and New Mojave. <b>Running P5 first means hand-transcribing a timeline that no longer exists</b>, then doing it again.</p>
+    </div>
+
+    <div class="callout">
+      <h4>The database is a world <i>initialised</i> from the docs, not a projection <i>of</i> them</h4>
+      <p>This is the load-bearing decision of the phase and it is already the architecture's (§7.4): re-seeding is idempotent and <b>never destructive</b>, because dropping a save orphans every fork whose <code>parent_save_id</code> points at it, and because from <a href="#phase-P12">P12</a> on it would silently destroy in-app edits. A pure projection cannot survive the author redrawing a union on the map.</p>
+      <p>So a changed doc does not rewrite the existing world. It <b>seeds a new save</b>, the old canon stays openable, forks stay intact, and the save picker of <a href="#phase-P6">P6</a> becomes the revision browser. The seed already does one save per file for <code>data/map_saves/</code>; this is that same shape applied to canon revisions. The corollary worth stating: <b>the seed can add and update but never delete</b>, so a bullet removed from the Bible is caught by the drift guard and reconciled by the author, never by a silent row drop.</p>
+    </div>
+
+    <div class="callout">
+      <h4>What cannot be generated from the doc, and should not be</h4>
+      <p>The Bible supplies prose and a date phrase. It does not say whether a bullet is <code>military</code> or <code>political</code>, whether &ldquo;Late 2071&rdquo; is season precision, which stage of a rename chain a location is at, who acted in it and in what role, or whether one compound bullet is two events. That is <b>interpretation</b>, and it lives in the authored tables of <a href="#phase-P5">P5</a> under the drift guard. &ldquo;Generated from the doc&rdquo; means the facts are parsed and never retyped, not that the readings are inferred.</p>
+    </div>
+
+    <ul class="tasks">
+
+      <li class="task" id="P4B.1"><div class="task-row">
+        <input type="checkbox" data-task-id="P4B.1">
+        <details><summary><span class="task-id"><a class="anchor" href="#P4B.1">P4B.1</a></span><span class="task-title">Citations report line numbers; they must stop asserting them</span></summary>
+        <div class="task-detail">
+          <p><b>This is the only blocker, and it is a bug already fixed once elsewhere.</b> Run against the 21 June Bible, the event drift guard <b>passes</b> &mdash; all twelve Pre-Big One bullets still pair with their authored readings &mdash; while <code>verifyCitations</code> fails <b>142 of 142</b> citations. Every one fails for the same mechanical reason: <code>Citation</code> is <code>{ of, line, quote }</code> and asserts an absolute line number, and the file grew by 28 lines. The checker's own error message already reports where each quote actually is, so it has everything it needs and refuses anyway.</p>
+          <ul class="subtasks">
+            <li id="P4B.1.1"><input type="checkbox" data-task-id="P4B.1.1"><span class="sub-id"><a class="anchor" href="#P4B.1.1">P4B.1.1</a></span><span class="sub-title">Match on the <code>quote</code> under <code>normaliseCanonText</code>; <b>report</b> the line it was found on. <code>Citation.line</code> becomes a hint that is refreshed every run, never a key. <span class="new">NEW</span></span></li>
+            <li id="P4B.1.2"><input type="checkbox" data-task-id="P4B.1.2"><span class="sub-id"><a class="anchor" href="#P4B.1.2">P4B.1.2</a></span><span class="sub-title">Fail when a quote is <b>absent</b>, or when it appears on several lines and the citation cannot say which &mdash; never when it merely moved. A quote that becomes ambiguous is a real signal: it means the sentence the citation leaned on is no longer unique.</span></li>
+            <li id="P4B.1.3"><input type="checkbox" data-task-id="P4B.1.3"><span class="sub-id"><a class="anchor" href="#P4B.1.3">P4B.1.3</a></span><span class="sub-title">This is exactly the P3 fix <b>F2</b>, which re-keyed the event drift guard onto <code>(section, sourceDate, textStart)</code> so &ldquo;no authored table has to be renumbered when a line is inserted above&rdquo;. The citation checker never got the same treatment, and the two guards now disagree about whether a line number is data. Make them agree.</span></li>
+            <li id="P4B.1.4"><input type="checkbox" data-task-id="P4B.1.4"><span class="sub-id"><a class="anchor" href="#P4B.1.4">P4B.1.4</a></span><span class="sub-title">Spec: inserting N lines above a cited quote still verifies; editing the quote's text fails; deleting the quoted sentence fails naming the citation. A checker that stops catching drift is indistinguishable from one that passes, which is why this task carries the phase's review.</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task" id="P4B.2"><div class="task-row">
+        <input type="checkbox" data-task-id="P4B.2">
+        <details><summary><span class="task-id"><a class="anchor" href="#P4B.2">P4B.2</a></span><span class="task-title">The sync &mdash; Drive to <code>data/story_docs/</code></span></summary>
+        <div class="task-detail">
+          <p>The piece that does not exist at all today. Everything in <code>data/story_docs/</code> arrived by hand export, which is why the copy went 24 days stale without anyone noticing.</p>
+          <ul class="subtasks">
+            <li id="P4B.2.1"><input type="checkbox" data-task-id="P4B.2.1"><span class="sub-id"><a class="anchor" href="#P4B.2.1">P4B.2.1</a></span><span class="sub-title">Pull by <b>document id</b>, never by title &mdash; a renamed doc must fail loudly rather than silently fetch a different one. Ids live in the script, next to the destination path. <span class="new">NEW</span></span></li>
+            <li id="P4B.2.2"><input type="checkbox" data-task-id="P4B.2.2"><span class="sub-id"><a class="anchor" href="#P4B.2.2">P4B.2.2</a></span><span class="sub-title"><b>The export format is verified compatible</b> (2026-09-05): <code>&quot;* &quot;</code> as the bullet marker at every nesting level with plain three-space indentation, section headings as bare unbulleted lines, paragraphs as single unwrapped lines, UTF-8 with BOM and CRLF endings &mdash; identical to the repo copy, so <code>readWorldTimelineBullets</code> parses a fresh export unchanged. Write the bytes through; <b>normalise nothing silently</b>, because a normalisation is a diff the author did not make.</span></li>
+            <li id="P4B.2.3"><input type="checkbox" data-task-id="P4B.2.3"><span class="sub-id"><a class="anchor" href="#P4B.2.3">P4B.2.3</a></span><span class="sub-title"><code>--dry-run</code> reports the diff and writes nothing, and it is <b>the default</b>. Pulling canon is a decision, not a side effect of running a script.</span></li>
+            <li id="P4B.2.4"><input type="checkbox" data-task-id="P4B.2.4"><span class="sub-id"><a class="anchor" href="#P4B.2.4">P4B.2.4</a></span><span class="sub-title">Record provenance next to the file: document id, Drive <code>modifiedTime</code>, byte length, sync time. Drive's <code>modifiedTime</code> alone is not evidence of an edit &mdash; all seven docs in the folder carry near-identical timestamps from a bulk move &mdash; so the byte length and a diff are what settle it.</span></li>
+            <li id="P4B.2.5"><input type="checkbox" data-task-id="P4B.2.5"><span class="sub-id"><a class="anchor" href="#P4B.2.5">P4B.2.5</a></span><span class="sub-title">Sync the Bible and the Story Document only. The Story Document is already in the repo; the rest wait on <a href="#P4B.5">P4B.5</a>, because a file nothing reads is a file nothing checks.</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task" id="P4B.3"><div class="task-row">
+        <input type="checkbox" data-task-id="P4B.3">
+        <details><summary><span class="task-id"><a class="anchor" href="#P4B.3">P4B.3</a></span><span class="task-title"><code>db:seed --new-save</code> &mdash; the swap verb</span></summary>
+        <div class="task-detail">
+          <p>Architecture §7.4 already promises this: &ldquo;The way to get a clean slate is <code>db:seed --new-save</code>, which creates a fresh save and leaves the existing tree intact.&rdquo; Verified 2026-09-05: <b>it was never built</b>. The seed is already parameterised on a target <code>saveId</code> internally, so this is a CLI surface over plumbing that exists.</p>
+          <ul class="subtasks">
+            <li id="P4B.3.1"><input type="checkbox" data-task-id="P4B.3.1"><span class="sub-id"><a class="anchor" href="#P4B.3.1">P4B.3.1</a></span><span class="sub-title">The flag mints a save row and seeds under it, leaving every existing save and fork untouched. Without it there is no way to take a new Bible without mutating <code>sav_canon</code> in place. <span class="new">NEW</span></span></li>
+            <li id="P4B.3.2"><input type="checkbox" data-task-id="P4B.3.2"><span class="sub-id"><a class="anchor" href="#P4B.3.2">P4B.3.2</a></span><span class="sub-title">Provenance goes in <code>save.description</code>, which is already the convention &mdash; <code>sav_canon</code> reads &ldquo;Seeded from data/map_saves/lifestream_map_v1.json (Version 1)&rdquo;. Name the source document and its synced revision, so a save says which canon it is.</span></li>
+            <li id="P4B.3.3"><input type="checkbox" data-task-id="P4B.3.3"><span class="sub-id"><a class="anchor" href="#P4B.3.3">P4B.3.3</a></span><span class="sub-title">A destructive re-seed stays refused when the target save has children, per §7.4. This task adds the non-destructive path; it does not open the destructive one.</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task" id="P4B.4"><div class="task-row">
+        <input type="checkbox" data-task-id="P4B.4">
+        <details><summary><span class="task-id"><a class="anchor" href="#P4B.4">P4B.4</a></span><span class="task-title">Take the 21 June Bible and re-cut <a href="#phase-P5">P5</a> against it</span></summary>
+        <div class="task-detail">
+          <p>The payoff task. Everything above exists so that this one is routine rather than archaeology.</p>
+          <ul class="subtasks">
+            <li id="P4B.4.1"><input type="checkbox" data-task-id="P4B.4.1"><span class="sub-id"><a class="anchor" href="#P4B.4.1">P4B.4.1</a></span><span class="sub-title">Sync, then run the guards. Expect the drift guard green &mdash; already confirmed against a shadow copy &mdash; and the citations to pass only once <a href="#P4B.1">P4B.1</a> lands. <span class="new">NEW</span></span></li>
+            <li id="P4B.4.2"><input type="checkbox" data-task-id="P4B.4.2"><span class="sub-id"><a class="anchor" href="#P4B.4.2">P4B.4.2</a></span><span class="sub-title">Re-verify the registry against the new <i>Cities / Orbital Locations / Asteroids</i> block. All eight of its locations are <b>already seeded</b>, so expect it to document what exists rather than add rows &mdash; and treat any that does not match as a real conflict.</span></li>
+            <li id="P4B.4.3"><input type="checkbox" data-task-id="P4B.4.3"><span class="sub-id"><a class="anchor" href="#P4B.4.3">P4B.4.3</a></span><span class="sub-title">Update the corpus budget everywhere it appears: <b>82 bullets</b>, Reconstruction Era <b>41</b>, <b>70</b> remaining after P3's twelve. It appears in this document, in architecture §7.4, and in the seed's own comments.</span></li>
+            <li id="P4B.4.4"><input type="checkbox" data-task-id="P4B.4.4"><span class="sub-id"><a class="anchor" href="#P4B.4.4">P4B.4.4</a></span><span class="sub-title">Re-cut <a href="#P5.3">P5.3</a>'s four year-blocks against the new bullet list. Bullets moved <i>between</i> blocks, so the existing 10 / 9 / 9 / 11 split is stale, not merely short by two.</span></li>
+            <li id="P4B.4.5"><input type="checkbox" data-task-id="P4B.4.5"><span class="sub-id"><a class="anchor" href="#P4B.4.5">P4B.4.5</a></span><span class="sub-title">One open question closes: the new block defines <b>Neo Los Angeles</b> as &ldquo;Name of Los Angeles after the Big One&rdquo;, so the rename is authored rather than invented. It is still <b>undated</b> &mdash; the July 2034 split in the registry remains a modelling decision, and should keep saying so.</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+      <li class="task" id="P4B.5"><div class="task-row">
+        <input type="checkbox" data-task-id="P4B.5">
+        <details><summary><span class="task-id"><a class="anchor" href="#P4B.5">P4B.5</a></span><span class="task-title">Decide what the other six documents feed, if anything</span></summary>
+        <div class="task-detail">
+          <p>Surveyed 2026-09-05. Only the Bible carries seedable structure; the rest are prose, art direction or stubs. The decision to record is <b>which of them the pipeline is responsible for</b>, because a synced file nothing parses is a file nothing checks.</p>
+          <ul class="subtasks">
+            <li id="P4B.5.1"><input type="checkbox" data-task-id="P4B.5.1"><span class="sub-id"><a class="anchor" href="#P4B.5.1">P4B.5.1</a></span><span class="sub-title"><b>Story Document</b> &mdash; a screenplay outline (Act / SQ / SC / Beat / Shot). It sits in <code>data/story_docs/</code> and <b>no parser reads it</b>. Either give it a reader or say plainly that it is reference. <span class="new">NEW</span></span></li>
+            <li id="P4B.5.2"><input type="checkbox" data-task-id="P4B.5.2"><span class="sub-id"><a class="anchor" href="#P4B.5.2">P4B.5.2</a></span><span class="sub-title"><b>Research</b>, <b>Treatment</b>, <b>Visual Style</b>, <b>LifeStream by Salvador Salcedo</b> &mdash; rationale, pitch, art direction and a script fragment. No table to land in. The screenplay fragment is structured enough to seed a scene concept the schema does not have; that is a future phase, not this one.</span></li>
+            <li id="P4B.5.3"><input type="checkbox" data-task-id="P4B.5.3"><span class="sub-id"><a class="anchor" href="#P4B.5.3">P4B.5.3</a></span><span class="sub-title"><b>Character</b> &mdash; a three-name stub with no bios and no dates. It <b>does not settle</b> the Lazaro / Ines birth-precision question, which stays open. Worth recording so nobody opens it hoping again.</span></li>
+            <li id="P4B.5.4"><input type="checkbox" data-task-id="P4B.5.4"><span class="sub-id"><a class="anchor" href="#P4B.5.4">P4B.5.4</a></span><span class="sub-title"><b>A new conflict, needing an author decision.</b> The <i>1 Page Synopsis</i> gives Adan a DOB of <b>5 June 2061</b> and Xavier <b>30 January 2064</b>; the Bible states they are born in <b>2058</b> and <b>2062</b>. Three years apart for both, consistently. The Bible is authoritative under current precedence, but a consistent three-year offset reads like a deliberate revision in one document rather than a typo in the other.</span></li>
+          </ul>
+        </div></details>
+      </div></li>
+
+    </ul>
+  </div>
+</details>
+
 <!-- ========================= P5 ========================= -->
 <details class="phase" id="phase-P5">
   <summary>
     <span class="phase-id">P5</span>
-    <span class="phase-title">World Timeline transcription — the remaining 68 bullets</span>
+    <span class="phase-title">World Timeline transcription — the remaining 70 bullets</span>
     <span class="phase-count" data-phase="P5"></span>
   </summary>
   <div class="phase-body">
     <p class="phase-goal">Goal: the Bible's World Timeline is fully transcribed, the era / thread timelines exist, and the <code>precedes</code> / <code>partOf</code> / <code>renames</code> chains are in place. <b>Done with the Corridor open</b> — every event lands on screen as it is written, which is the only context in which a wrong date, a wrong category or a dropped actor is visible.</p>
 
     <div class="callout warn">
-      <h4>Corpus budget — 80 bullets, not ~50</h4>
-      <p>Verified by counting <code>data/story_docs/LIFEstream Bible.txt</code> from L886: <b>Pre-Big One 12</b> (L887–899) · <b>North Korean War 8</b> (L900–908) · <b>Black Fever Era 21</b> (L909–930) · <b>Reconstruction Era 39</b> (L931–970). Total <b>80</b>. The previous estimate of ~50 was roughly 40% short, and it was the number the schema, the seed scripts and the layout budget were all sized against. Several bullets are compound — L903 carries the pincer operation <i>and</i> X's father reaching NK territory — and split into multiple events, so <b>80 is a floor, not a target</b>. Era names are used verbatim: "Pre-Big One", "North Korean War", "Black Fever Era", "Reconstruction Era".</p>
+      <h4>Corpus budget — 82 bullets, not ~50</h4>
+      <p>Verified by counting <code>data/story_docs/LIFEstream Bible.txt</code> from L886: <b>Pre-Big One 12</b> (L887–899) · <b>North Korean War 8</b> (L900–908) · <b>Black Fever Era 21</b> (L909–930) · <b>Reconstruction Era 41</b>. Total <b>82</b>. The previous estimate of ~50 was roughly 40% short, and it was the number the schema, the seed scripts and the layout budget were all sized against. Several bullets are compound — L903 carries the pincer operation <i>and</i> X's father reaching NK territory — and split into multiple events, so <b>80 is a floor, not a target</b>. Era names are used verbatim: "Pre-Big One", "North Korean War", "Black Fever Era", "Reconstruction Era". <b>Recounted 2026-09-05 against the Drive original</b>, which is the source <a href="#phase-P4B">P4B</a> syncs: the first three eras are unchanged, the Reconstruction Era went <b>39 &rarr; 41</b>, and the total <b>80 &rarr; 82</b>. Line ranges are deliberately no longer quoted here — they shift on every edit, which is the same reason <a href="#P4B.1">P4B.1</a> takes them out of the citation checker. <span class="new">CORRECTED</span></p>
     </div>
 
     <ul class="tasks">
